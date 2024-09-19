@@ -3,6 +3,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+import keybinds
+
 
 class Window(QMainWindow):
    def __init__(self):
@@ -20,23 +22,31 @@ class Window(QMainWindow):
       # showing all the widgets
       self.show()
 
+      # keybinds stuff
+      shortcutsManager = keybinds.ShortcutsManager(self)
+      shortcutsManager.addShortcut("ctrl+q","Quit",self.close)
+      shortcutsManager.addShortcut("/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
+      shortcutsManager.addShortcut("o","Open IDE",self.button.click)
+      shortcutsManager.addShortcut("p","Open Hand Held Mode",self.button1.click)
+
+
    # method for widgets
    def UiComponents(self):
       # creating a push button
-      button = QPushButton("IDE", self)
+      self.button = QPushButton("IDE", self)
 
       # setting geometry of button
-      button.setGeometry(1100, 0, 100, 30)
+      self.button.setGeometry(1100, 0, 100, 30)
 
       # adding action to a button
-      button.clicked.connect(self.IDE)
-      button1 = QPushButton("Hand Hold", self)
+      self.button.clicked.connect(self.IDE)
+      self.button1 = QPushButton("Hand Hold", self)
 
       # setting geometry of button
-      button1.setGeometry(0, 0, 100, 30)
+      self.button1.setGeometry(0, 0, 100, 30)
 
       # adding action to a button
-      button1.clicked.connect(self.clickme)
+      self.button1.clicked.connect(self.clickme)
 
 
 
