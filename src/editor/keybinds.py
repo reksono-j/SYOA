@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import QShortcut
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout
 from PyQt5.QtCore import Qt
+import json
+import os
 
 # for opening the shortcuts changer menu
 class ShortcutsMenu(QDialog):
@@ -10,17 +12,18 @@ class ShortcutsMenu(QDialog):
         self.setWindowTitle("Shortcuts Menu")
         self.setGeometry(parent.rect())
 
+        self.shortcutsManager = shortcutsManager
+
         self.button = "" # to reference the button that was clicked
 
         # layout for the widgets
         self.layout = QFormLayout()
         self.setLayout(self.layout)
 
-        # adds the labels and buttons
-        for i in range(len(shortcutsManager.shortcutList)):
-            label = QLabel(shortcutsManager.shortcutList[i].name)
-            button = QPushButton(shortcutsManager.shortcutList[i].key().toString())
-            button.thisShortcut = shortcutsManager.shortcutList[i]
+        for key in shortcutsManager.shortcutDict:
+            label = QLabel(shortcutsManager.shortcutDict[key].name)
+            button = QPushButton(shortcutsManager.shortcutDict[key].key().toString())
+            button.thisShortcut = shortcutsManager.shortcutDict[key]
             button.clicked.connect(lambda: self.initiateReplacingKeys())
             self.layout.addRow(label, button)
         
@@ -37,7 +40,6 @@ class ShortcutsMenu(QDialog):
 
     def initiateReplacingKeys(self):
         self.button = self.sender() # gets the reference to the button that was clicked
-        print(self.button.text())
         self.showKeybindScreen()
 
     def finishReplacingKeys(self):
@@ -45,6 +47,7 @@ class ShortcutsMenu(QDialog):
         self.button.thisShortcut.setKey(newKeySequence)
         self.hideKeybindScreen()
         self.button.setText(self.button.thisShortcut.key().toString())
+        self.shortcutsManager.saveShortcuts()
 
     def showKeybindScreen(self):
         self.overlay.setGeometry(self.rect())
@@ -65,18 +68,43 @@ class ShortcutsMenu(QDialog):
 
 class ShortcutsManager:
     def __init__(self, window) -> None:
-        self.shortcutList = [] # for the shortcuts menu
+        self.shortcutDict = {} # for the shortcuts menu
         self.window = window
 
-    def addShortcut(self, key, name, function):
+        self.addOrReplaceShortcut("ctrl+q","Quit",self.window.close)
+        self.addOrReplaceShortcut("/","Replace Shortcuts Menu",lambda: self.openShortcutsMenu())
+        self.addOrReplaceShortcut("o","Open IDE",self.window.button.click)
+        self.addOrReplaceShortcut("p","Open Hand Held Mode",self.window.button1.click)
+
+        self.importShortcuts()
+
+
+    # removes same shortcuts based on the name
+    def addOrReplaceShortcut(self, key, name, function):
         shortcut = QShortcut(QKeySequence(key), self.window)
         shortcut.name = name
         shortcut.activated.connect(function)
-        self.shortcutList.append(shortcut)
+        self.shortcutDict[name] = shortcut
 
     def openShortcutsMenu(self):
         # Open the options menu
         menu = ShortcutsMenu(self, self.window)
         menu.exec_()  # This will block execution until the dialog is closed
+    
+    def saveShortcuts(self):
+        for key in self.shortcutDict:
+            self.config['shortcutSettings'][key] = self.shortcutDict[key].key().toString()
         
+        with open(self.configPath, 'w') as file:
+            json.dump(self.config, file, indent=4)
 
+    def importShortcuts(self):
+        # gets the path to the config file
+        workingDir = os.path.dirname(os.path.abspath(__file__))
+        self.configPath = os.path.join(workingDir+"\\settings", 'config.json')
+        with open(self.configPath, 'r') as file:
+            config = json.load(file)
+        self.config = config
+
+        for key in self.config['shortcutSettings']:
+            self.shortcutDict[key].setKey(QKeySequence(self.config['shortcutSettings'][key]))

@@ -24,10 +24,7 @@ class Window(QMainWindow):
 
       # keybinds stuff
       shortcutsManager = keybinds.ShortcutsManager(self)
-      shortcutsManager.addShortcut("ctrl+q","Quit",self.close)
-      shortcutsManager.addShortcut("/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
-      shortcutsManager.addShortcut("o","Open IDE",self.button.click)
-      shortcutsManager.addShortcut("p","Open Hand Held Mode",self.button1.click)
+      
 
 
    # method for widgets
