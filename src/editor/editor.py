@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import *
 
 import keybinds
 
+import ui_customize
+
 
 class Window(QMainWindow):
    def __init__(self):
@@ -14,7 +16,14 @@ class Window(QMainWindow):
       self.setWindowTitle("Editor")
 
       # setting geometry
-      self.setGeometry(100, 100, 1200, 800)
+      self.window_xPos = 100
+      self.window_yPos = 100
+      self.window_width = 1200
+      self.window_height = 800
+      self.setGeometry(self.window_xPos, self.window_yPos, self.window_width, self.window_height)
+
+      # ui customize menu import
+      self.uiSettingsManager = ui_customize.UICustomizeManager(self)
 
       # calling method
       self.UiComponents()
@@ -24,8 +33,10 @@ class Window(QMainWindow):
 
       # keybinds stuff
       shortcutsManager = keybinds.ShortcutsManager(self)
-      
 
+
+
+   
 
    # method for widgets
    def UiComponents(self):
@@ -33,7 +44,7 @@ class Window(QMainWindow):
       self.button = QPushButton("IDE", self)
 
       # setting geometry of button
-      self.button.setGeometry(1100, 0, 100, 30)
+      self.button.setGeometry(self.window_width-100, 0, 100, 30)
 
       # adding action to a button
       self.button.clicked.connect(self.IDE)
@@ -44,6 +55,13 @@ class Window(QMainWindow):
 
       # adding action to a button
       self.button1.clicked.connect(self.clickme)
+
+
+      # ui settings button setup
+      self.buttonUISettings = QPushButton("UI Settings", self)
+      self.buttonUISettings.setGeometry(self.window_width//2 - 50, 0, 100, 30)
+      self.buttonUISettings.clicked.connect(lambda: self.uiSettingsManager.openMenu())
+
 
 
 
