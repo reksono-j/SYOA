@@ -1,4 +1,4 @@
-from pyparsing import Combine, Word, Literal, Suppress, CharsNotIn, nested_expr, Regex, Optional, OneOrMore, one_of, alphanums, nums, printables
+from pyparsing import Combine, Word, CaselessKeyword, Literal, Suppress, CharsNotIn, nested_expr, Regex, Optional, OneOrMore, one_of, alphanums, nums, printables
 
 
 # Grammar 
@@ -66,61 +66,52 @@ from pyparsing import Combine, Word, Literal, Suppress, CharsNotIn, nested_expr,
 #                           Dialogue {speaker:Speaker2 text:"Woah, you're right."}]}
 # Branch {target:Scene2}
 
-ExampleScript = """IF var1 EQ 1
-Test
-Speaker 2: Wow
+ExampleScript = """Speaker1 : Hello world
+CHOICE Hi there
+ Speaker2: Hi there
+END
+Choice Pick up rock
+You picked up a rock
+modify rock add 1 
+END
+IF rock eq 1
+Speaker1 : That's a sweet rock
+Speaker2 : Isn't it?
 ELSE
-Speaker 1: Right?
-END"""
-
-#Dialogue
-"""Speaker1 : This is a test 
-Speaker2 : No kid:ding? 
-Speaker3 :Seriously? 
-I'm writing a test"""
-
-#Modify
-"MOD set var1 1"
-
-# Choice
-"""CHOICE "Left"
-MOD add var1 2
-This is another test line
+Speaker 1 looks at the ground, leans over, and picks up a rock.
+Speaker1 : Wow this is an awesome rock.
+Speaker2: Woah, you're right.
 END
-CHOICE "Right"
-This is another test line
-END
-CHOICE "Forward"
-This is another test line
-OVER
-"""
-#Branch
-"BRANCH Scene2"
-
+Branch Scene2"""
 
 def parse_text(text: str):
-    # Working
-    speaker = Regex('^([A-Za-z0-9]*?)(?=[ :])')
-    dialogue = Optional(speaker('speaker') + Literal(':')) + Word(printables + ' ')('text')
-    modify    = Literal("MODIFY") + one_of("ADD SUB SET MOD", caseless = True)('Operation') + Word(alphanums)('Variable') + Word(nums)('Amount')
-    branch   = Literal('BRANCH') + Word(alphanums)('scene')
+    Speaker     = Regex('^([A-Za-z0-9]*?)(?=[ :])')
+    Variable    = Regex('^([A-Za-z]{1}[A-Za-z0-9]*)')('Value')
+    Number      = Word(nums)('Value')
+    Value       = Variable | Number
+    Dialogue    = Optional(Speaker('speaker') + Literal(':')) + Word(printables + ' ')('Text')
+    Modify      = CaselessKeyword("MODIFY") + Word(alphanums)('Variable') + one_of("ADD SUB SET MOD", caseless = True)('Operation') + Number('Amount')
+    Branch      = CaselessKeyword('BRANCH') + Word(alphanums)('scene')
+    Comparator  = one_of("LESS MORE EQ LTE MTE", caseless = True)
+    Compare     = Variable('var1') + Comparator('condition') + Variable('var2')
+    Choice      = CaselessKeyword("CHOICE") + Word(printables + ' ')('Option')
+    If          = CaselessKeyword('IF') + Compare
+    Else        = CaselessKeyword('ELSE') # TODO split into two lists if('if') and else('else') split by ELSE
+    End         = CaselessKeyword('END')
     
-    # WIP - CONDITIONAL
-    condIf    = 'IF' + dialogue
-    condElse  = 'ELSE' # TODO split into two lists if('if') and else('else') split by ELSE
-    condEnd   = 'END'
-    conditional = nested_expr(opener=condIf, closer=condEnd, content=Combine(OneOrMore(~Literal('IF') + ~Literal(condEnd) + Word(printables + ' '))))
+    Element = Modify | End | If | Else | Choice | Branch | Dialogue
     
-    # WIP - CHOICE
-    # choice    = Literal("CHOICE") + Word(printables + ' ')('text')
-    # possibly choices start with a choice and some text then capture the elements that follow until another choice or some closing keyword is found 
     
-    # WIP - COMPARE
-    # condition = one_of("LESS MORE EQ LTE MTE", caseless = True)
-    # compare   = Word(alphanums)('var1') + condition('condition') + Word(alphanums)('var2')
+    Conditional = nested_expr(opener=If, closer=End, content=Combine(OneOrMore(~If + ~End + Word(printables + ' '))))
+
+    #example = [x[0] for x in conditional.searchString(ExampleScript).as_list()]
+    #example = dialogue.runTests(ExampleScript)
+    #example = End.parse_string("END")
+    example = Element.runTests(ExampleScript)
+    #example = [x for x in Element.scan_string(ExampleScript)]
+    #for x in example:
+    #  print(x)
     
-    #example = conditional.parseString(ExampleScript)[0]
-    example = dialogue.runTests(ExampleScript)
     print(example)
     return example
 
