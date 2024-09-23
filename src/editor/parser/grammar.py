@@ -1,5 +1,6 @@
-from pyparsing import Combine, Word, CaselessKeyword, Literal, Suppress, CharsNotIn, nested_expr, Regex, Optional, OneOrMore, one_of, alphanums, nums, printables
-
+from pyparsing import Word, CaselessKeyword, Literal, Regex, Optional, one_of, alphanums, nums, printables
+from enum import Enum
+from sceneStructure import *
 
 # Grammar 
 # Dialogue - Speaker:Sentence or Sentence -> string:string or string
@@ -66,60 +67,133 @@ from pyparsing import Combine, Word, CaselessKeyword, Literal, Suppress, CharsNo
 #                           Dialogue {speaker:Speaker2 text:"Woah, you're right."}]}
 # Branch {target:Scene2}
 
-ExampleScript = """Speaker1 : Hello world
+ExampleScript = """CHOICE test option 1
+Speaker1: wow
+Speaker2: no way
+END
+CHOICE test option 2
+Sp3: huh?
+Sp4: really
+END
+CHOICE test option 3
+Sp5: no kidding
+Sp6: That's what I'm saying
+END
+Branch Scene2
+"""
+
+"""Speaker1 : Hello world
 CHOICE Hi there
- Speaker2: Hi there
+Speaker2: Hi there
 END
 Choice Pick up rock
 You picked up a rock
 modify rock add 1 
 END
-IF rock eq 1
+IF rock EQ 1
 Speaker1 : That's a sweet rock
 Speaker2 : Isn't it?
 ELSE
 Speaker 1 looks at the ground, leans over, and picks up a rock.
+IF rock eq 2
 Speaker1 : Wow this is an awesome rock.
+END
 Speaker2: Woah, you're right.
 END
 Branch Scene2"""
 
+class Parsed(Enum):
+    MODIFY = 0,
+    END = 1,
+    IF = 2,
+    ELSE = 3,
+    CHOICE = 4,
+    BRANCH = 5,
+    DIALOGUE = 6
+
 def parse_text(text: str):
-    Speaker     = Regex('^([A-Za-z0-9]*?)(?=[ :])')
-    Variable    = Regex('^([A-Za-z]{1}[A-Za-z0-9]*)')('Value')
-    Number      = Word(nums)('Value')
-    Value       = Variable | Number
-    Dialogue    = Optional(Speaker('speaker') + Literal(':')) + Word(printables + ' ')('Text')
-    Modify      = CaselessKeyword("MODIFY") + Word(alphanums)('Variable') + one_of("ADD SUB SET MOD", caseless = True)('Operation') + Number('Amount')
-    Branch      = CaselessKeyword('BRANCH') + Word(alphanums)('scene')
-    Comparator  = one_of("LESS MORE EQ LTE MTE", caseless = True)
-    Compare     = Variable('var1') + Comparator('condition') + Variable('var2')
-    Choice      = CaselessKeyword("CHOICE") + Word(printables + ' ')('Option')
-    If          = CaselessKeyword('IF') + Compare
-    Else        = CaselessKeyword('ELSE') # TODO split into two lists if('if') and else('else') split by ELSE
-    End         = CaselessKeyword('END')
-    
-    Element = Modify | End | If | Else | Choice | Branch | Dialogue
-    
-    
-    Conditional = nested_expr(opener=If, closer=End, content=Combine(OneOrMore(~If + ~End + Word(printables + ' '))))
-
-    #example = [x[0] for x in conditional.searchString(ExampleScript).as_list()]
-    #example = dialogue.runTests(ExampleScript)
-    #example = End.parse_string("END")
-    example = Element.runTests(ExampleScript)
-    #example = [x for x in Element.scan_string(ExampleScript)]
-    #for x in example:
-    #  print(x)
-    
-    print(example)
-    return example
-
-def read_script():
-  test = ExampleScript
+  Speaker     = Regex('([A-Za-z0-9]*?)(?=[ :])')
+  Variable    = Regex('([A-Za-z]{1}[A-Za-z0-9]*)')
+  Number      = Word(nums)
+  Value       = Variable | Number
+  Dialogue    = Optional(Speaker('speaker') + Literal(':')) + Word(printables + ' ')('text')
+  Modify      = CaselessKeyword("MODIFY") + Word(alphanums)('variable') + one_of("ADD SUB SET MOD", caseless = True)('operation') + Number('amount')
+  Branch      = CaselessKeyword('BRANCH') + Word(alphanums)('scene')
+  Comparator  = one_of("LESS MORE EQ LTE MTE", caseless = True)
+  Compare     = Value('var1') + Comparator('comparator') + Value('var2')
+  Choice      = CaselessKeyword("CHOICE") + Word(printables + ' ')('option')
+  If          = CaselessKeyword('IF') + Compare('comparison')
+  Else        = CaselessKeyword('ELSE') # TODO split into two lists if('if') and else('else') split by ELSE
+  End         = CaselessKeyword('END')
   
-  parse_text(test)
+  def LabelElement(ElementType: Parsed):
+    def parseAction(str, loc, tok):
+        return (ElementType, tok.asDict())
+    return parseAction
+  
+  Element = (Modify.setParseAction(LabelElement(Parsed.MODIFY)) | 
+              End.setParseAction(LabelElement(Parsed.END))    |
+              If.setParseAction(LabelElement(Parsed.IF))    |
+              Else.setParseAction(LabelElement(Parsed.ELSE))  |
+              Choice.setParseAction(LabelElement(Parsed.CHOICE)) |
+              Branch.setParseAction(LabelElement(Parsed.BRANCH)) |
+              Dialogue.setParseAction(LabelElement(Parsed.DIALOGUE)))
+  
+  parsedList = [x[0][0] for x in Element.scan_string(ExampleScript)]
+  return parsedList
+
+def build_Scene(parsedList):
+  scene = Scene()
+  contextStack = [scene.lines]
+  for identifier, content in parsedList:
+      activeContext = contextStack[-1]
+      match identifier:
+        case Parsed.DIALOGUE:
+          if 'speaker' in content:
+            activeContext.append(Dialogue(content['speaker'], content['text']))  
+          else:
+            activeContext.append(Dialogue('', content['text']))  
+        case Parsed.MODIFY:
+          operation = Operation[content['operation']] # converts string to enum
+          mod = Modify(operation, content['variable'], content['amount'])
+          activeContext.append(mod)
+        case Parsed.END:
+          contextStack.pop()
+        case Parsed.IF:
+          conditional = Conditional(Comparator[content['comparator']], content['var1'], content['var2'])        
+          activeContext.append(conditional)
+          contextStack.append(conditional.ifElements)
+        case Parsed.ELSE:
+          contextStack.pop()
+          activeContext = contextStack[-1]
+          ifElement = activeContext[-1]
+          if type(ifElement) is not Conditional:
+            raise Exception("Else elements should be in the same logical block as If elements")
+          contextStack.append(ifElement.elseElements)
+        case Parsed.CHOICE:
+          choice = Choice()
+          if activeContext:
+            if type(activeContext[-1]) is Choice:
+              choice = activeContext[-1]
+          else:
+            activeContext.append(choice)
+          option = ChoiceOption(content['option'])
+          choice.options.append(option)
+          contextStack.append(option.consequences)
+        case Parsed.BRANCH:
+          activeContext.append(Branch(content['scene']))
+  return scene
+        
+        
+  
+def read_script(script: str):
+  parsedList = parse_text(script)
+  return build_Scene(parsedList)
       
 
 if __name__ == "__main__":
-  read_script()
+  test = read_script(ExampleScript).lines
+  print()
+  print("=======================================")
+  for x in test:
+    print(x)
