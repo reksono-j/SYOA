@@ -11,13 +11,12 @@ from sceneStructure import *
 # Compare - string Condition string|int
 # Condition - LESS | MORE | EQ | LTE | MTE
 # Operation - ADD | SUB | SET | MOD
-# 
 
-# CHARACTER 1 - {"C1", "C1A" as "Mysterious person"}
+# Below is the process by which the parser processes a script
 
 # Speaker1 : Hello world
 # CHOICE Hi there
-#  Speaker2: Hi there
+# Speaker2: Hi there
 # END
 # Choice Pick up rock
 # You picked up a rock
@@ -35,81 +34,49 @@ from sceneStructure import *
 
 # The parsing process would first categorize each line as an elmeent
 # Then it would process the blocked statements in conditionals and choices
-# Dialogue {speaker:Speaker1 text:"Hello world"}
-# ChoiceOption {option:'"Hi there"'}
-# Dialogue {speaker:Speaker2 text:"Hi there"}
-# End{}
-# ChoiceOption {option:'Pick up rock'}
-# Dialogue{text:"You picked up a rock"}
-# Modify {variable:rock operation:ADD value:1}
-# End{}
-# IF {variable1:rock operation:eq 1}
-# Dialogue {speaker:Speaker1 text:"That's a sweet rock"}
-# Dialogue {speaker:Speaker2 text:"Isn't it?"}
-# Else {}
-# Dialogue {text:"Speaker 1 looks at the ground, leans over, and picks up a rock."}
-# Dialogue {speaker:Speaker1 text:"Wow this is an awesome rock."}
-# Dialogue {speaker:Speaker2 text:"Woah, you're right."}
-# End{}
-# Branch {target:Scene2}
+# (DIALOGUE, {speaker:"Speaker1" text:"Hello world"})
+# (CHOICE, {option:"Hi there"})
+# (DIALOGUE, {speaker:"Speaker2" text:"Hi there"})
+# (END, {})
+# (CHOICE, {option:"Pick up rock"})
+# (DIALOGUE, {text:"You picked up a rock"})
+# (MODIFY, {variable:"rock" operation:"ADD" value:"1"})
+# (END, {})
+# (IF, {variable1:"rock" operation:"eq" "1"})
+# (DIALOGUE, {speaker:"Speaker1" text:"That's a sweet rock"})
+# (DIALOGUE, {speaker:"Speaker2" text:"Isn't it?"})
+# (ELSE, {})
+# (DIALOGUE, {text:"Speaker 1 looks at the ground, leans over, and picks up a rock."})
+# (DIALOGUE, {speaker:"Speaker1" text:"Wow this is an awesome rock."})
+# (DIALOGUE, {speaker:"Speaker2" text:"Woah, you're right."})
+# (End, {})
+# (Branch, {target: "Scene2"})
 
-# Dialogue {speaker:Speaker1 text:"Hello world"}
-# Choice{ choices: [ChoiceOption {option:'"Hi there"' 
-#                                 elements:[Dialogue {speaker:Speaker2 text:"Hi there"}],
-#                   ChoiceOption {option:'Pick up rock'
+# Then it would build the elements and place it in a scene's line list
+# Dialogue {speaker:"Speaker1" text:"Hello world"}
+# Choice {options: [ChoiceOption {option:'Hi there' 
+#                                 elements:[Dialogue {speaker: "Speaker2" text:"Hi there"}],
+#                   ChoiceOption {option: "Pick up rock"
 #                                 elements:[Dialogue{text:"You picked up a rock"},
-#                                           Modify {variable:rock operation:ADD value:1}]}
-# Condition{ if: IF{variable1:rock operation:eq 1} 
-#            ifElements: [Dialogue {speaker:Speaker1 text:"That's a sweet rock"},
-#                         Dialogue {speaker:Speaker2 text:"Isn't it?"}
-#            elseElements: [Dialogue {text:"Speaker 1 looks at the ground, leans over, and picks up a rock."},
+#                                           Modify {variable:"rock" operation:"ADD" value:"1"}]}
+# Conditional{compare: Comparator.EQ
+#             var1: "rock" 
+#             var2: "1"
+#             ifElements: [Dialogue {speaker:Speaker1 text:"That's a sweet rock"},
+#                          Dialogue {speaker:Speaker2 text:"Isn't it?"}
+#             elseElements: [Dialogue {text:"Speaker 1 looks at the ground, leans over, and picks up a rock."},
 #                           Dialogue {speaker:Speaker1 text:"Wow this is an awesome rock."},
 #                           Dialogue {speaker:Speaker2 text:"Woah, you're right."}]}
 # Branch {target:Scene2}
 
-ExampleScript = """CHOICE test option 1
-Speaker1: wow
-Speaker2: no way
-END
-CHOICE test option 2
-Sp3: huh?
-Sp4: really
-END
-CHOICE test option 3
-Sp5: no kidding
-Sp6: That's what I'm saying
-END
-Branch Scene2
-"""
-
-"""Speaker1 : Hello world
-CHOICE Hi there
-Speaker2: Hi there
-END
-Choice Pick up rock
-You picked up a rock
-modify rock add 1 
-END
-IF rock EQ 1
-Speaker1 : That's a sweet rock
-Speaker2 : Isn't it?
-ELSE
-Speaker 1 looks at the ground, leans over, and picks up a rock.
-IF rock eq 2
-Speaker1 : Wow this is an awesome rock.
-END
-Speaker2: Woah, you're right.
-END
-Branch Scene2"""
-
 class Parsed(Enum):
-    MODIFY = 0,
-    END = 1,
-    IF = 2,
-    ELSE = 3,
-    CHOICE = 4,
-    BRANCH = 5,
-    DIALOGUE = 6
+  MODIFY = 0,
+  END = 1,
+  IF = 2,
+  ELSE = 3,
+  CHOICE = 4,
+  BRANCH = 5,
+  DIALOGUE = 6
 
 def parse_text(text: str):
   Speaker     = Regex('([A-Za-z0-9]*?)(?=[ :])')
@@ -123,7 +90,7 @@ def parse_text(text: str):
   Compare     = Value('var1') + Comparator('comparator') + Value('var2')
   Choice      = CaselessKeyword("CHOICE") + Word(printables + ' ')('option')
   If          = CaselessKeyword('IF') + Compare('comparison')
-  Else        = CaselessKeyword('ELSE') # TODO split into two lists if('if') and else('else') split by ELSE
+  Else        = CaselessKeyword('ELSE')
   End         = CaselessKeyword('END')
   
   def LabelElement(ElementType: Parsed):
@@ -131,15 +98,15 @@ def parse_text(text: str):
         return (ElementType, tok.asDict())
     return parseAction
   
-  Element = (Modify.setParseAction(LabelElement(Parsed.MODIFY)) | 
-              End.setParseAction(LabelElement(Parsed.END))    |
-              If.setParseAction(LabelElement(Parsed.IF))    |
-              Else.setParseAction(LabelElement(Parsed.ELSE))  |
+  Element = (Modify.setParseAction(LabelElement(Parsed.MODIFY))  | 
+              End.setParseAction(LabelElement(Parsed.END))       |
+              If.setParseAction(LabelElement(Parsed.IF))         |
+              Else.setParseAction(LabelElement(Parsed.ELSE))     |
               Choice.setParseAction(LabelElement(Parsed.CHOICE)) |
               Branch.setParseAction(LabelElement(Parsed.BRANCH)) |
               Dialogue.setParseAction(LabelElement(Parsed.DIALOGUE)))
   
-  parsedList = [x[0][0] for x in Element.scan_string(ExampleScript)]
+  parsedList = [x[0][0] for x in Element.scan_string(text)]
   return parsedList
 
 def build_Scene(parsedList):
@@ -183,17 +150,8 @@ def build_Scene(parsedList):
         case Parsed.BRANCH:
           activeContext.append(Branch(content['scene']))
   return scene
-        
-        
   
 def read_script(script: str):
   parsedList = parse_text(script)
   return build_Scene(parsedList)
-      
 
-if __name__ == "__main__":
-  test = read_script(ExampleScript).lines
-  print()
-  print("=======================================")
-  for x in test:
-    print(x)
