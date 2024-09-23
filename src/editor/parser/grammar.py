@@ -78,7 +78,7 @@ class Parsed(Enum):
   BRANCH = 5,
   DIALOGUE = 6
 
-def parse_text(text: str):
+def parseText(text: str):
   Speaker     = Regex('([A-Za-z0-9]*?)(?=[ :])')
   Variable    = Regex('([A-Za-z]{1}[A-Za-z0-9]*)')
   Number      = Word(nums)
@@ -109,7 +109,7 @@ def parse_text(text: str):
   parsedList = [x[0][0] for x in Element.scan_string(text)]
   return parsedList
 
-def build_Scene(parsedList):
+def buildScene(parsedList):
   scene = Scene()
   contextStack = [scene.lines]
   for identifier, content in parsedList:
@@ -151,7 +151,7 @@ def build_Scene(parsedList):
           activeContext.append(Branch(content['scene']))
   return scene
   
-def read_script(script: str):
-  parsedList = parse_text(script)
-  return build_Scene(parsedList)
+def readScript(script: str):
+  parsedList = parseText(script)
+  return buildScene(parsedList)
 
