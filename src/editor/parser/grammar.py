@@ -59,7 +59,7 @@ from sceneStructure import *
 #                   ChoiceOption {option: "Pick up rock"
 #                                 elements:[Dialogue{text:"You picked up a rock"},
 #                                           Modify {variable:"rock" operation:"ADD" value:"1"}]}
-# Conditional{compare: Comparator.EQ
+# Conditional{compare: "EQ"
 #             var1: "rock" 
 #             var2: "1"
 #             ifElements: [Dialogue {speaker:Speaker1 text:"That's a sweet rock"},
@@ -127,7 +127,7 @@ def buildScene(parsedList):
         case Parsed.END:
           contextStack.pop()
         case Parsed.IF:
-          conditional = Conditional(Comparator[content['comparator']], content['var1'], content['var2'])        
+          conditional = Conditional(content['comparator'], content['var1'], content['var2'])        
           activeContext.append(conditional)
           contextStack.append(conditional.ifElements)
         case Parsed.ELSE:
