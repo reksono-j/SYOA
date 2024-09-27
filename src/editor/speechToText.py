@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import queue
 import threading
+from PyQt5.QtWidgets import QApplication, QTextEdit, QLineEdit
 
 class STT():
     audio_model = whisper.load_model("tiny") # load Whisper model 
@@ -38,9 +39,9 @@ class STT():
 
     @staticmethod
     def startRecording():
-       STT.currentlyRecording = True
-       print("Started Recording")
-       STT.recordingThread.start()
+        STT.currentlyRecording = True
+        print("Started Recording")
+        STT.recordingThread.start()
 
 
     @staticmethod
@@ -49,19 +50,21 @@ class STT():
         STT.currentlyRecording = False
         STT.stopEvent.set() # sets event usedd to stop recording function
         STT.recordingThread.join() # wait until recordingThread terminates
-        STT.recordingThread = threading.Thread(target=STT.recordAudioToQueue)
+        STT.recordingThread = threading.Thread(target=STT.recordAudioToQueue) # reinitializes thread, to be able to start thread again
         STT.stopEvent.clear()
         STT.processAudioData()
-        print("Stopped processing")
+        print("Finished processing")
         
 
     @staticmethod
     def processAudioData():
         audioDataBytes = b''.join(STT.audio_queue.queue)
+        STT.audio_queue.queue.clear()
         audioNDArray = np.frombuffer(audioDataBytes, dtype=np.int16).astype(np.float32) / 32768.0
         result = STT.audio_model.transcribe(audioNDArray, fp16=torch.cuda.is_available())
         STT.transcription = result['text'].strip()
         print(result['text'].strip())
+
     
     @staticmethod
     def getLatestTranscription():
@@ -69,8 +72,24 @@ class STT():
     
     @staticmethod
     def recordCallback():
-        if STT.currentlyRecording:
-            STT.stopRecording()
-        else:
-            STT.startRecording()
+        focused_widget = QApplication.focusWidget() # gets the focused widget, which should be the textbox
+
+        if isinstance(focused_widget, QTextEdit):
+            if STT.currentlyRecording:
+                STT.stopRecording()
+            else:
+                STT.startRecording()
+
+            if(not STT.currentlyRecording):
+                focused_widget.append(STT.getLatestTranscription())
+        elif isinstance(focused_widget, QLineEdit):
+            if STT.currentlyRecording:
+                STT.stopRecording()
+            else:
+                STT.startRecording()
+
+            if(not STT.currentlyRecording):
+                focused_widget.setText(STT.getLatestTranscription())
+
+        
     
