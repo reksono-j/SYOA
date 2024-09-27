@@ -1,9 +1,9 @@
 {
     "shortcutSettings": {
-        "Quit": "Q",
+        "Quit": "Ctrl+Q",
         "Replace Shortcuts Menu": "/",
         "Open IDE": "O",
         "Open Hand Held Mode": "P",
-        "Start Transcription": "T"
+        "Start Transcription": "Alt+T"
     }
 }
