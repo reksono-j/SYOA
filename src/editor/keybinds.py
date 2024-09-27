@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QFo
 from PyQt5.QtCore import Qt
 import json
 import os
+import speechToText
 
 # for opening the shortcuts changer menu
 class ShortcutsMenu(QDialog):
@@ -71,10 +72,12 @@ class ShortcutsManager:
         self.shortcutDict = {} # for the shortcuts menu
         self.window = window
 
+        # must add shortcuts in this block
         self.addOrReplaceShortcut("ctrl+q","Quit",self.window.close)
         self.addOrReplaceShortcut("/","Replace Shortcuts Menu",lambda: self.openShortcutsMenu())
         self.addOrReplaceShortcut("o","Open IDE",self.window.button.click)
         self.addOrReplaceShortcut("p","Open Hand Held Mode",self.window.button1.click)
+        self.addOrReplaceShortcut("t","Start Transcription",speechToText.STT.recordCallback)
 
         self.importShortcuts()
 

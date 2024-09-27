@@ -3,6 +3,7 @@
         "Quit": "Q",
         "Replace Shortcuts Menu": "/",
         "Open IDE": "O",
-        "Open Hand Held Mode": "P"
+        "Open Hand Held Mode": "P",
+        "Start Transcription": "T"
     }
 }
