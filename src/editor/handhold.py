@@ -17,7 +17,7 @@ class HandHoldMenu(QWidget):
     def initUI(self):
         # printing pressed
         print("pressed")
-        count = 0
+        count = 100
         title = True
 
         self.layout = QVBoxLayout()

@@ -12,7 +12,6 @@ class UICustomizeMenu(QGroupBox):
         self.UICustomizeManager = UICustomizeManager
         self.initParameters()
         self.initUI()
-        self.settingsDict = {}
 
     def initParameters(self):
         self.opened = False
@@ -34,15 +33,24 @@ class UICustomizeMenu(QGroupBox):
         #ui options boxes setup
         #set typeface
         self.innerForm.fontFamilyComboBox = QFontComboBox(self)
+        self.innerForm.fontFamilyComboBox.setCurrentFont(self.parent.font())
 
         #set font size
         self.innerForm.fontSizeSpinBox = QSpinBox(self)
-        self.innerForm.fontSizeSpinBox.setMinimum(1)
+        self.innerForm.fontSizeSpinBox.setMinimum(12)
         self.innerForm.fontSizeSpinBox.setMaximum(72)
+        self.innerForm.fontSizeSpinBox.setValue(int(self.UICustomizeManager.settingsDict["Font Size"]))
 
         #set font color
         self.innerForm.fontColorComboBox = QComboBox(self)
+        self.innerForm.fontColorComboBox.setEditText(self.UICustomizeManager.settingsDict["Font Color"])
         self.innerForm.fontColorComboBox.setEditable(False)
+        self.innerForm.fontColorComboBox.addItem("black")
+        self.innerForm.fontColorComboBox.addItem("red")
+        self.innerForm.fontColorComboBox.addItem("blue")
+        self.innerForm.fontColorComboBox.setCurrentText(self.UICustomizeManager.settingsDict["Font Color"])
+
+        
 
         #layout of form menu
         self.innerForm.layout.addRow(self.tr("Font Family:"), self.innerForm.fontFamilyComboBox)
@@ -75,18 +83,18 @@ class UICustomizeMenu(QGroupBox):
             self.opened = True
 
     def updateDict(self):
-        self.settingsDict["Font Family"] = self.innerForm.fontFamilyComboBox.currentFont().family()
-        self.settingsDict["Font Size"] = str(self.innerForm.fontSizeSpinBox.value())
-        #self.settingsDict["Font Color"] = self.innerForm.fontColorComboBox.value()
-        self.UICustomizeManager.updateSettings(self.settingsDict)
+        self.UICustomizeManager.settingsDict["Font Family"] = self.innerForm.fontFamilyComboBox.currentFont().family()
+        self.UICustomizeManager.settingsDict["Font Size"] = str(self.innerForm.fontSizeSpinBox.value())
+        self.UICustomizeManager.settingsDict["Font Color"] = self.innerForm.fontColorComboBox.currentText()
+        self.UICustomizeManager.updateSettings()
 
 class UICustomizeManager:
     def __init__(self, window) -> None:
         self.window = window
         self.settingsDict = {}
         self.importSettings()
+        self.applySettings()
         self.menu = UICustomizeMenu(self, window)
-        self.menu.settingsDict = self.settingsDict
 
     def menuToggle(self):
         self.menu.toggleUI()
@@ -107,8 +115,7 @@ class UICustomizeManager:
                                   "font-size: " + self.settingsDict["Font Size"] + "pt;" +
                                   "font-family: " + self.settingsDict["Font Family"])
 
-    def updateSettings(self, updatedDict):
-        self.settingsDict = updatedDict
+    def updateSettings(self):
         self.applySettings()
         self.saveSettings()
 

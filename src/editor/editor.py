@@ -23,17 +23,25 @@ class Window(QMainWindow):
       self.window_width = 1200
       self.window_height = 800
       self.setGeometry(self.window_xPos, self.window_yPos, self.window_width, self.window_height)
+      self.setFixedSize(1200, 800)
 
       # calls error if no central widget (essentially main window)
       self.centralWidget = QWidget(self)
       self.setCentralWidget(self.centralWidget)
       self.centralWidget.layout = QVBoxLayout()
-      self.centralWidget.layout.setSpacing(30)
+      self.centralWidget.layout.setSpacing(0)
+      self.centralWidget.layout.setContentsMargins(0, 0, 0, 0)
+      # self.centralWidget.sizePolicy = QSizePolicy()
+      # self.centralWidget.sizePolicy.setVerticalPolicy(QSizePolicy.Fixed)
+      # self.centralWidget.sizePolicy.setHorizontalPolicy(QSizePolicy.Fixed)
 
       # widget that holds buttons that switch to different menus
       self.buttonsWidget = QWidget(self.centralWidget)
       self.buttonsWidget.layout = QHBoxLayout()
       self.buttonsWidget.layout.setSpacing(10)
+      # self.buttonsWidget.sizePolicy = QSizePolicy()
+      # self.buttonsWidget.sizePolicy.setVerticalPolicy(QSizePolicy.Fixed)
+      # self.buttonsWidget.sizePolicy.setHorizontalPolicy(QSizePolicy.Fixed)
 
       self.centralWidget.layout.addWidget(self.buttonsWidget)
 
