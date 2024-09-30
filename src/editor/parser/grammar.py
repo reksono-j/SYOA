@@ -139,9 +139,8 @@ def buildScene(parsedList):
           contextStack.append(ifElement.elseElements)
         case Parsed.CHOICE:
           choice = Choice()
-          if activeContext:
-            if type(activeContext[-1]) is Choice:
-              choice = activeContext[-1]
+          if type(activeContext[-1]) is Choice:
+            choice = activeContext[-1]
           else:
             activeContext.append(choice)
           option = ChoiceOption(content['option'])
