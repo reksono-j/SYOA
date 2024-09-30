@@ -5,6 +5,10 @@ from PyQt5.QtWidgets import *
 
 import keybinds
 
+import ui_customize
+import handhold
+import ide
+
 
 class Window(QMainWindow):
    def __init__(self):
@@ -13,8 +17,50 @@ class Window(QMainWindow):
       # setting title
       self.setWindowTitle("Editor")
 
-      # setting geometry
-      self.setGeometry(100, 100, 1200, 800)
+      # setting default geometry
+      self.window_xPos = 100
+      self.window_yPos = 100
+      self.window_width = 1200
+      self.window_height = 800
+      self.setGeometry(self.window_xPos, self.window_yPos, self.window_width, self.window_height)
+      self.setFixedSize(1200, 800)
+
+      # calls error if no central widget (essentially main window)
+      self.centralWidget = QWidget(self)
+      self.setCentralWidget(self.centralWidget)
+      self.centralWidget.layout = QVBoxLayout()
+      self.centralWidget.layout.setSpacing(0)
+      self.centralWidget.layout.setContentsMargins(0, 0, 0, 0)
+      # self.centralWidget.sizePolicy = QSizePolicy()
+      # self.centralWidget.sizePolicy.setVerticalPolicy(QSizePolicy.Fixed)
+      # self.centralWidget.sizePolicy.setHorizontalPolicy(QSizePolicy.Fixed)
+
+      # widget that holds buttons that switch to different menus
+      self.buttonsWidget = QWidget(self.centralWidget)
+      self.buttonsWidget.layout = QHBoxLayout()
+      self.buttonsWidget.layout.setSpacing(10)
+      # self.buttonsWidget.sizePolicy = QSizePolicy()
+      # self.buttonsWidget.sizePolicy.setVerticalPolicy(QSizePolicy.Fixed)
+      # self.buttonsWidget.sizePolicy.setHorizontalPolicy(QSizePolicy.Fixed)
+
+      self.centralWidget.layout.addWidget(self.buttonsWidget)
+
+      # stacked widget that holds and shows/closes different menus
+      self.menusWidget = QStackedWidget(self.centralWidget)
+
+      #adding menus and buttons widgets to central widget
+      self.centralWidget.layout.addWidget(self.menusWidget)
+      self.centralWidget.layout.addWidget(self.buttonsWidget)
+
+      # ui customize menu import
+      self.uiSettingsManager = ui_customize.UICustomizeManager(self)
+      self.uiSettingsManager.applySettings()
+
+      # hand hold menu import
+      self.handholdManager = handhold.HandHoldManager(self)
+
+      # ide menu import
+      self.ideManager = ide.IDEManager(self)
 
       # calling method
       self.UiComponents()
@@ -24,104 +70,39 @@ class Window(QMainWindow):
 
       # keybinds stuff
       shortcutsManager = keybinds.ShortcutsManager(self)
-      
+
+      # setting previously defined layouts of central and buttons widget
+      self.centralWidget.setLayout(self.centralWidget.layout)
+      self.buttonsWidget.setLayout(self.buttonsWidget.layout)
 
 
    # method for widgets
    def UiComponents(self):
+      # add widgets associated with each push button to central stacked widget
+      self.menusWidget.addWidget(self.handholdManager.menu)
+      self.menusWidget.addWidget(self.ideManager.menu)
+      self.menusWidget.addWidget(self.uiSettingsManager.menu)
+
       # creating a push button
-      self.button = QPushButton("IDE", self)
-
-      # setting geometry of button
-      self.button.setGeometry(1100, 0, 100, 30)
+      self.button = QPushButton("IDE")
 
       # adding action to a button
-      self.button.clicked.connect(self.IDE)
-      self.button1 = QPushButton("Hand Hold", self)
+      self.button.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.ideManager.menu))
 
-      # setting geometry of button
-      self.button1.setGeometry(0, 0, 100, 30)
+      # creating a push button
+      self.button1 = QPushButton("Hand Hold")
 
       # adding action to a button
-      self.button1.clicked.connect(self.clickme)
+      self.button1.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.handholdManager.menu))
 
+      # ui settings button setup
+      self.buttonUISettings = QPushButton("UI Settings")
+      self.buttonUISettings.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.uiSettingsManager.menu))
 
-
-   # action method
-   def clickme(self):
-      # printing pressed
-      print("pressed")
-      count = 100
-      title = True
-
-      self.label = QLabel('Give a title for this event:', self)
-      self.label.setGeometry(count,100,200,30)
-      self.layout().addWidget(self.label)
-      self.tbx = QTextEdit(self)
-      count = count + 30
-      self.tbx.setGeometry(100, count, 100, 30)
-      self.layout().addWidget(self.tbx)
-      self.button = QPushButton("Enter", self)
-      self.button.setGeometry(200, count, 100, 30)
-      self.layout().addWidget(self.button)
-      count = count + 30
-      self.label = QLabel('Do you want to add dialogue?', self)
-      self.label.setGeometry(100, count, 300, 30)
-      self.layout().addWidget(self.label)
-      self.tbx = QTextEdit(self)
-      count = count + 30
-      self.tbx.setGeometry(100, count, 100, 30)
-      self.layout().addWidget(self.tbx)
-
-      self.button = QPushButton("Enter", self)
-      self.button.setGeometry(200, count, 100, 30)
-      self.layout().addWidget(self.button)
-      count = count + 30
-      self.label = QLabel('Who is talking?', self)
-      self.label.setGeometry(100, count, 300, 30)
-      self.layout().addWidget(self.label)
-      self.tbx = QTextEdit(self)
-      count = count + 30
-      self.tbx.setGeometry(100, count, 100, 30)
-      self.layout().addWidget(self.tbx)
-
-      self.button = QPushButton("Enter", self)
-      self.button.setGeometry(200, count, 100, 30)
-      self.layout().addWidget(self.button)
-      count = count + 30
-      self.label = QLabel('What is the dialogue?', self)
-      self.label.setGeometry(100, count, 300, 30)
-      self.layout().addWidget(self.label)
-      self.tbx = QTextEdit(self)
-      count = count + 30
-      self.tbx.setGeometry(100, count, 100, 30)
-      self.layout().addWidget(self.tbx)
-
-      self.button = QPushButton("Enter", self)
-      self.button.setGeometry(200, count, 100, 30)
-      self.layout().addWidget(self.button)
-      count = count + 30
-      self.label = QLabel('Do you want this to connect to a existing or new event? Is this the end of the story?', self)
-      self.label.setGeometry(100, count, 600, 30)
-      self.layout().addWidget(self.label)
-      self.tbx = QTextEdit(self)
-      count = count + 30
-      self.tbx.setGeometry(100, count, 100, 30)
-      self.layout().addWidget(self.tbx)
-      self.button = QPushButton("Enter", self)
-      self.button.setGeometry(200, count, 100, 30)
-      self.layout().addWidget(self.button)
-
-   def IDE(self):
-
-      print("Meow")
-      self.tbx = QTextEdit(self)
-      print("Meow")
-      self.tbx.setGeometry(0, 100, 1200, 700)
-      self.layout().addWidget(self.tbx)
-
-
-
+      # adding defined buttons to buttons widget
+      self.buttonsWidget.layout.addWidget(self.button)
+      self.buttonsWidget.layout.addWidget(self.button1)
+      self.buttonsWidget.layout.addWidget(self.buttonUISettings)
 
 
 

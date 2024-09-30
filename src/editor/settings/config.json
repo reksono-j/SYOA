@@ -5,5 +5,10 @@
         "Open IDE": "O",
         "Open Hand Held Mode": "P",
         "Start Transcription": "Alt+T"
+    },
+    "uiSettings": {
+        "Font Family": "Arial",
+        "Font Size": "12",
+        "Font Color": "#000000"
     }
 }
