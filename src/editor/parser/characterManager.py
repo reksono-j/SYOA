@@ -41,8 +41,10 @@ class CharacterManager(QWidget):
 
     def addCharacter(self):
         name = self.openNameDialog()
+        if not name:
+            return
         self.characters.append(name)
-
+        
         nameLayout = QHBoxLayout()
         nameLabel = QLabel(name)
         nameLabel.setAccessibleName(f"Name: {name}")  
@@ -63,8 +65,6 @@ class CharacterManager(QWidget):
         if dialog.exec_() == QDialog.Accepted:  
             name = dialog.getName()  
             return name
-        else:
-            return "TODO: Add error for not entering name"
     
     def deleteCharacter(self, name, layout):
         if name in self.characters:
