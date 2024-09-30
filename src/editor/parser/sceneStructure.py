@@ -41,7 +41,7 @@ class Modify(Element):
 
 
 class Conditional(Element):
-    compare: str
+    compare: Comparator
     var1: str
     var2: str
     ifElements: list[Element]
