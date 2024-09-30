@@ -69,24 +69,6 @@ from sceneStructure import *
 #                           Dialogue {speaker:Speaker2 text:"Woah, you're right."}]}
 # Branch {target:Scene2}
 
-ExampleScript = """Speaker1 : Hello world
-CHOICE Hi there
-Speaker2: Hi there
-END
-Choice Pick up rock
-You picked up a rock
-modify rock add 1 
-END
-IF rock eq 1
-Speaker1 : That's a sweet rock
-Speaker2 : Isn't it?
-ELSE
-Speaker 1 looks at the ground, leans over, and picks up a rock.
-Speaker1 : Wow this is an awesome rock.
-Speaker2: Woah, you're right.
-END
-Branch Scene2"""
-
 class Parsed(Enum):
   MODIFY = 0,
   END = 1,
@@ -173,9 +155,26 @@ def readScript(script: str):
   parsedList = parseText(script)
   return buildScene(parsedList)
 
-
 if __name__ == "__main__":
+  ExampleScript = """Speaker1 : Hello world
+CHOICE Hi there
+Speaker2: Hi there
+END
+Choice Pick up rock
+You picked up a rock
+modify rock add 1 
+END
+IF rock eq 1
+Speaker1 : That's a sweet rock
+Speaker2 : Isn't it?
+ELSE
+Speaker 1 looks at the ground, leans over, and picks up a rock.
+Speaker1 : Wow this is an awesome rock.
+Speaker2: Woah, you're right.
+END
+Branch Scene2"""
   scene = readScript(ExampleScript)
+  print(scene)
   lines = scene.lines
   for line in lines:
     print(line)
