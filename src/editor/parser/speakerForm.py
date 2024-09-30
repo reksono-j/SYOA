@@ -11,7 +11,7 @@ class speakerForm(QWidget):
         self.speakerLabel = QLabel("Speaker")
         self.speakerLabel.setAccessibleName("Speaker")
         self.speakerName = QLineEdit(name)
-        self.speakerName.setAccessibleName("Name Field")
+        self.speakerName.setAccessibleName("Name")
         self.changeButton = QPushButton("Change Name")
         self.changeButton.setAccessibleName("Toggle Name Change") # TODO: Think of better description for this
         
@@ -27,11 +27,11 @@ class speakerForm(QWidget):
         self.tags = []
 
         self.saveButton = QPushButton("Save")
-        self.saveButton.setAccessibleName("Save Button")
+        self.saveButton.setAccessibleName("Save")
         self.saveButton.clicked.connect(self.saveCharacter)
 
         self.addButton = QPushButton("Add")
-        self.addButton.setAccessibleName("Add Alias Button")
+        self.addButton.setAccessibleName("Add Alias")
         self.addButton.clicked.connect(self.addAliasRow)
 
         self.layout.setColumnStretch(0, 1)           
@@ -45,8 +45,7 @@ class speakerForm(QWidget):
         aliasLabel = QLabel(f"Alias {len(self.aliases) + 1}")
         aliasInput = QLineEdit()
         
-        aliasLabel.setAccessibleName(f"Alias: {self.AliasInput.text}")
-        aliasInput.setAccessibleName(f"Ed") # TODO Figure out how to retroactively update the accessible names when lineedit changes
+        # TODO Figure out how to retroactively update the accessible names when lineedit changes
         
         aliasLabel.setBuddy(aliasInput)
         aliasSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
