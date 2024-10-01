@@ -4,3 +4,4 @@ torch
 openai-whisper
 SpeechRecognition 
 numpy
+coqui-tts

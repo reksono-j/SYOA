@@ -8,6 +8,7 @@ import keybinds
 import ui_customize
 import handhold
 import ide
+import speechToText
 
 
 class Window(QMainWindow):
@@ -68,8 +69,13 @@ class Window(QMainWindow):
       # showing all the widgets
       self.show()
 
-      # keybinds stuff
+      # keybinds stuff 
       shortcutsManager = keybinds.ShortcutsManager(self)
+      shortcutsManager.addShortcut("ctrl+q","Quit",self.close)
+      shortcutsManager.addShortcut("/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
+      shortcutsManager.addShortcut("o","Open IDE",self.button.click)
+      shortcutsManager.addShortcut("p","Open Hand Held Mode",self.button1.click)
+      shortcutsManager.addShortcut("t","Start Transcription",speechToText.STT.recordCallback)
 
       # setting previously defined layouts of central and buttons widget
       self.centralWidget.setLayout(self.centralWidget.layout)

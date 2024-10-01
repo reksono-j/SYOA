@@ -70,24 +70,26 @@ class ShortcutsMenu(QDialog):
 class ShortcutsManager:
     def __init__(self, window) -> None:
         self.shortcutDict = {} # for the shortcuts menu
-        self.window = window
-
-        # must add shortcuts in this block
-        self.addOrReplaceShortcut("ctrl+q","Quit",self.window.close)
-        self.addOrReplaceShortcut("/","Replace Shortcuts Menu",lambda: self.openShortcutsMenu())
-        self.addOrReplaceShortcut("o","Open IDE",self.window.button.click)
-        self.addOrReplaceShortcut("p","Open Hand Held Mode",self.window.button1.click)
-        self.addOrReplaceShortcut("t","Start Transcription",speechToText.STT.recordCallback)
-
+        self.window = window        
         self.importShortcuts()
 
+        #self.addShortcut("ctrl+q","Quit",self.window.close)
+        #self.addShortcut("/","Replace Shortcuts Menu",lambda: self.openShortcutsMenu())
+        #self.addShortcut("o","Open IDE",self.window.button.click)
+        #self.addShortcut("p","Open Hand Held Mode",self.window.button1.click)
+        #self.addShortcut("t","Start Transcription",speechToText.STT.recordCallback)
 
-    # removes same shortcuts based on the name
-    def addOrReplaceShortcut(self, key, name, function):
-        shortcut = QShortcut(QKeySequence(key), self.window)
-        shortcut.name = name
-        shortcut.activated.connect(function)
-        self.shortcutDict[name] = shortcut
+    def addShortcut(self, keySequence, displayedName, callbackFunction):
+        """
+        imported shortcuts will take priority
+        """
+        if displayedName in self.shortcutDict: # imported shortcut from settings, so just connect the function
+            self.shortcutDict[displayedName].activated.connect(callbackFunction)
+        else: # did not get shortcut from settings, so create new shortcut
+            shortcut = QShortcut(QKeySequence(keySequence), self.window)
+            shortcut.name = displayedName
+            shortcut.activated.connect(function)
+            self.shortcutDict[displayedName] = shortcut
 
     def openShortcutsMenu(self):
         # Open the options menu
@@ -110,4 +112,6 @@ class ShortcutsManager:
         self.config = config
 
         for key in self.config['shortcutSettings']:
-            self.shortcutDict[key].setKey(QKeySequence(self.config['shortcutSettings'][key]))
+            keySequence = QKeySequence(self.config['shortcutSettings'][key])
+            self.shortcutDict[key] = QShortcut(keySequence, self.window)
+            self.shortcutDict[key].name = key
