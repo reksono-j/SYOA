@@ -10,6 +10,7 @@ class speakerForm(QDialog):
         # Speaker name bar
         self.speakerLabel = QLabel("Speaker")
         self.speakerLabel.setAccessibleName("Speaker")
+
         self.speakerName = QLineEdit(character[0])
         self.speakerName.setAccessibleName("Name Field")
         self.changeButton = QPushButton("Change Name")
@@ -35,6 +36,7 @@ class speakerForm(QDialog):
         self.addButton.setAccessibleName("Add Alias Button")
         self.addButton.clicked.connect(self.addAlias)
 
+
         self.layout.setColumnStretch(0, 1)           
         self.layout.setColumnStretch(1, 3)
         self.setLayout(self.layout)
@@ -54,7 +56,7 @@ class speakerForm(QDialog):
         aliasInput = QLineEdit()
         aliasInput.setText(name)
         
-        #aliasInput.setAccessibleName() # TODO Figure out how to retroactively update the accessible names when lineedit changes
+        # TODO Figure out how to retroactively update the accessible names when lineedit changes
         aliasLabel.setBuddy(aliasInput)
         aliasSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         aliasInput.setSizePolicy(aliasSizePolicy)
