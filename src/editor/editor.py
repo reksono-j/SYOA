@@ -23,7 +23,6 @@ class Window(QMainWindow):
       self.window_width = 1200
       self.window_height = 800
       self.setGeometry(self.window_xPos, self.window_yPos, self.window_width, self.window_height)
-      self.setFixedSize(1200, 800)
 
       # calls error if no central widget (essentially main window)
       self.centralWidget = QWidget(self)
@@ -50,7 +49,6 @@ class Window(QMainWindow):
 
       #adding menus and buttons widgets to central widget
       self.centralWidget.layout.addWidget(self.menusWidget)
-      self.centralWidget.layout.addWidget(self.buttonsWidget)
 
       # ui customize menu import
       self.uiSettingsManager = ui_customize.UICustomizeManager(self)
