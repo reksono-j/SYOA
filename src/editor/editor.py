@@ -3,15 +3,24 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-import keybinds
+# create pyqt5 app
+App = QApplication(sys.argv)
 
 import ui_customize
 import handhold
 import ide
+import keybinds
 import speechToText
 
 
 class Window(QMainWindow):
+
+    # singleton pattern for getting this instance in other files
+   _instance = None
+   def __new__(cls):
+      cls._instance = super(Window, cls).__new__(cls)
+      return cls._instance
+
    def __init__(self):
       super().__init__()
 
@@ -110,10 +119,6 @@ class Window(QMainWindow):
       self.buttonsWidget.layout.addWidget(self.button1)
       self.buttonsWidget.layout.addWidget(self.buttonUISettings)
 
-
-
-# create pyqt5 app
-App = QApplication(sys.argv)
 
 # create the instance of our Window
 window = Window()
