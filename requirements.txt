@@ -4,4 +4,6 @@ torch
 openai-whisper
 SpeechRecognition 
 numpy
+silero
+torchaudio
 pyaudio

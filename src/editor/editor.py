@@ -3,14 +3,24 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-import keybinds
+# create pyqt5 app
+App = QApplication(sys.argv)
 
 import ui_customize
 import handhold
 import ide
+import keybinds
+import speechToText
 
 
 class Window(QMainWindow):
+
+    # singleton pattern for getting this instance in other files
+   _instance = None
+   def __new__(cls):
+      cls._instance = super(Window, cls).__new__(cls)
+      return cls._instance
+
    def __init__(self):
       super().__init__()
 
@@ -66,8 +76,13 @@ class Window(QMainWindow):
       # showing all the widgets
       self.show()
 
-      # keybinds stuff
+      # keybinds stuff 
       shortcutsManager = keybinds.ShortcutsManager(self)
+      shortcutsManager.addShortcut("ctrl+q","Quit",self.close)
+      shortcutsManager.addShortcut("/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
+      shortcutsManager.addShortcut("o","Open IDE",self.button.click)
+      shortcutsManager.addShortcut("p","Open Hand Held Mode",self.button1.click)
+      shortcutsManager.addShortcut("t","Start Transcription",speechToText.STT.recordCallback)
 
       # setting previously defined layouts of central and buttons widget
       self.centralWidget.setLayout(self.centralWidget.layout)
@@ -102,10 +117,6 @@ class Window(QMainWindow):
       self.buttonsWidget.layout.addWidget(self.button1)
       self.buttonsWidget.layout.addWidget(self.buttonUISettings)
 
-
-
-# create pyqt5 app
-App = QApplication(sys.argv)
 
 # create the instance of our Window
 window = Window()

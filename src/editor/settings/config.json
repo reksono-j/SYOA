@@ -1,10 +1,10 @@
 {
     "shortcutSettings": {
         "Quit": "Ctrl+Q",
-        "Replace Shortcuts Menu": "/",
-        "Open IDE": "O",
-        "Open Hand Held Mode": "P",
-        "Start Transcription": "Alt+T"
+        "Replace Shortcuts Menu": "Ctrl+/",
+        "Open Hand Held Mode": "Ctrl+P",
+        "Start Transcription": "Ctrl+T",
+        "Open IDE": "Ctrl+O"
     },
     "uiSettings": {
         "Font Family": "Arial",
