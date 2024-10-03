@@ -6,3 +6,4 @@ SpeechRecognition
 numpy
 silero
 torchaudio
+pyaudio
