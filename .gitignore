@@ -164,3 +164,4 @@ cython_debug/
 
 donTest.py
 donTest2.py
+*.wav
