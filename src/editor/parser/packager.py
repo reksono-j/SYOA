@@ -1,6 +1,6 @@
 from sceneStructure import *
 from pathlib import Path
-from grammar import readScript
+from parser import readScript
 from zipfile import ZipFile
 from variableManager import VariableManager
 import io
@@ -48,7 +48,7 @@ class storyPackager:
     def _serializeElement(self, el: Element, sceneTitle: str):
         if type(el) == Dialogue:
             self.counter += 1 # TODO : Add character manager speaker id validation
-            dialogue = {"speaker":el.speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"} #TODO I have it set to wave files instead of mp3s because of the wave package being built-in
+            dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"} #TODO I have it set to wave files instead of mp3s because of the wave package being built-in
             self.Dialogue.append(dialogue)
             return dialogue
         if type(el) == Modify:
@@ -63,7 +63,7 @@ class storyPackager:
                 case Operation.MOD:
                     action += "%= "
             action +=  f"{el.amount}"
-            return {"action": action}
+            return {"type":"modify", "action": action}
         if type(el) == Conditional:    
             conditional = {}
             var1 = self._checkVariable(el.var1)
@@ -88,20 +88,22 @@ class storyPackager:
                 conditional['ifLines'].append(self._serializeElement(lineElement, sceneTitle))
             for lineElement in el.elseElements:
                 conditional['elseLines'].append(self._serializeElement(lineElement, sceneTitle))
-            return {'conditional': conditional}
+            conditional['type'] = "conditional"
+            return conditional
         if type(el) == Choice:
-            choices = {}
-            for i, option in enumerate(el.options):
-                choices[i] = {}
-                choices[i]["text"] = option.text
-                choices[i]["lines"] = []
+            choices =  []
+            for option in el.options:
+                choice = {}
+                choice["text"] = option.text
+                choice["lines"] = []
                 for lineElement in option.consequences:
-                    choices[i]["lines"].append(self._serializeElement(lineElement, sceneTitle))
-            return {'choices': choices}
+                    choice["lines"].append(self._serializeElement(lineElement, sceneTitle))
+                choices.append(choice)
+            return {"type":"choice", 'choices': choices}
         if type(el) == Branch:
             if not (el.scene in self.sceneNames):
                 print("ERROR: Scene does not exist") # TODO ERR CHECKING
-            return {"next": el.scene}
+            return {"type":"branch", "next": el.scene}
     
     def _serializeScene(self, scene: Scene):
         self.counter = 0
