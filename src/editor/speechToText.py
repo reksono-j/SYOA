@@ -11,8 +11,9 @@ import torch
 import queue
 import threading
 import keybinds
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt
+from PySide2.QtGui import *
 
 
 class STT():
@@ -30,12 +31,14 @@ class STT():
 
     # overlay things
     overlay = QWidget()
+    overlay.setAccessibleName("Recording")
+    overlay.setAccessibleDescription("Currently recording speech to text")
     overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
     overlay.hide()
     overlayText = QLabel("Some text idk", overlay)
     overlayText.setStyleSheet("color: white; font-size: 25px;")
     overlayText.setAlignment(Qt.AlignCenter)
-    
+    accessibleInterface = QAccessibleWidget(overlay, name="Recording", r=QAccessible.AlertMessage)
 
     @staticmethod
     def recordAudioToQueue():
@@ -124,9 +127,11 @@ class STT():
         STT.overlay.setGeometry(activeWindow.rect())
         STT.overlayText.setGeometry(activeWindow.rect())
         STT.overlay.show()
+        QAccessible.updateAccessibility(QAccessibleEvent(STT.overlay, QAccessible.Alert))
 
     @staticmethod
     def hideOverlay():
+        QAccessible.updateAccessibility(QAccessibleEvent(STT.overlay, QAccessible.Alert))
         STT.overlay.hide()
 
     @staticmethod
