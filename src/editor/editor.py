@@ -1,16 +1,27 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 
-import keybinds
+
+# create pyqt5 app
+App = QApplication(sys.argv)
 
 import ui_customize
 import handhold
 import ide
+import keybinds
+import speechToText
 
 
 class Window(QMainWindow):
+
+    # singleton pattern for getting this instance in other files
+   _instance = None
+   def __new__(cls):
+      cls._instance = super(Window, cls).__new__(cls)
+      return cls._instance
+
    def __init__(self):
       super().__init__()
 
@@ -66,8 +77,13 @@ class Window(QMainWindow):
       # showing all the widgets
       self.show()
 
-      # keybinds stuff
+      # keybinds stuff 
       shortcutsManager = keybinds.ShortcutsManager(self)
+      shortcutsManager.addShortcut("ctrl+q","Quit",self.close)
+      shortcutsManager.addShortcut("/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
+      shortcutsManager.addShortcut("o","Open IDE",self.button.click)
+      shortcutsManager.addShortcut("p","Open Hand Held Mode",self.button1.click)
+      shortcutsManager.addShortcut("t","Start Transcription",speechToText.STT.recordCallback)
 
       # setting previously defined layouts of central and buttons widget
       self.centralWidget.setLayout(self.centralWidget.layout)
@@ -86,6 +102,7 @@ class Window(QMainWindow):
 
       # adding action to a button
       self.button.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.ideManager.menu))
+      
 
       # creating a push button
       self.button1 = QPushButton("Hand Hold")
@@ -95,7 +112,9 @@ class Window(QMainWindow):
 
       # ui settings button setup
       self.buttonUISettings = QPushButton("UI Settings")
+      #self.buttonUISettings.accessibleInterface = QAccessibleWidget(self.buttonUISettings, name="UI Settings", r=QAccessible.Button)
       self.buttonUISettings.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.uiSettingsManager.menu))
+      #self.buttonUISettings.clicked.connect(lambda: QAccessible.updateAccessibility(QAccessibleEvent(self, QAccessible.ObjectShow)))
 
       # adding defined buttons to buttons widget
       self.buttonsWidget.layout.addWidget(self.button)
@@ -103,12 +122,8 @@ class Window(QMainWindow):
       self.buttonsWidget.layout.addWidget(self.buttonUISettings)
 
 
-
-# create pyqt5 app
-App = QApplication(sys.argv)
-
 # create the instance of our Window
 window = Window()
 
 # start the app
-sys.exit(App.exec())
+sys.exit(App.exec_())

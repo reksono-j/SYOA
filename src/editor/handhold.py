@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 
 class HandHoldMenu(QScrollArea):
     def __init__(self, HandHoldManager, parent):
@@ -29,6 +29,8 @@ class HandHoldMenu(QScrollArea):
         self.label.setGeometry(count,100,200,30)
         self.groupBox.layout.addWidget(self.label)
         self.tbx = QTextEdit(self)
+        self.tbx.setAccessibleName("Event title text box. ")
+        self.tbx.setAccessibleDescription("Insert an event title here.")
         self.count = count + 30
         count = self.count
         self.tbx.setGeometry(100, count, 100, 30)
@@ -48,6 +50,8 @@ class HandHoldMenu(QScrollArea):
 
         count = self.count
         self.label = QLabel('Do you want to add dialogue?', self)
+        self.label.setAccessibleName("Do you want to add dialogue?")
+        self.label.setAccessibleDescription("Answer with following buttons")
         self.label.setGeometry(100, count, 300, 30)
         self.groupBox.layout.addWidget(self.label)
         count = count + 30
@@ -69,6 +73,8 @@ class HandHoldMenu(QScrollArea):
         self.label.setGeometry(100, count, 300, 30)
         self.groupBox.layout.addWidget(self.label)
         self.tbx = QTextEdit(self)
+        self.tbx.setAccessibleName("Speaker name text box.")
+        self.tbx.setAccessibleDescription("Insert the speaker name.")
         count = count + 30
         self.tbx.setGeometry(100, count, 100, 30)
         self.groupBox.layout.addWidget(self.tbx)
@@ -87,6 +93,8 @@ class HandHoldMenu(QScrollArea):
         self.label.setGeometry(100, count, 300, 30)
         self.groupBox.layout.addWidget(self.label)
         self.tbx = QTextEdit(self)
+        self.tbx.setAccessibleName("Speaker dialogue text box.")
+        self.tbx.setAccessibleDescription("Insert the dialogue for the speaker.")
         count = count + 30
         self.tbx.setGeometry(100, count, 100, 30)
         self.groupBox.layout.addWidget(self.tbx)
@@ -102,6 +110,8 @@ class HandHoldMenu(QScrollArea):
     def eee(self):
         count = self.count
         self.label = QLabel('Do you want this to connect to a existing or new event? Is this the end of the story?', self)
+        self.label.setAccessibleName('Do you want this to connect to a existing or new event? Is this the end of the story?')
+        self.label.setAccessibleDescription("Answer with following buttons")
         self.label.setGeometry(100, count, 600, 30)
         self.groupBox.layout.addWidget(self.label)
         self.tbx = QTextEdit(self)

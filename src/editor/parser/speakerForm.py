@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QSizePolicy
+from PySide2.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QSizePolicy
 
 
 class speakerForm(QDialog):

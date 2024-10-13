@@ -1,7 +1,8 @@
-from PyQt5.QtWidgets import QShortcut
-from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout
-from PyQt5.QtCore import Qt
+from PySide2.QtWidgets import QShortcut
+from PySide2.QtGui import *
+#from PySide2.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout
+from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt
 import json
 import os
 import speechToText
@@ -17,6 +18,11 @@ class ShortcutsMenu(QDialog):
 
         self.button = "" # to reference the button that was clicked
 
+        # establish accessibility interface for menu
+        #self.setAccessibleName("Shortcuts Menu")
+        self.setAccessibleDescription("Change shortcut keybinds here")
+        self.accessibilityInterface = QAccessibleWidget(self, role=QAccessible.Dialog, name="Shortcuts Menu")
+
         # layout for the widgets
         self.layout = QFormLayout()
         self.setLayout(self.layout)
@@ -27,6 +33,11 @@ class ShortcutsMenu(QDialog):
             button.thisShortcut = shortcutsManager.shortcutDict[key]
             button.clicked.connect(lambda: self.initiateReplacingKeys())
             self.layout.addRow(label, button)
+
+            # accessibility
+            #button.setAccessibleName(shortcutsManager.shortcutDict[key].name)
+            button.setAccessibleDescription("Change " + shortcutsManager.shortcutDict[key].name + " keybind here")
+            button.accessibilityInterface = QAccessibleWidget(button, role=QAccessible.Button, name=shortcutsManager.shortcutDict[key].name)
         
         # transparent overlay
         self.overlay = QWidget(self)
@@ -62,37 +73,49 @@ class ShortcutsMenu(QDialog):
         self.keybindInputWidget.show()  
         self.keybindInputWidget.setFocus()
 
+        # accessibility 
+        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.PopupMenuStart))
+        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.Focus))
+
     def hideKeybindScreen(self):
         self.overlay.hide()
         self.keybindInputWidget.hide()
+
+        # accessibility 
+        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.PopupMenuEnd))
+        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.Focus))
 
 
 class ShortcutsManager:
     def __init__(self, window) -> None:
         self.shortcutDict = {} # for the shortcuts menu
-        self.window = window
-
-        # must add shortcuts in this block
-        self.addOrReplaceShortcut("ctrl+q","Quit",self.window.close)
-        self.addOrReplaceShortcut("/","Replace Shortcuts Menu",lambda: self.openShortcutsMenu())
-        self.addOrReplaceShortcut("o","Open IDE",self.window.button.click)
-        self.addOrReplaceShortcut("p","Open Hand Held Mode",self.window.button1.click)
-        self.addOrReplaceShortcut("t","Start Transcription",speechToText.STT.recordCallback)
-
+        self.window = window        
         self.importShortcuts()
 
+        #self.addShortcut("ctrl+q","Quit",self.window.close)
+        #self.addShortcut("/","Replace Shortcuts Menu",lambda: self.openShortcutsMenu())
+        #self.addShortcut("o","Open IDE",self.window.button.click)
+        #self.addShortcut("p","Open Hand Held Mode",self.window.button1.click)
+        #self.addShortcut("t","Start Transcription",speechToText.STT.recordCallback)
 
-    # removes same shortcuts based on the name
-    def addOrReplaceShortcut(self, key, name, function):
-        shortcut = QShortcut(QKeySequence(key), self.window)
-        shortcut.name = name
-        shortcut.activated.connect(function)
-        self.shortcutDict[name] = shortcut
+    def addShortcut(self, keySequence, displayedName, callbackFunction):
+        """
+        imported shortcuts will take priority
+        """
+        if displayedName in self.shortcutDict: # imported shortcut from settings, so just connect the function
+            self.shortcutDict[displayedName].activated.connect(callbackFunction)
+        else: # did not get shortcut from settings, so create new shortcut
+            shortcut = QShortcut(QKeySequence(keySequence), self.window)
+            shortcut.name = displayedName
+            shortcut.activated.connect(function)
+            self.shortcutDict[displayedName] = shortcut
 
     def openShortcutsMenu(self):
         # Open the options menu
         menu = ShortcutsMenu(self, self.window)
+        QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogStart))
         menu.exec_()  # This will block execution until the dialog is closed
+        QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogEnd))
     
     def saveShortcuts(self):
         for key in self.shortcutDict:
@@ -110,4 +133,6 @@ class ShortcutsManager:
         self.config = config
 
         for key in self.config['shortcutSettings']:
-            self.shortcutDict[key].setKey(QKeySequence(self.config['shortcutSettings'][key]))
+            keySequence = QKeySequence(self.config['shortcutSettings'][key])
+            self.shortcutDict[key] = QShortcut(keySequence, self.window)
+            self.shortcutDict[key].name = key

@@ -10,7 +10,11 @@ import numpy as np
 import torch
 import queue
 import threading
-from PyQt5.QtWidgets import QApplication, QTextEdit, QLineEdit
+import keybinds
+from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt
+from PySide2.QtGui import *
+
 
 class STT():
     audio_model = whisper.load_model("tiny") # load Whisper model 
@@ -23,6 +27,18 @@ class STT():
     transcription = '' # the latest transcription
     currentlyRecording = False
     
+    QApplication.activeWindow()
+
+    # overlay things
+    overlay = QWidget()
+    overlay.setAccessibleName("Recording")
+    overlay.setAccessibleDescription("Currently recording speech to text")
+    overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
+    overlay.hide()
+    overlayText = QLabel("Some text idk", overlay)
+    overlayText.setStyleSheet("color: white; font-size: 25px;")
+    overlayText.setAlignment(Qt.AlignCenter)
+    accessibleInterface = QAccessibleWidget(overlay, name="Recording", r=QAccessible.AlertMessage)
 
     @staticmethod
     def recordAudioToQueue():
@@ -33,6 +49,15 @@ class STT():
                     STT.audio_queue.put(audio_data.get_raw_data())
                 except sr.WaitTimeoutError: # not sure what this is
                     pass  
+    
+    @staticmethod
+    def processAudioData():
+        audioDataBytes = b''.join(STT.audio_queue.queue)
+        STT.audio_queue.queue.clear()
+        audioNDArray = np.frombuffer(audioDataBytes, dtype=np.int16).astype(np.float32) / 32768.0
+        result = STT.audio_model.transcribe(audioNDArray, fp16=torch.cuda.is_available())
+        STT.transcription = result['text'].strip()
+        print(result['text'].strip())
 
     recordingThread = threading.Thread(target=recordAudioToQueue) # new thread to run recording function
     stopEvent = threading.Event()
@@ -43,6 +68,9 @@ class STT():
         print("Started Recording")
         STT.recordingThread.start()
 
+        STT.setOverlayText("Recording")
+        STT.showOverlay()
+
 
     @staticmethod
     def stopRecording():
@@ -52,19 +80,19 @@ class STT():
         STT.recordingThread.join() # wait until recordingThread terminates
         STT.recordingThread = threading.Thread(target=STT.recordAudioToQueue) # reinitializes thread, to be able to start thread again
         STT.stopEvent.clear()
+
+
+        # this does not update the text because processAudioData() is a long-running task that blocks GUI updates
+        # using regular threads do not work
+        # solution most likely QThread or just not having this
+        STT.setOverlayText("Processing...") 
+
+
         STT.processAudioData()
         print("Finished processing")
+
+        STT.hideOverlay()
         
-
-    @staticmethod
-    def processAudioData():
-        audioDataBytes = b''.join(STT.audio_queue.queue)
-        STT.audio_queue.queue.clear()
-        audioNDArray = np.frombuffer(audioDataBytes, dtype=np.int16).astype(np.float32) / 32768.0
-        result = STT.audio_model.transcribe(audioNDArray, fp16=torch.cuda.is_available())
-        STT.transcription = result['text'].strip()
-        print(result['text'].strip())
-
     
     @staticmethod
     def getLatestTranscription():
@@ -91,5 +119,23 @@ class STT():
             if(not STT.currentlyRecording):
                 focused_widget.setText(STT.getLatestTranscription())
 
+    @staticmethod
+    def showOverlay():
+        activeWindow =  QApplication.activeWindow()
+
+        STT.overlay.setParent(activeWindow)
+        STT.overlay.setGeometry(activeWindow.rect())
+        STT.overlayText.setGeometry(activeWindow.rect())
+        STT.overlay.show()
+        QAccessible.updateAccessibility(QAccessibleEvent(STT.overlay, QAccessible.Alert))
+
+    @staticmethod
+    def hideOverlay():
+        QAccessible.updateAccessibility(QAccessibleEvent(STT.overlay, QAccessible.Alert))
+        STT.overlay.hide()
+
+    @staticmethod
+    def setOverlayText(s):
+        STT.overlayText.setText(s)
         
     
