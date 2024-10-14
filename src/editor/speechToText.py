@@ -10,10 +10,9 @@ import numpy as np
 import torch
 import queue
 import threading
-import keybinds
-from PySide2.QtWidgets import *
-from PySide2.QtCore import Qt
-from PySide2.QtGui import *
+from PySide6.QtWidgets import *
+from PySide6.QtCore import Qt
+from PySide6.QtGui import *
 
 
 class STT():
@@ -26,19 +25,23 @@ class STT():
         recognizer.adjust_for_ambient_noise(source)
     transcription = '' # the latest transcription
     currentlyRecording = False
-    
-    QApplication.activeWindow()
 
-    # overlay things
-    overlay = QWidget()
-    overlay.setAccessibleName("Recording")
-    overlay.setAccessibleDescription("Currently recording speech to text")
-    overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
-    overlay.hide()
-    overlayText = QLabel("Some text idk", overlay)
-    overlayText.setStyleSheet("color: white; font-size: 25px;")
-    overlayText.setAlignment(Qt.AlignCenter)
-    accessibleInterface = QAccessibleWidget(overlay, name="Recording", r=QAccessible.AlertMessage)
+    overlay = None
+    overlayText = None
+
+    @staticmethod
+    def getOverlay():
+        if STT.overlay is None:
+            # overlay things
+            STT.overlay = QWidget()
+            STT.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
+            STT.overlay.hide()
+            STT.overlayText = QLabel("Some text idk", STT.overlay)
+            STT.overlayText.setStyleSheet("color: white; font-size: 25px;")
+            STT.overlayText.setAlignment(Qt.AlignCenter)
+        else:
+            return STT.overlay
+    
 
     @staticmethod
     def recordAudioToQueue():
@@ -123,19 +126,19 @@ class STT():
     def showOverlay():
         activeWindow =  QApplication.activeWindow()
 
-        STT.overlay.setParent(activeWindow)
-        STT.overlay.setGeometry(activeWindow.rect())
+        STT.getOverlay().setParent(activeWindow)
+        STT.getOverlay().setGeometry(activeWindow.rect())
         STT.overlayText.setGeometry(activeWindow.rect())
-        STT.overlay.show()
-        QAccessible.updateAccessibility(QAccessibleEvent(STT.overlay, QAccessible.Alert))
+        STT.getOverlay().show()
 
     @staticmethod
     def hideOverlay():
-        QAccessible.updateAccessibility(QAccessibleEvent(STT.overlay, QAccessible.Alert))
-        STT.overlay.hide()
+        STT.getOverlay().hide()
 
     @staticmethod
     def setOverlayText(s):
+        if STT.overlay is None:
+            STT.getOverlay() # just to initialize overlay and overlayText
         STT.overlayText.setText(s)
         
     

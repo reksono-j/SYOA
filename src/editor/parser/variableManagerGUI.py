@@ -1,10 +1,10 @@
 import sys
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
     QHBoxLayout, QMessageBox, QScrollArea, QDialog, QLineEdit
 )
-from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtCore import QRegExp
+from PySide6.QtGui import QRegExpValidator
+from PySide6.QtCore import QRegExp
 from speakerForm import *
 
 class VariableManagerGUI(QWidget):

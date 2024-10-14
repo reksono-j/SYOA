@@ -1,11 +1,10 @@
-from PySide2.QtWidgets import QShortcut
-from PySide2.QtGui import *
-#from PySide2.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout
-from PySide2.QtWidgets import *
-from PySide2.QtCore import Qt
+from PySide6.QtGui import *
+#from PySide6.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout
+from PySide6.QtWidgets import *
+from PySide6.QtCore import Qt
 import json
+import sys
 import os
-import speechToText
 
 # for opening the shortcuts changer menu
 class ShortcutsMenu(QDialog):
@@ -21,7 +20,7 @@ class ShortcutsMenu(QDialog):
         # establish accessibility interface for menu
         #self.setAccessibleName("Shortcuts Menu")
         self.setAccessibleDescription("Change shortcut keybinds here")
-        self.accessibilityInterface = QAccessibleWidget(self, role=QAccessible.Dialog, name="Shortcuts Menu")
+        #self.accessibilityInterface = QAccessibleWidget(self, role=QAccessible.Dialog, name="Shortcuts Menu")
 
         # layout for the widgets
         self.layout = QFormLayout()
@@ -37,7 +36,7 @@ class ShortcutsMenu(QDialog):
             # accessibility
             #button.setAccessibleName(shortcutsManager.shortcutDict[key].name)
             button.setAccessibleDescription("Change " + shortcutsManager.shortcutDict[key].name + " keybind here")
-            button.accessibilityInterface = QAccessibleWidget(button, role=QAccessible.Button, name=shortcutsManager.shortcutDict[key].name)
+            #button.accessibilityInterface = QAccessibleWidget(button, role=QAccessible.Button, name=shortcutsManager.shortcutDict[key].name)
         
         # transparent overlay
         self.overlay = QWidget(self)
@@ -74,16 +73,16 @@ class ShortcutsMenu(QDialog):
         self.keybindInputWidget.setFocus()
 
         # accessibility 
-        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.PopupMenuStart))
-        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.Focus))
+        #QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.PopupMenuStart))
+        #QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.Focus))
 
     def hideKeybindScreen(self):
         self.overlay.hide()
         self.keybindInputWidget.hide()
 
         # accessibility 
-        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.PopupMenuEnd))
-        QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.Focus))
+        #QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.PopupMenuEnd))
+        #QAccessible.updateAccessibility(QAccessibleEvent(self.accessibilityInterface, QAccessible.Focus))
 
 
 class ShortcutsManager:
@@ -113,9 +112,9 @@ class ShortcutsManager:
     def openShortcutsMenu(self):
         # Open the options menu
         menu = ShortcutsMenu(self, self.window)
-        QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogStart))
+        #QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogStart))
         menu.exec_()  # This will block execution until the dialog is closed
-        QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogEnd))
+        #QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogEnd))
     
     def saveShortcuts(self):
         for key in self.shortcutDict:
@@ -136,3 +135,12 @@ class ShortcutsManager:
             keySequence = QKeySequence(self.config['shortcutSettings'][key])
             self.shortcutDict[key] = QShortcut(keySequence, self.window)
             self.shortcutDict[key].name = key
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    
+    mainWindow = QMainWindow()
+    textbox = ShortcutsMenu(ShortcutsManager(mainWindow),mainWindow)
+    textbox.resize(1000, 500)
+    textbox.show()
+    sys.exit(app.exec())
