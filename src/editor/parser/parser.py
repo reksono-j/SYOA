@@ -148,6 +148,7 @@ def buildScene(parsedList):
           contextStack.append(option.consequences)
         case Parsed.BRANCH:
           activeContext.append(Branch(content['scene']))
+          scene.links.append(content['scene'])
   return scene
   
 def readScript(script: str):

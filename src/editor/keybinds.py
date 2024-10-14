@@ -87,28 +87,41 @@ class ShortcutsMenu(QDialog):
 
 
 class ShortcutsManager:
+    _instance = None
+
+    def __new__(cls, _):
+        if cls._instance is None:
+            cls._instance = super(ShortcutsManager, cls).__new__(cls)
+        return cls._instance
+    
+    @classmethod
+    def getInstance(cls):
+        if cls._instance is None:
+            print("ShortcutsManager is not defined yet.")
+            return None
+        else:
+            return cls._instance
+
     def __init__(self, window) -> None:
         self.shortcutDict = {} # for the shortcuts menu
         self.window = window        
         self.importShortcuts()
 
-        #self.addShortcut("ctrl+q","Quit",self.window.close)
-        #self.addShortcut("/","Replace Shortcuts Menu",lambda: self.openShortcutsMenu())
-        #self.addShortcut("o","Open IDE",self.window.button.click)
-        #self.addShortcut("p","Open Hand Held Mode",self.window.button1.click)
-        #self.addShortcut("t","Start Transcription",speechToText.STT.recordCallback)
-
     def addShortcut(self, keySequence, displayedName, callbackFunction):
         """
         imported shortcuts will take priority
         """
-        if displayedName in self.shortcutDict: # imported shortcut from settings, so just connect the function
-            self.shortcutDict[displayedName].activated.connect(callbackFunction)
+
+        dictKey = displayedName.lower()
+
+        if dictKey in self.shortcutDict: # imported shortcut from settings, so just connect the function
+            self.shortcutDict[dictKey].activated.connect(callbackFunction)
+            self.shortcutDict[dictKey].name = displayedName
         else: # did not get shortcut from settings, so create new shortcut
             shortcut = QShortcut(QKeySequence(keySequence), self.window)
             shortcut.name = displayedName
-            shortcut.activated.connect(function)
-            self.shortcutDict[displayedName] = shortcut
+            shortcut.activated.connect(callbackFunction)
+            self.shortcutDict[dictKey] = shortcut
 
     def openShortcutsMenu(self):
         # Open the options menu
