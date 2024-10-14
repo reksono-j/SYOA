@@ -1,14 +1,11 @@
 import sys
 from PySide6.QtCore import *
-from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import ui_customize
 import handhold
 import ide
 import keybinds
 import speechToText
-
-
 
 
 class Window(QMainWindow):
@@ -118,10 +115,6 @@ class Window(QMainWindow):
       self.buttonsWidget.layout.addWidget(self.buttonUISettings)
 
 # create PySide6 app
-App = QApplication(sys.argv)
-
-
-# create pyqt5 app
 App = QApplication(sys.argv)
 
 # create the instance of our Window

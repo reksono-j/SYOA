@@ -11,7 +11,7 @@ import wave
 import math
 
 # TODO: Create a some sort of setting that stores the project folder path and references it in this file
-storyDirectory = Path("SYOA/src/editor/parser/Story_EX_DeleteLater")
+storyDirectory = Path("src/editor/parser/Story_EX_DeleteLater")
 
 class storyPackager:
     counter = 0
@@ -145,7 +145,7 @@ class storyPackager:
         # TODO: Give actual name instead of testStory.zip
         # Writes buffer contents to actual zip
         buffer.seek(0) 
-        with open("SYOA/src/viewer/Story_EX_DeleteLater/testStory.syoa", "wb") as zipFile:
+        with open("src/viewer/Story_EX_DeleteLater/testStory.syoa", "wb") as zipFile:
             zipFile.write(buffer.read())
         
 
