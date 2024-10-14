@@ -1,7 +1,8 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
+
 
 
 
@@ -100,6 +101,7 @@ class Window(QMainWindow):
 
       # adding action to a button
       self.button.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.ideManager.menu))
+      
 
       # creating a push button
       self.button1 = QPushButton("Hand Hold")
@@ -109,7 +111,9 @@ class Window(QMainWindow):
 
       # ui settings button setup
       self.buttonUISettings = QPushButton("UI Settings")
+      #self.buttonUISettings.accessibleInterface = QAccessibleWidget(self.buttonUISettings, name="UI Settings", r=QAccessible.Button)
       self.buttonUISettings.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.uiSettingsManager.menu))
+      #self.buttonUISettings.clicked.connect(lambda: QAccessible.updateAccessibility(QAccessibleEvent(self, QAccessible.ObjectShow)))
 
       # adding defined buttons to buttons widget
       self.buttonsWidget.layout.addWidget(self.button)
@@ -126,4 +130,4 @@ window = Window()
 from voiceCommand import VCManager
 
 # start the app
-sys.exit(App.exec())
+sys.exit(App.exec_())

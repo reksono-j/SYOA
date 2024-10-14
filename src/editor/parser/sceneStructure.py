@@ -84,9 +84,12 @@ class Choice(Element):
     
     
 class Scene:
+    title : str
     lines : list[Element]
+    links : list[str]
     def __init__(self):
         self.lines = []
+        self.links = []
     def add_line(self, element:Element):
         self.lines.append(element)
         

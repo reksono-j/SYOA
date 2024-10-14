@@ -1,11 +1,11 @@
 import sys
-from PyQt5.QtWidgets import (
+from PySide2.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
     QHBoxLayout, QMessageBox, QScrollArea, QDialog, QLineEdit
 )
 from speakerForm import *
 
-class CharacterManager(QWidget):
+class CharacterManagerGUI(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         ["Cooper",  [["Cooper",  "speed:1.0, pitch:1.0"], ["Joseph","speed:0.9, pitch:1.2"]]]
     ]
     app = QApplication(sys.argv)
-    editor = CharacterManager()
+    editor = CharacterManagerGUI()
     editor.loadCharacterData(ExampleCharacterList)
     editor.resize(300, 400)
     editor.show()
