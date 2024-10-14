@@ -1,7 +1,9 @@
-from PySide6.QtGui import *
-#from PySide6.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout
-from PySide6.QtWidgets import *
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtWidgets import (
+    QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
+    QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
+    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit
+)
 import json
 import sys
 import os
@@ -15,7 +17,7 @@ class ShortcutsMenu(QDialog):
 
         self.shortcutsManager = shortcutsManager
 
-        self.button = "" # to reference the button that was clicked
+        self.button = None # to reference the button that was clicked
 
         # establish accessibility interface for menu
         #self.setAccessibleName("Shortcuts Menu")
@@ -30,12 +32,12 @@ class ShortcutsMenu(QDialog):
             label = QLabel(shortcutsManager.shortcutDict[key].name)
             button = QPushButton(shortcutsManager.shortcutDict[key].key().toString())
             button.thisShortcut = shortcutsManager.shortcutDict[key]
-            button.clicked.connect(lambda: self.initiateReplacingKeys())
+            button.clicked.connect(lambda _,b=button: self.initiateReplacingKeys(b))
             self.layout.addRow(label, button)
 
             # accessibility
             #button.setAccessibleName(shortcutsManager.shortcutDict[key].name)
-            button.setAccessibleDescription("Change " + shortcutsManager.shortcutDict[key].name + " keybind here")
+            #button.setAccessibleDescription("Change " + shortcutsManager.shortcutDict[key].name + " keybind here")
             #button.accessibilityInterface = QAccessibleWidget(button, role=QAccessible.Button, name=shortcutsManager.shortcutDict[key].name)
         
         # transparent overlay
@@ -49,9 +51,12 @@ class ShortcutsMenu(QDialog):
         self.keybindInputWidget.hide()
         self.keybindInputWidget.editingFinished.connect(self.finishReplacingKeys)
 
-    def initiateReplacingKeys(self):
-        self.button = self.sender() # gets the reference to the button that was clicked
-        self.showKeybindScreen()
+    def initiateReplacingKeys(self, buttonReference:QPushButton):
+        if type(buttonReference) is QPushButton:
+            self.button = buttonReference # gets the reference to the button that was clicked
+            self.showKeybindScreen()
+        else:
+            print("buttonReference (should be QPushButton) was of type: "+ str(type(buttonReference)))
 
     def finishReplacingKeys(self):
         newKeySequence = self.keybindInputWidget.keySequence()

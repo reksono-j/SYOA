@@ -1,9 +1,7 @@
 import sys
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6 import QtWidgets
 
-class IDEMenu(QTextEdit):
+class IDEMenu(QtWidgets.QTextEdit):
     def __init__(self, UICustomizeManager, parent):
         super(IDEMenu, self).__init__(parent)
         self.parent = parent

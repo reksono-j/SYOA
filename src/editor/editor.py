@@ -1,14 +1,11 @@
 import sys
 from PySide6.QtCore import *
-from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import ui_customize
 import handhold
 import ide
 import keybinds
 import speechToText
-
-
 
 
 class Window(QMainWindow):

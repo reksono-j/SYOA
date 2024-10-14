@@ -1,9 +1,7 @@
 import sys
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6 import QtWidgets
 
-class HandHoldMenu(QScrollArea):
+class HandHoldMenu(QtWidgets.QScrollArea):
     def __init__(self, HandHoldManager, parent):
         super(HandHoldMenu, self).__init__(parent)
         self.parent = parent
@@ -16,26 +14,26 @@ class HandHoldMenu(QScrollArea):
 
     # action method
     def initUI(self):
-        self.groupBox = QGroupBox("Hand Hold")
+        self.groupBox = QtWidgets.QGroupBox("Hand Hold")
         self.setWidget(self.groupBox)
         self.setWidgetResizable(True)
-        self.groupBox.layout = QVBoxLayout()
+        self.groupBox.layout = QtWidgets.QVBoxLayout()
         # printing pressed
         print("pressed")
         count = 100
         title = True
 
-        self.label = QLabel('Give a title for this event:', self)
+        self.label = QtWidgets.QLabel('Give a title for this event:', self)
         self.label.setGeometry(count,100,200,30)
         self.groupBox.layout.addWidget(self.label)
-        self.tbx = QTextEdit(self)
+        self.tbx = QtWidgets.QTextEdit(self)
         self.tbx.setAccessibleName("Event title text box. ")
         self.tbx.setAccessibleDescription("Insert an event title here.")
         self.count = count + 30
         count = self.count
         self.tbx.setGeometry(100, count, 100, 30)
         self.groupBox.layout.addWidget(self.tbx)
-        button = QPushButton("Enter", self)
+        button = QtWidgets.QPushButton("Enter", self)
         button.setGeometry(200, count, 100, 30)
         self.groupBox.layout.addWidget(button)
         self.count = count + 30
@@ -49,19 +47,19 @@ class HandHoldMenu(QScrollArea):
     def test(self):
 
         count = self.count
-        self.label = QLabel('Do you want to add dialogue?', self)
+        self.label = QtWidgets.QLabel('Do you want to add dialogue?', self)
         self.label.setAccessibleName("Do you want to add dialogue?")
         self.label.setAccessibleDescription("Answer with following buttons")
         self.label.setGeometry(100, count, 300, 30)
         self.groupBox.layout.addWidget(self.label)
         count = count + 30
-        self.button = QPushButton("Yes", self)
+        self.button = QtWidgets.QPushButton("Yes", self)
         self.button.setGeometry(100, count, 100, 30)
         self.groupBox.layout.addWidget(self.button)
         count = count + 30
         self.count = count
         self.button.clicked.connect(self.talking)
-        self.button = QPushButton("No", self)
+        self.button = QtWidgets.QPushButton("No", self)
         self.button.setGeometry(200, count-30, 100, 30)
         self.groupBox.layout.addWidget(self.button)
         self.button.clicked.connect(self.eee)
@@ -69,17 +67,17 @@ class HandHoldMenu(QScrollArea):
 
     def talking(self):
         count = self.count
-        self.label = QLabel('Who is talking?', self)
+        self.label = QtWidgets.QLabel('Who is talking?', self)
         self.label.setGeometry(100, count, 300, 30)
         self.groupBox.layout.addWidget(self.label)
-        self.tbx = QTextEdit(self)
+        self.tbx = QtWidgets.QTextEdit(self)
         self.tbx.setAccessibleName("Speaker name text box.")
         self.tbx.setAccessibleDescription("Insert the speaker name.")
         count = count + 30
         self.tbx.setGeometry(100, count, 100, 30)
         self.groupBox.layout.addWidget(self.tbx)
 
-        self.button = QPushButton("Enter", self)
+        self.button = QtWidgets.QPushButton("Enter", self)
         self.button.setGeometry(200, count, 100, 30)
         self.groupBox.layout.addWidget(self.button)
         count = count + 30
@@ -89,17 +87,17 @@ class HandHoldMenu(QScrollArea):
 
     def WD(self):
         count = self.count
-        self.label = QLabel('What is the dialogue?', self)
+        self.label = QtWidgets.QLabel('What is the dialogue?', self)
         self.label.setGeometry(100, count, 300, 30)
         self.groupBox.layout.addWidget(self.label)
-        self.tbx = QTextEdit(self)
+        self.tbx = QtWidgets.QTextEdit(self)
         self.tbx.setAccessibleName("Speaker dialogue text box.")
         self.tbx.setAccessibleDescription("Insert the dialogue for the speaker.")
         count = count + 30
         self.tbx.setGeometry(100, count, 100, 30)
         self.groupBox.layout.addWidget(self.tbx)
 
-        self.button = QPushButton("Enter", self)
+        self.button = QtWidgets.QPushButton("Enter", self)
         self.button.setGeometry(200, count, 100, 30)
         self.groupBox.layout.addWidget(self.button)
         count = count + 30
@@ -109,23 +107,23 @@ class HandHoldMenu(QScrollArea):
 
     def eee(self):
         count = self.count
-        self.label = QLabel('Do you want this to connect to a existing or new event? Is this the end of the story?', self)
+        self.label = QtWidgets.QLabel('Do you want this to connect to a existing or new event? Is this the end of the story?', self)
         self.label.setAccessibleName('Do you want this to connect to a existing or new event? Is this the end of the story?')
         self.label.setAccessibleDescription("Answer with following buttons")
         self.label.setGeometry(100, count, 600, 30)
         self.groupBox.layout.addWidget(self.label)
-        self.tbx = QTextEdit(self)
+        self.tbx = QtWidgets.QTextEdit(self)
         count = count + 30
-        self.button = QPushButton("Existing", self)
+        self.button = QtWidgets.QPushButton("Existing", self)
         self.button.setGeometry(100, count, 100, 30)
         self.groupBox.layout.addWidget(self.button)
         count = count + 30
         self.count = count
         self.button.clicked.connect(self.talking)
-        self.button = QPushButton("New", self)
+        self.button = QtWidgets.QPushButton("New", self)
         self.button.setGeometry(200, count - 30, 100, 30)
         self.groupBox.layout.addWidget(self.button)
-        self.button = QPushButton("End", self)
+        self.button = QtWidgets.QPushButton("End", self)
         self.button.setGeometry(300, count - 30, 100, 30)
         self.groupBox.layout.addWidget(self.button)
 

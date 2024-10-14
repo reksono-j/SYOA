@@ -59,6 +59,10 @@ class SSMLBuilder():
     
     def addPause(self,milliseconds:int):
         self.SSMLText += f'\n<break time="{milliseconds}ms"/>'
+
+    def reset(self):
+        self.SSMLText = '<speak>\n'  
+        self.markupStack = ['</speak>']
     
 class TTS():
     language = 'en'
@@ -71,8 +75,13 @@ class TTS():
                                          speaker=model_id)
     model.to(device)
 
-    sample_rate = 48000
+    """
+    Good voices:
+    female: en_0
+    male: en_29
+    """
     speaker = 'en_0' # which voice to use
+    sample_rate = 48000
     put_accent=True
     put_yo=True
 
@@ -114,17 +123,33 @@ class TTS():
         else:
             print(str(speakerString) + " is not a valid speaker")
 
+if __name__ == "__main__":
+    text = """The wings groaned. Keztral eased back for fear of ripping them off.
+    Orange tracers zipped over them in lashing ropes. Too high. They were
+    going fast, hard to lead. Flak detonations sounded behind, a clack as
+    shrapnel hit their right wing. It stuck there, glowing like a coal.
+    """
 
-#ssml = SSMLBuilder()
-#ssml.addText("hello, what the hell are you doing?")
-#ssml.addPause(500)
-#ssml.addText("I have a question for you though", rate=RATE.xFast, pitch = PITCH.medium)
-#
-#TTS.convertToAudioSSML(ssml, "wave.wav")
+    ssml = SSMLBuilder()
+    ssml.addText(text)
+    TTS.convertToAudioSSML(ssml, "normal.wav")
 
+    ssml.reset()
+    ssml.addText(text)
+    ssml.addPause(2000)
+    ssml.addText("after pause")
+    TTS.convertToAudioSSML(ssml, "withPause.wav")
 
+    ssml.reset()
+    ssml.addText(text, rate=RATE.xFast)
+    TTS.convertToAudioSSML(ssml, "fastRate.wav")
 
+    ssml.reset()
+    ssml.addText(text, pitch=PITCH.xHigh)
+    print(ssml.getSSMLText())
+    TTS.convertToAudioSSML(ssml, "highPitch.wav")
 
-
-
-
+    TTS.setSpeaker("en_29")
+    ssml.reset()
+    ssml.addText(text)
+    TTS.convertToAudioSSML(ssml, "maleVoice.wav")

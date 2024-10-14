@@ -10,9 +10,12 @@ import numpy as np
 import torch
 import queue
 import threading
-from PySide6.QtWidgets import *
-from PySide6.QtCore import Qt
-from PySide6.QtGui import *
+from PySide6.QtWidgets import (
+    QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
+    QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
+    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit
+)
+from PySide6.QtGui import Qt
 
 
 class STT():
