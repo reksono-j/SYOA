@@ -120,10 +120,6 @@ class Window(QMainWindow):
 # create PySide6 app
 App = QApplication(sys.argv)
 
-
-# create pyqt5 app
-App = QApplication(sys.argv)
-
 # create the instance of our Window
 window = Window()
 

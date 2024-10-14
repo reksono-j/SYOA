@@ -89,4 +89,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ScenePlayer()
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
