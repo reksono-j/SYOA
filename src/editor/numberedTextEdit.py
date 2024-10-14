@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QPlainTextEdit, QWidget, QMessageBox, QTextEdit
-from PyQt5.QtGui import QPainter, QColor, QFont, QTextFormat
-from PyQt5.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QPlainTextEdit, QWidget, QMessageBox, QTextEdit
+from PySide6.QtGui import QPainter, QColor, QFont, QTextFormat
+from PySide6.QtCore import Qt
 
 # TODO: Connect all of the color options to the preferences
 

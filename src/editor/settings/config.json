@@ -8,8 +8,8 @@
         "voice command": "Ctrl+V"
     },
     "uiSettings": {
-        "Font Family": "Arial",
+        "Font Family": "Segoe UI",
         "Font Size": "12",
-        "Font Color": "#000000"
+        "Font Color": "red"
     }
 }

@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 
 class Window(QMainWindow):
@@ -109,7 +109,7 @@ class Window(QMainWindow):
 
 
 
-# create pyqt5 app
+# create PySide6 app
 App = QApplication(sys.argv)
 
 # create the instance of our Window
