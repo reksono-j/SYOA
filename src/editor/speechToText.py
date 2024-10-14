@@ -10,10 +10,11 @@ import numpy as np
 import torch
 import queue
 import threading
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PySide6.QtWidgets import *
+from PySide6.QtCore import Qt
+from PySide6.QtGui import *
 
-# play sound cure on start and stop recording
+
 class STT():
     audio_model = whisper.load_model("tiny") # load Whisper model 
 
@@ -124,7 +125,7 @@ class STT():
     @staticmethod
     def showOverlay():
         activeWindow =  QApplication.activeWindow()
-
+        
         STT.getOverlay().setParent(activeWindow)
         STT.getOverlay().setGeometry(activeWindow.rect())
         STT.overlayText.setGeometry(activeWindow.rect())

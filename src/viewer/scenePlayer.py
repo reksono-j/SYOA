@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+from PySide6.QtWidgets import *
+from PySide6.QtCore import *
 from sceneWidgets import DialogueWidget, ChoiceWidget
 from loader import Loader
 
