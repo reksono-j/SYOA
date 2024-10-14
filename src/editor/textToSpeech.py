@@ -72,7 +72,7 @@ class TTS():
     model.to(device)
 
     sample_rate = 48000
-    speaker = 'en_2' # which voice to use
+    speaker = 'en_0' # which voice to use
     put_accent=True
     put_yo=True
 
@@ -115,10 +115,16 @@ class TTS():
             print(str(speakerString) + " is not a valid speaker")
 
 
-ssml = SSMLBuilder()
-ssml.addText("asdasdasd")
-ssml.addPause(500)
-ssml.addText("some text", rate=RATE.slow,pitch = "aaaa")
-print(ssml.getSSMLText())
+#ssml = SSMLBuilder()
+#ssml.addText("hello, what the hell are you doing?")
+#ssml.addPause(500)
+#ssml.addText("I have a question for you though", rate=RATE.xFast, pitch = PITCH.medium)
+#
+#TTS.convertToAudioSSML(ssml, "wave.wav")
 
-TTS.convertToAudioSSML(ssml.getSSMLText(), "wave.mp3")
+
+
+
+
+
+

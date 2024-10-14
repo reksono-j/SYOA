@@ -121,8 +121,13 @@ class Window(QMainWindow):
 App = QApplication(sys.argv)
 
 
+# create pyqt5 app
+App = QApplication(sys.argv)
+
 # create the instance of our Window
 window = Window()
+
+from voiceCommand import VCManager
 
 # start the app
 sys.exit(App.exec())

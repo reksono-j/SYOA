@@ -128,15 +128,21 @@ class STT():
 
         STT.getOverlay().setParent(activeWindow)
         STT.getOverlay().setGeometry(activeWindow.rect())
+        STT.getOverlay().setParent(activeWindow)
+        STT.getOverlay().setGeometry(activeWindow.rect())
         STT.overlayText.setGeometry(activeWindow.rect())
+        STT.getOverlay().show()
         STT.getOverlay().show()
 
     @staticmethod
     def hideOverlay():
         STT.getOverlay().hide()
+        STT.getOverlay().hide()
 
     @staticmethod
     def setOverlayText(s):
+        if STT.overlay is None:
+            STT.getOverlay() # just to initialize overlay and overlayText
         if STT.overlay is None:
             STT.getOverlay() # just to initialize overlay and overlayText
         STT.overlayText.setText(s)
