@@ -3,8 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-# create pyqt5 app
-App = QApplication(sys.argv)
+
 
 import ui_customize
 import handhold
@@ -118,8 +117,13 @@ class Window(QMainWindow):
       self.buttonsWidget.layout.addWidget(self.buttonUISettings)
 
 
+# create pyqt5 app
+App = QApplication(sys.argv)
+
 # create the instance of our Window
 window = Window()
+
+from voiceCommand import VCManager
 
 # start the app
 sys.exit(App.exec())

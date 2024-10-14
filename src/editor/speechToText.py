@@ -10,11 +10,10 @@ import numpy as np
 import torch
 import queue
 import threading
-import keybinds
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 
-
+# play sound cure on start and stop recording
 class STT():
     audio_model = whisper.load_model("tiny") # load Whisper model 
 
@@ -25,16 +24,22 @@ class STT():
         recognizer.adjust_for_ambient_noise(source)
     transcription = '' # the latest transcription
     currentlyRecording = False
-    
-    QApplication.activeWindow()
 
-    # overlay things
-    overlay = QWidget()
-    overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
-    overlay.hide()
-    overlayText = QLabel("Some text idk", overlay)
-    overlayText.setStyleSheet("color: white; font-size: 25px;")
-    overlayText.setAlignment(Qt.AlignCenter)
+    overlay = None
+    overlayText = None
+
+    @staticmethod
+    def getOverlay():
+        if STT.overlay is None:
+            # overlay things
+            STT.overlay = QWidget()
+            STT.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
+            STT.overlay.hide()
+            STT.overlayText = QLabel("Some text idk", STT.overlay)
+            STT.overlayText.setStyleSheet("color: white; font-size: 25px;")
+            STT.overlayText.setAlignment(Qt.AlignCenter)
+        else:
+            return STT.overlay
     
 
     @staticmethod
@@ -120,17 +125,19 @@ class STT():
     def showOverlay():
         activeWindow =  QApplication.activeWindow()
 
-        STT.overlay.setParent(activeWindow)
-        STT.overlay.setGeometry(activeWindow.rect())
+        STT.getOverlay().setParent(activeWindow)
+        STT.getOverlay().setGeometry(activeWindow.rect())
         STT.overlayText.setGeometry(activeWindow.rect())
-        STT.overlay.show()
+        STT.getOverlay().show()
 
     @staticmethod
     def hideOverlay():
-        STT.overlay.hide()
+        STT.getOverlay().hide()
 
     @staticmethod
     def setOverlayText(s):
+        if STT.overlay is None:
+            STT.getOverlay() # just to initialize overlay and overlayText
         STT.overlayText.setText(s)
         
     
