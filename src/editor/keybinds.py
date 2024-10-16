@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 import json
 import sys
 import os
+from util import randomFunctions
 
 # for opening the shortcuts changer menu
 class ShortcutsMenu(QDialog):
@@ -110,6 +111,7 @@ class ShortcutsManager:
         self.shortcutDict = {} # for the shortcuts menu
         self.window = window        
         self.importShortcuts()
+        self.shortcutFunctionDict = {} # same as shortcutDict, instead of shortcuts, it is the function attached to the shortcut
 
     def addShortcut(self, keySequence, displayedName, callbackFunction):
         """
@@ -126,6 +128,9 @@ class ShortcutsManager:
             shortcut.name = displayedName
             shortcut.activated.connect(callbackFunction)
             self.shortcutDict[dictKey] = shortcut
+        
+        dictKeyStripped = randomFunctions.stripShortcutsName(dictKey)
+        self.shortcutFunctionDict[dictKeyStripped] = callbackFunction
 
     def openShortcutsMenu(self):
         # Open the options menu
@@ -135,8 +140,9 @@ class ShortcutsManager:
         #QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogEnd))
     
     def saveShortcuts(self):
-        for key in self.shortcutDict:
-            self.config['shortcutSettings'][key] = self.shortcutDict[key].key().toString()
+        for shortcutName in self.shortcutDict:
+            displayedShortcutName = self.shortcutDict[shortcutName].name
+            self.config['shortcutSettings'][displayedShortcutName] = self.shortcutDict[shortcutName].key().toString()
         
         with open(self.configPath, 'w') as file:
             json.dump(self.config, file, indent=4)
@@ -149,10 +155,11 @@ class ShortcutsManager:
             config = json.load(file)
         self.config = config
 
-        for key in self.config['shortcutSettings']:
-            keySequence = QKeySequence(self.config['shortcutSettings'][key])
-            self.shortcutDict[key] = QShortcut(keySequence, self.window)
-            self.shortcutDict[key].name = key
+        for displayedShortcutName in self.config['shortcutSettings']:
+            keySequence = QKeySequence(self.config['shortcutSettings'][displayedShortcutName])
+            shortcutDictShortcutKey = displayedShortcutName.lower()
+            self.shortcutDict[shortcutDictShortcutKey] = QShortcut(keySequence, self.window)
+            self.shortcutDict[shortcutDictShortcutKey].name = displayedShortcutName
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
