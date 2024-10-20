@@ -8,3 +8,4 @@ numpy
 silero
 torchaudio
 pyaudio
+pydub

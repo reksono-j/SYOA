@@ -6,6 +6,8 @@ import handhold
 import ide
 import keybinds
 import speechToText
+import voiceCommand
+from voiceCommand import VCManager
 
 
 class Window(QMainWindow):
@@ -78,6 +80,7 @@ class Window(QMainWindow):
       shortcutsManager.addShortcut("Ctrl+O","Open IDE",self.button.click)
       shortcutsManager.addShortcut("Ctrl+P","Open Hand Held Mode",self.button1.click)
       shortcutsManager.addShortcut("Ctrl+T","Start Transcription",speechToText.STT.recordCallback)
+      shortcutsManager.addShortcut("Ctrl+V","Voice Command", voiceCommand.VCManager.VCCallback)
 
       # setting previously defined layouts of central and buttons widget
       self.centralWidget.setLayout(self.centralWidget.layout)
@@ -119,8 +122,6 @@ App = QApplication(sys.argv)
 
 # create the instance of our Window
 window = Window()
-
-from voiceCommand import VCManager
 
 # start the app
 sys.exit(App.exec())
