@@ -117,7 +117,7 @@ class TTS():
             audio = TTS.model.apply_tts(ssml_text=ssmlText,
                                 speaker=TTS.speaker,
                                 sample_rate=TTS.sample_rate)
-            audio = audio.unsqueeze(0)
+            audio = audio.unsqueeze(1)
             return audio
         else:
             print("You must pass in an SSMLBuilder object")
