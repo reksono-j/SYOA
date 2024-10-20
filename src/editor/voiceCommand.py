@@ -45,7 +45,7 @@ class VCManager():
         if VCManager.overlay is None:
             # overlay things
             VCManager.overlay = QWidget()
-            VCManager.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
+            VCManager.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.75);")
             layout = QGridLayout()
             VCManager.overlay.setLayout(layout)
             VCManager.overlay.hide()
@@ -60,7 +60,7 @@ class VCManager():
     @staticmethod
     def getOverlayText():
         if VCManager.overlayText is None:
-            VCManager.overlayText = QLabel("Some text idk", VCManager.getOverlay())
+            VCManager.overlayText = QLabel("", VCManager.getOverlay())
             VCManager.overlayText.setStyleSheet("color: white; font-size: 30px;")
             VCManager.getOverlay().layout().addWidget(VCManager.overlayText,0,0,1,2,Qt.AlignCenter)
         
@@ -96,10 +96,8 @@ class VCManager():
     @staticmethod
     def showOverlay():
         MainWindow =  VCManager.getMainWindow()
-        print(type(MainWindow))
         VCManager.getOverlay().setParent(MainWindow)
         VCManager.getOverlay().setGeometry(MainWindow.rect())
-        VCManager.getOverlayText().setGeometry(MainWindow.rect())
         VCManager.getOverlay().show()
 
     @staticmethod
@@ -115,11 +113,9 @@ class VCManager():
         print("Shortcut does not exist: " + transcription)
         VCManager.setOverlayText("Shortcut does not exist: " + transcription)
         VCManager.showOverlay()
-        # not done yet
 
     @staticmethod
     def VCCallback():
-        VCManager.showOverlay()
         if VCManager.getSTT().currentlyRecording:
             VCManager.getSTT().stopRecording()
         else:

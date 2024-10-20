@@ -1,3 +1,6 @@
+import os
+import winsound
+
 def stripShortcutsName(transcription:str):
     """
     Gets rid of punctuation and spaces, turns string to lowercase.
@@ -7,3 +10,6 @@ def stripShortcutsName(transcription:str):
     stripped = transcription.lower().replace(",", "").replace(".", "").replace("?","")
     stripped = stripped.replace("!","").replace("-","").replace(" ","")
     return stripped
+
+def playBeepSound():
+    winsound.Beep(1000, 500) 

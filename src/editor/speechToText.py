@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import Qt
 
 
+
+
 class STT():
     audio_model = whisper.load_model("tiny") # load Whisper model 
 

@@ -124,32 +124,37 @@ class TTS():
             print(str(speakerString) + " is not a valid speaker")
 
 if __name__ == "__main__":
-    text = """The wings groaned. Keztral eased back for fear of ripping them off.
-    Orange tracers zipped over them in lashing ropes. Too high. They were
-    going fast, hard to lead. Flak detonations sounded behind, a clack as
-    shrapnel hit their right wing. It stuck there, glowing like a coal.
-    """
 
-    ssml = SSMLBuilder()
-    ssml.addText(text)
-    TTS.convertToAudioSSML(ssml, "normal.wav")
+    TTS.convertToAudio("Done recording.","doneRecording.wav")
+    TTS.convertToAudio("Recording.","recording.wav")
 
-    ssml.reset()
-    ssml.addText(text)
-    ssml.addPause(2000)
-    ssml.addText("after pause")
-    TTS.convertToAudioSSML(ssml, "withPause.wav")
 
-    ssml.reset()
-    ssml.addText(text, rate=RATE.xFast)
-    TTS.convertToAudioSSML(ssml, "fastRate.wav")
-
-    ssml.reset()
-    ssml.addText(text, pitch=PITCH.xHigh)
-    print(ssml.getSSMLText())
-    TTS.convertToAudioSSML(ssml, "highPitch.wav")
-
-    TTS.setSpeaker("en_29")
-    ssml.reset()
-    ssml.addText(text)
-    TTS.convertToAudioSSML(ssml, "maleVoice.wav")
+    #text = """The wings groaned. Keztral eased back for fear of ripping them off.
+    #Orange tracers zipped over them in lashing ropes. Too high. They were
+    #going fast, hard to lead. Flak detonations sounded behind, a clack as
+    #shrapnel hit their right wing. It stuck there, glowing like a coal.
+    #"""
+#
+    #ssml = SSMLBuilder()
+    #ssml.addText(text)
+    #TTS.convertToAudioSSML(ssml, "normal.wav")
+#
+    #ssml.reset()
+    #ssml.addText(text)
+    #ssml.addPause(2000)
+    #ssml.addText("after pause")
+    #TTS.convertToAudioSSML(ssml, "withPause.wav")
+#
+    #ssml.reset()
+    #ssml.addText(text, rate=RATE.xFast)
+    #TTS.convertToAudioSSML(ssml, "fastRate.wav")
+#
+    #ssml.reset()
+    #ssml.addText(text, pitch=PITCH.xHigh)
+    #print(ssml.getSSMLText())
+    #TTS.convertToAudioSSML(ssml, "highPitch.wav")
+#
+    #TTS.setSpeaker("en_29")
+    #ssml.reset()
+    #ssml.addText(text)
+    #TTS.convertToAudioSSML(ssml, "maleVoice.wav")
