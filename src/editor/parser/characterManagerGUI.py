@@ -4,6 +4,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QMessageBox, QScrollArea, QDialog, QLineEdit
 )
 from speakerForm import *
+import json
+import os
 
 class CharacterManagerGUI(QWidget):
     def __init__(self):
@@ -36,7 +38,7 @@ class CharacterManagerGUI(QWidget):
         # Close button
         self.closeButton = QPushButton("Close")
         self.closeButton.setAccessibleName("Close Button")
-        self.closeButton.clicked.connect(self.close)
+        self.closeButton.clicked.connect(self.onClose)
         self.layout.addWidget(self.closeButton)
 
         self.setLayout(self.layout)
@@ -81,7 +83,7 @@ class CharacterManagerGUI(QWidget):
             
     def openNameDialog(self):
         dialog = NameDialog()
-        if dialog.exec_() == QDialog.Accepted:  
+        if dialog.exec() == QDialog.Accepted:  
             name = dialog.getName()  
             return name
     
@@ -100,7 +102,7 @@ class CharacterManagerGUI(QWidget):
         i = next((i for i, character in enumerate(self.characters) if character[0] == name), -1)
         if i != -1:
             characterEditDialog = speakerForm(self.characters[i])
-            if characterEditDialog.exec_() == QDialog.Accepted:  
+            if characterEditDialog.exec() == QDialog.Accepted:  
                 character = characterEditDialog.getCharacter()
                 if character[0] != name:
                     self.updateCharacterName(name, character[0])
@@ -124,6 +126,74 @@ class CharacterManagerGUI(QWidget):
         deleteButton = layout.itemAt(2).widget()
         deleteButton.clicked.disconnect()
         deleteButton.clicked.connect(lambda: self.deleteCharacter(name, layout))
+
+    def parseJSONToList(self):
+        # load JSON file data into dict
+        with open(self.characterFile, 'r') as file:
+            self.characterJSON = json.load(file)
+
+        # convert to list format for other functions
+        inputList = [] # list that gets passed to LoadCharacterData()
+        for speaker in self.characterJSON:
+            characterName = speaker
+            aliasList = []
+            for alias in self.characterJSON[speaker]:
+                newAlias = []
+                newAlias.append(alias)
+                tagList = ""
+                for tag in self.characterJSON[speaker][alias]:
+                    tagList += tag + ": "
+                    tagList += str(self.characterJSON[speaker][alias][tag]) + ", "
+                tagList = tagList[:len(tagList) - 2]
+                newAlias.append(tagList)
+                aliasList.append(newAlias)
+            inputList.append([characterName, aliasList])
+            
+        return inputList
+
+    def loadCharactersFromJSON(self, dirName):
+        workingDir = os.path.dirname(os.path.abspath(__file__)) 
+        filePath = os.path.join(workingDir+"\\" + dirName, 'characterlist.json')
+        self.characterFile = filePath
+        self.loadCharacterData(self.parseJSONToList())
+
+    def saveListAsJSON(self):
+        outputDict = {}
+        for character in self.characters:
+            # convert list of characters into individual character vars w/ some rudimentary error checking
+            if character[0] != None:
+                characterName = character[0]
+            else:
+                print("ERROR: Character object without associated name.")
+
+            if character[1] != None:
+                aliasList = character[1]
+            else:
+                print("ERROR: Character object has no aliases.")
+
+            outputDict[characterName] = {}
+        
+            for i in range(len(aliasList)):
+                # add alias name
+                aliasName = aliasList[i][0]
+                outputDict[characterName][aliasName] = {}
+
+                # add alias tags from flattened data
+                for tagStr in aliasList[i]:
+                    if tagStr != aliasName:
+                        tagStr = tagStr.replace(" ", "")
+                        tagSep = tagStr.split(',')
+                        for tag in tagSep:
+                            tagParts = tag.split(':')
+                            outputDict[characterName][aliasName][tagParts[0]] = tagParts[1]
+
+        with open(self.characterFile, 'w') as file:
+            json.dump(outputDict, file, indent=4)
+
+    def onClose(self):
+        self.close()
+        self.saveListAsJSON()
+        
 
 class NameDialog(QDialog):
     def __init__(self):
@@ -168,7 +238,8 @@ if __name__ == "__main__":
     ]
     app = QApplication(sys.argv)
     editor = CharacterManagerGUI()
-    editor.loadCharacterData(ExampleCharacterList)
+    #editor.loadCharacterData(ExampleCharacterList)
+    editor.loadCharactersFromJSON("Story_EX_DeleteLater")
     editor.resize(300, 400)
     editor.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

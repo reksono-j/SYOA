@@ -3,7 +3,11 @@ from pathlib import Path
 from parser import readScript
 from zipfile import ZipFile
 from variableManager import VariableManager
+import torch
+import torchaudio
+import textToSpeech
 import io
+import os
 import json
 
 
@@ -11,7 +15,8 @@ import wave
 import math
 
 # TODO: Create a some sort of setting that stores the project folder path and references it in this file
-storyDirectory = Path("src/editor/parser/Story_EX_DeleteLater")
+#storyDirectory = Path("src/editor/parser/Story_EX_DeleteLater")
+storyDirectory = Path(Path.cwd(), Path("Story_EX_DeleteLater")) # For testing, getting FileNotFoundError using other path
 
 class storyPackager:
     counter = 0
@@ -36,14 +41,15 @@ class storyPackager:
             
     def loadStoryFiles(self):
         for path in storyDirectory.iterdir():
-            sceneName = path.name.removesuffix('.txt')
-            self.sceneNames.append(sceneName)
-            if path.is_file():	
-                with open(path, 'r') as file:
-                    script = file.read()
-                    scene = readScript(script)
-                    scene.title = sceneName
-                    self.rawScenes.append(scene)
+            if path.name.endswith(".json") != True:
+                sceneName = path.name.removesuffix('.txt')
+                self.sceneNames.append(sceneName)
+                if path.is_file():	
+                    with open(path, 'r') as file:
+                        script = file.read()
+                        scene = readScript(script)
+                        scene.title = sceneName
+                        self.rawScenes.append(scene)
     
     def _serializeElement(self, el: Element, sceneTitle: str):
         if type(el) == Dialogue:
@@ -129,9 +135,23 @@ class storyPackager:
             for scene in self.rawScenes:
                 sceneData = self._serializeScene(scene)
                 file.writestr(f"scripts/{sceneData["title"]}", json.dumps(sceneData, indent = 2))
-                
-            # TODO: Add the actual TTS audio creation
-            # Temporary Audio creation
+
+            # load in character list json for tts generation
+            characterFile = os.path.join(storyDirectory, 'characterlist.json')
+            characterJSON = ""
+            with open(characterFile, 'r') as file:
+                characterJSON = json.load(file)
+
+            # collapse JSON into dict of all aliases and their settings
+            aliasDict = {}
+            for speaker in characterJSON:
+                for alias in characterJSON[speaker]:
+                    aliasDict[alias] = {}
+                    for setting in characterJSON[speaker][alias]:
+                        aliasDict[alias][setting] = characterJSON[speaker][alias][setting]
+
+            # initiate TTS sequence       
+            ssml = textToSpeech.SSMLBuilder()
             for line in self.Dialogue:
                 waveBuffer = io.BytesIO()
                 with wave.open(waveBuffer, mode="wb") as wav_file:
@@ -142,16 +162,20 @@ class storyPackager:
                 waveBuffer.seek(0)
                 file.writestr(line["audio"], waveBuffer.read())
 
+                # ssml.reset()
+                # if (line["speaker"] in aliasDict):
+                #     ssml.addText(line["text"], rate=aliasDict[line[speaker]]["speed"], pitch=aliasDict[line[speaker]]["pitch"])
+                # else:
+                #     ssml.addText(line["text"])
+                # #TODO: Add voice selection to character manager GUI
+                # #TTS.setSpeaker(aliasDict[line[speaker]][speaker])
+                # torchaudio.save(textToSpeech.TTS.convertToAudioSSMLBytes(ssml), wav_file, sample_rate=textToSpeech.TTS.sample_rate)
+
         # TODO: Give actual name instead of testStory.zip
         # Writes buffer contents to actual zip
         buffer.seek(0) 
         with open("src/viewer/Story_EX_DeleteLater/testStory.syoa", "wb") as zipFile:
             zipFile.write(buffer.read())
-        
-
-
-
-            
 
 
 if __name__ == "__main__":

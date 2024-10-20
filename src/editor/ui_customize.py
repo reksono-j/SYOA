@@ -56,7 +56,7 @@ class UICustomizeMenu(QGroupBox):
         self.innerForm.fontSizeSpinBox = QSpinBox(self)
         self.innerForm.fontSizeSpinBox.setAccessibleName("Font Size Setting")
         self.innerForm.fontSizeSpinBox.setAccessibleDescription("Change font size here")
-        self.innerForm.fontSizeSpinBox.setMinimum(12)
+        self.innerForm.fontSizeSpinBox.setMinimum(1)
         self.innerForm.fontSizeSpinBox.setMaximum(72)
         self.innerForm.fontSizeSpinBox.setValue(int(self.UICustomizeManager.settingsDict["Font Size"]))
 
