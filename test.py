@@ -1,6 +1,4 @@
-import speechToText
-import keybinds
-from util import randomFunctions
+
 from PySide6.QtWidgets import (
     QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
     QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
@@ -26,19 +24,7 @@ class VCManager():
         
         return VCManager.mainWindow
 
-    @staticmethod
-    def getSTT():
-        if VCManager.STT is None:
-            VCManager.STT = speechToText.STT
-        
-        return VCManager.STT
     
-    @staticmethod
-    def getShortcutsManager():
-        if VCManager.shortcutsManager is None:
-            shortcutsManager = keybinds.ShortcutsManager.getInstance()
-        
-        return shortcutsManager
 
     @staticmethod
     def getOverlay():
@@ -70,29 +56,19 @@ class VCManager():
     def getRecordAgainButton():
         if VCManager.recordAgainButton is None:
             button = QPushButton("Record", VCManager.getOverlay())
-            button.clicked.connect(VCManager.recordAgainFunction)
             VCManager.getOverlay().layout().addWidget(button,1,0)
+
 
         return VCManager.recordAgainButton
     
     @staticmethod
-    def recordAgainFunction():
-        VCManager.hideOverlay()
-        VCManager.VCCallback()
-
-    @staticmethod
     def getQuitButton():
         if VCManager.quitButton is None:
             button = QPushButton("Quit", VCManager.getOverlay())
-            button.clicked.connect(VCManager.quitButtonFunction)
             VCManager.getOverlay().layout().addWidget(button,1,1)
 
         return VCManager.quitButton
     
-    @staticmethod
-    def quitButtonFunction():
-        VCManager.hideOverlay()
-
     @staticmethod
     def showOverlay():
         MainWindow =  VCManager.getMainWindow()
@@ -113,28 +89,27 @@ class VCManager():
     @staticmethod
     def noShortcutFound(transcription:str, shortcutStr:str):
         print("Shortcut does not exist: " + transcription)
-        VCManager.setOverlayText("Shortcut does not exist: " + transcription)
+        #VCManager.setOverlayText("Shortcut does not exist: " + transcription)
         VCManager.showOverlay()
         # not done yet
 
     @staticmethod
     def VCCallback():
         VCManager.showOverlay()
-        if VCManager.getSTT().currentlyRecording:
-            VCManager.getSTT().stopRecording()
-        else:
-            VCManager.getSTT().startRecording()
-
-        if(not VCManager.getSTT().currentlyRecording):
-                transcription = VCManager.getSTT().getLatestTranscription()
-                shortcutStr = randomFunctions.stripShortcutsName(transcription)
-                shortcutFunction = VCManager.getShortcutsManager().shortcutFunctionDict.get(shortcutStr)
-
-                if(shortcutFunction is not None):
-                    shortcutFunction() # calls the function associated with the shortcut
-                    VCManager.hideOverlay()
-                else:
-                    VCManager.noShortcutFound(transcription, shortcutStr)
+        #if VCManager.getSTT().currentlyRecording:
+        #    VCManager.getSTT().stopRecording()
+        #else:
+        #    VCManager.getSTT().startRecording()
+#
+        #if(not VCManager.getSTT().currentlyRecording):
+        #        transcription = VCManager.getSTT().getLatestTranscription()
+        #        shortcutStr = randomFunctions.stripShortcutsName(transcription)
+        #        shortcutFunction = VCManager.getShortcutsManager().shortcutFunctionDict.get(shortcutStr)
+#
+        #        if(shortcutFunction is not None):
+        #            shortcutFunction() # calls the function associated with the shortcut
+        #        else:
+        #            VCManager.noShortcutFound(transcription, shortcutStr)
 
 
 class MainWindow(QMainWindow):
