@@ -117,7 +117,7 @@ class TTS():
             audio = TTS.model.apply_tts(ssml_text=ssmlText,
                                 speaker=TTS.speaker,
                                 sample_rate=TTS.sample_rate)
-            audio = audio.unsqueeze(0)
+            audio = audio.unsqueeze(1)
             return audio
         else:
             print("You must pass in an SSMLBuilder object")
@@ -137,37 +137,32 @@ class TTS():
             print(str(speakerString) + " is not a valid speaker")
 
 if __name__ == "__main__":
+    text = """The wings groaned. Keztral eased back for fear of ripping them off.
+    Orange tracers zipped over them in lashing ropes. Too high. They were
+    going fast, hard to lead. Flak detonations sounded behind, a clack as
+    shrapnel hit their right wing. It stuck there, glowing like a coal.
+    """
 
-    TTS.convertToAudio("Done recording.","doneRecording.wav")
-    TTS.convertToAudio("Recording.","recording.wav")
+    ssml = SSMLBuilder()
+    ssml.addText(text)
+    TTS.convertToAudioSSML(ssml, "normal.wav")
 
+    ssml.reset()
+    ssml.addText(text)
+    ssml.addPause(2000)
+    ssml.addText("after pause")
+    TTS.convertToAudioSSML(ssml, "withPause.wav")
 
-    #text = """The wings groaned. Keztral eased back for fear of ripping them off.
-    #Orange tracers zipped over them in lashing ropes. Too high. They were
-    #going fast, hard to lead. Flak detonations sounded behind, a clack as
-    #shrapnel hit their right wing. It stuck there, glowing like a coal.
-    #"""
-#
-    #ssml = SSMLBuilder()
-    #ssml.addText(text)
-    #TTS.convertToAudioSSML(ssml, "normal.wav")
-#
-    #ssml.reset()
-    #ssml.addText(text)
-    #ssml.addPause(2000)
-    #ssml.addText("after pause")
-    #TTS.convertToAudioSSML(ssml, "withPause.wav")
-#
-    #ssml.reset()
-    #ssml.addText(text, rate=RATE.xFast)
-    #TTS.convertToAudioSSML(ssml, "fastRate.wav")
-#
-    #ssml.reset()
-    #ssml.addText(text, pitch=PITCH.xHigh)
-    #print(ssml.getSSMLText())
-    #TTS.convertToAudioSSML(ssml, "highPitch.wav")
-#
-    #TTS.setSpeaker("en_29")
-    #ssml.reset()
-    #ssml.addText(text)
-    #TTS.convertToAudioSSML(ssml, "maleVoice.wav")
+    ssml.reset()
+    ssml.addText(text, rate=RATE.xFast)
+    TTS.convertToAudioSSML(ssml, "fastRate.wav")
+
+    ssml.reset()
+    ssml.addText(text, pitch=PITCH.xHigh)
+    print(ssml.getSSMLText())
+    TTS.convertToAudioSSML(ssml, "highPitch.wav")
+
+    TTS.setSpeaker("en_29")
+    ssml.reset()
+    ssml.addText(text)
+    TTS.convertToAudioSSML(ssml, "maleVoice.wav")
