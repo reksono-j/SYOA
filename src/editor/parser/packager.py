@@ -50,11 +50,16 @@ class storyPackager:
                         scene = readScript(script)
                         scene.title = sceneName
                         self.rawScenes.append(scene)
+                        
     
     def _serializeElement(self, el: Element, sceneTitle: str):
         if type(el) == Dialogue:
             self.counter += 1 # TODO : Add character manager speaker id validation
-            dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"} #TODO I have it set to wave files instead of mp3s because of the wave package being built-in
+            dialogue = {}
+            if (not any(char.isalnum() for char in el.text)):
+                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text} #TODO I have it set to wave files instead of mp3s because of the wave package being built-in
+            else:
+                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
             self.Dialogue.append(dialogue)
             return dialogue
         if type(el) == Modify:
@@ -139,8 +144,8 @@ class storyPackager:
             # load in character list json for tts generation
             characterFile = os.path.join(storyDirectory, 'characterlist.json')
             characterJSON = ""
-            with open(characterFile, 'r') as file:
-                characterJSON = json.load(file)
+            with open(characterFile, 'r') as char_file:
+                characterJSON = json.load(char_file)
 
             # collapse JSON into dict of all aliases and their settings
             aliasDict = {}
@@ -153,28 +158,22 @@ class storyPackager:
             # initiate TTS sequence       
             ssml = textToSpeech.SSMLBuilder()
             for line in self.Dialogue:
-                waveBuffer = io.BytesIO()
-                with wave.open(waveBuffer, mode="wb") as wav_file:
-                    wav_file.setnchannels(1)
-                    wav_file.setsampwidth(1)
-                    wav_file.setframerate(self.FRAMES_PER_SECOND)
-                    wav_file.writeframes(bytes(self.sound_wave((1 + (abs(hash(line["text"])) % 1000)), 2.5)))
-                waveBuffer.seek(0)
-                file.writestr(line["audio"], waveBuffer.read())
+                if "audio" in line:
+                    if (line["speaker"] in aliasDict):
+                        ssml.addText(line["text"], rate=aliasDict[line[speaker]]["speed"], pitch=aliasDict[line[speaker]]["pitch"])
+                    else:
+                        ssml.addText(line["text"])
+                    audioBuffer = textToSpeech.TTS.convertToAudioSSMLBytes(ssml)
+                    file.writestr(line["audio"], audioBuffer.getvalue())
+                    ssml.reset()
 
-                # ssml.reset()
-                # if (line["speaker"] in aliasDict):
-                #     ssml.addText(line["text"], rate=aliasDict[line[speaker]]["speed"], pitch=aliasDict[line[speaker]]["pitch"])
-                # else:
-                #     ssml.addText(line["text"])
-                # #TODO: Add voice selection to character manager GUI
-                # #TTS.setSpeaker(aliasDict[line[speaker]][speaker])
-                # torchaudio.save(textToSpeech.TTS.convertToAudioSSMLBytes(ssml), wav_file, sample_rate=textToSpeech.TTS.sample_rate)
+                    #TODO: Add voice selection to character manager GUI
+                    #TTS.setSpeaker(aliasDict[line[speaker]][speaker])
 
         # TODO: Give actual name instead of testStory.zip
         # Writes buffer contents to actual zip
         buffer.seek(0) 
-        with open("src/viewer/Story_EX_DeleteLater/testStory.syoa", "wb") as zipFile:
+        with open(Path(Path(Path.cwd(), "Story_EX_DeleteLater", "testStory.syoa")), "wb") as zipFile:
             zipFile.write(buffer.read())
 
 
