@@ -4,6 +4,7 @@ pip install torch torchaudio silero
 
 import torch
 import torchaudio
+import io
 from enum import Enum
 
 class RATE(Enum):
@@ -117,8 +118,11 @@ class TTS():
             audio = TTS.model.apply_tts(ssml_text=ssmlText,
                                 speaker=TTS.speaker,
                                 sample_rate=TTS.sample_rate)
-            audio = audio.unsqueeze(1)
-            return audio
+            audio = audio.unsqueeze(0)
+            audioBuffer = io.BytesIO()
+            torchaudio.save(audioBuffer, audio, TTS.sample_rate, format="wav")
+            audioBuffer.seek(0)
+            return audioBuffer
         else:
             print("You must pass in an SSMLBuilder object")
     
