@@ -2,7 +2,6 @@ BUTTON_STYLE = """
 QPushButton {
     background-color: #6eb1ff; /* Default color */
     color: darkblue; /* Text color */
-    font-size: 16px;
     border: 2px solid transparent; /* Default border */
     border-radius: 5px; /* Rounded corners */
 }
@@ -31,7 +30,6 @@ QPushButton {
     background-color: #007BFF;
     border-radius: 5px;
     padding: 10px;
-    font-size: 14px;
 }
 QPushButton:hover {
     background-color: #0056b3;
@@ -53,7 +51,6 @@ QTextEdit {
     background-color: white;
     border: 1px solid #007BFF;
     border-radius: 5px;
-    font-size: 14px;
 }
 """
 
