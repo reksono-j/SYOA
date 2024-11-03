@@ -2,32 +2,24 @@ from sceneStructure import *
 from pathlib import Path
 from parser import readScript
 from zipfile import ZipFile
-from variableManager import VariableManager
-import torch
-import torchaudio
-import textToSpeech
+from variableManager import EditorVariableManager
 import io
-import os
 import json
-
-
-import wave
 import math
+from textToSpeech import TTS
 
-# TODO: Create a some sort of setting that stores the project folder path and references it in this file
-#storyDirectory = Path("src/editor/parser/Story_EX_DeleteLater")
-storyDirectory = Path(Path.cwd(), Path("Story_EX_DeleteLater")) # For testing, getting FileNotFoundError using other path
 
-class storyPackager:
+class StoryPackager:
     counter = 0
     def __init__(self):
         self.sceneNames = [] # For validation
         self.rawScenes = [] # To be serialized
         self.Dialogue = [] # To be have audio generated
     
-    def _checkVariable(self, variable: str):
+    @staticmethod
+    def _checkVariable(variable: str):
         if variable.isidentifier():
-            vm = VariableManager()
+            vm = EditorVariableManager()
             if vm.isKey(variable):
                 return f"<VariableManager>[{variable}]"
             else:
@@ -39,27 +31,27 @@ class storyPackager:
             except:
                 print("ERROR") # TODO ERR CHECKING
             
-    def loadStoryFiles(self):
+    def loadStoryFiles(self, projectDirectory):
+        storyDirectory = Path(projectDirectory)
         for path in storyDirectory.iterdir():
-            if path.name.endswith(".json") != True:
-                sceneName = path.name.removesuffix('.txt')
-                self.sceneNames.append(sceneName)
-                if path.is_file():	
-                    with open(path, 'r') as file:
-                        script = file.read()
-                        scene = readScript(script)
-                        scene.title = sceneName
-                        self.rawScenes.append(scene)
-                        
+            sceneName = path.name.removesuffix('.txt')
+            self.sceneNames.append(sceneName)
+            if path.is_file():	
+                with open(path, 'r') as file:
+                    script = file.read()
+                    scene = readScript(script)
+                    scene.title = sceneName
+                    self.rawScenes.append(scene)
     
     def _serializeElement(self, el: Element, sceneTitle: str):
         if type(el) == Dialogue:
             self.counter += 1 # TODO : Add character manager speaker id validation
             dialogue = {}
-            if (not any(char.isalnum() for char in el.text)):
-                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text} #TODO I have it set to wave files instead of mp3s because of the wave package being built-in
+            if not any(char.isalnum() for char in el.text):
+                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text} 
             else:
                 dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
+                
             self.Dialogue.append(dialogue)
             return dialogue
         if type(el) == Modify:
@@ -104,9 +96,7 @@ class storyPackager:
         if type(el) == Choice:
             choices =  []
             for option in el.options:
-                choice = {}
-                choice["text"] = option.text
-                choice["lines"] = []
+                choice = {"text": option.text, "lines": []}
                 for lineElement in option.consequences:
                     choice["lines"].append(self._serializeElement(lineElement, sceneTitle))
                 choices.append(choice)
@@ -133,54 +123,37 @@ class storyPackager:
             amplitude = math.sin(2 * math.pi * frequency * time)
             yield round((amplitude + 1) / 2 * 255)
 
-    def serializeScenes(self):
-        buffer = io.BytesIO()
-        with ZipFile(buffer, 'w') as file:
-            # Reads each scene file
-            for scene in self.rawScenes:
-                sceneData = self._serializeScene(scene)
-                file.writestr(f"scripts/{sceneData["title"]}", json.dumps(sceneData, indent = 2))
+    def serializeScenes(self, filepath):
+        try:
+            buffer = io.BytesIO()
+            with ZipFile(buffer, 'w') as file:
+                # Reads each scene file
+                for scene in self.rawScenes:
+                    sceneData = self._serializeScene(scene)
+                    file.writestr(f"scripts/{sceneData["title"]}", json.dumps(sceneData, indent = 2))
+                    
+                for line in self.Dialogue:
+                    if "audio" in line:
+                        audioBuffer = TTS.convertToAudio(line["text"])
+                        file.writestr(line["audio"], audioBuffer.getvalue())
+            # Writes buffer contents to actual zip
+            buffer.seek(0) 
+            with open(filepath, "wb") as zipFile:
+                zipFile.write(buffer.read())
+            return True
+        except:
+            return False
+        
 
-            # load in character list json for tts generation
-            characterFile = os.path.join(storyDirectory, 'characterlist.json')
-            characterJSON = ""
-            with open(characterFile, 'r') as char_file:
-                characterJSON = json.load(char_file)
 
-            # collapse JSON into dict of all aliases and their settings
-            aliasDict = {}
-            for speaker in characterJSON:
-                for alias in characterJSON[speaker]:
-                    aliasDict[alias] = {}
-                    for setting in characterJSON[speaker][alias]:
-                        aliasDict[alias][setting] = characterJSON[speaker][alias][setting]
 
-            # initiate TTS sequence       
-            ssml = textToSpeech.SSMLBuilder()
-            for line in self.Dialogue:
-                if "audio" in line:
-                    if (line["speaker"] in aliasDict):
-                        ssml.addText(line["text"], rate=aliasDict[line[speaker]]["speed"], pitch=aliasDict[line[speaker]]["pitch"])
-                    else:
-                        ssml.addText(line["text"])
-                    audioBuffer = textToSpeech.TTS.convertToAudioSSMLBytes(ssml)
-                    file.writestr(line["audio"], audioBuffer.getvalue())
-                    ssml.reset()
-
-                    #TODO: Add voice selection to character manager GUI
-                    #TTS.setSpeaker(aliasDict[line[speaker]][speaker])
-
-        # TODO: Give actual name instead of testStory.zip
-        # Writes buffer contents to actual zip
-        buffer.seek(0) 
-        with open(Path(Path(Path.cwd(), "Story_EX_DeleteLater", "testStory.syoa")), "wb") as zipFile:
-            zipFile.write(buffer.read())
+            
 
 
 if __name__ == "__main__":
-    vm = VariableManager()
-    vm['rock'] = 10
-    compiler = storyPackager()
+    vm = EditorVariableManager()
+    vm.setVariable("rock", 10)
+    compiler = StoryPackager()
     compiler.loadStoryFiles()
     compiler.serializeScenes()
     #compiler.serializeManagerData()

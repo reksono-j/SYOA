@@ -4,6 +4,7 @@ pip install torch torchaudio silero
 
 import torch
 import torchaudio
+import io
 from enum import Enum
 
 class RATE(Enum):
@@ -59,45 +60,38 @@ class SSMLBuilder():
     
     def addPause(self,milliseconds:int):
         self.SSMLText += f'\n<break time="{milliseconds}ms"/>'
-
-    def reset(self):
-        self.SSMLText = '<speak>\n'  
-        self.markupStack = ['</speak>']
     
 class TTS():
     language = 'en'
     model_id = 'v3_en'
     device = torch.device('cpu')
 
+    
     model, example_text = torch.hub.load(repo_or_dir='snakers4/silero-models',
                                          model='silero_tts',
                                          language=language,
                                          speaker=model_id)
     model.to(device)
 
-    """
-    Good voices:
-    female: en_0
-    male: en_29
-    """
-    speaker = 'en_0' # which voice to use
     sample_rate = 48000
+    speaker = 'en_0' # which voice to use
     put_accent=True
     put_yo=True
 
     @staticmethod
-    def convertToAudio(text:str, filePath):
-        """
-        example: TTS.convertToAudio("hello, my name is Don Chen","someAudio.wav")
-        """
-        audio = TTS.model.apply_tts(text=text,
-                            speaker=TTS.speaker,
-                            sample_rate=TTS.sample_rate)
+    def convertToAudio(text: str):
+        audio = TTS.model.apply_tts(text=text,  
+                                speaker=TTS.speaker,
+                                sample_rate=TTS.sample_rate)
         audio = audio.unsqueeze(0)
-        torchaudio.save(filePath, audio, TTS.sample_rate)
+
+        audioBuffer = io.BytesIO()
+        torchaudio.save(audioBuffer, audio, TTS.sample_rate, format="wav")
+        audioBuffer.seek(0) 
+        return audioBuffer
     
     @staticmethod
-    def convertToAudioSSML(SSMLObj:SSMLBuilder, filePath):
+    def convertToAudioSSML(SSMLObj:SSMLBuilder):
         if(isinstance(SSMLObj, SSMLBuilder)):
             ssmlText = SSMLObj.getSSMLText()
 
@@ -105,20 +99,9 @@ class TTS():
                                 speaker=TTS.speaker,
                                 sample_rate=TTS.sample_rate)
             audio = audio.unsqueeze(0)
-            torchaudio.save(filePath, audio, TTS.sample_rate)
-        else:
-            print("You must pass in an SSMLBuilder object")
-    
-    @staticmethod
-    def convertToAudioSSMLBytes(SSMLObj:SSMLBuilder):
-        if(isinstance(SSMLObj, SSMLBuilder)):
-            ssmlText = SSMLObj.getSSMLText()
-
-            audio = TTS.model.apply_tts(ssml_text=ssmlText,
-                                speaker=TTS.speaker,
-                                sample_rate=TTS.sample_rate)
-            audio = audio.unsqueeze(0)
-            return audio
+            audioBuffer = io.BytesIO()
+            torchaudio.save(audioBuffer, audio, TTS.sample_rate, format="wav")
+            return audioBuffer
         else:
             print("You must pass in an SSMLBuilder object")
     
@@ -136,38 +119,17 @@ class TTS():
         else:
             print(str(speakerString) + " is not a valid speaker")
 
-if __name__ == "__main__":
 
-    TTS.convertToAudio("Done recording.","doneRecording.wav")
-    TTS.convertToAudio("Recording.","recording.wav")
+#ssml = SSMLBuilder()
+#ssml.addText("hello, what the hell are you doing?")
+#ssml.addPause(500)
+#ssml.addText("I have a question for you though", rate=RATE.xFast, pitch = PITCH.medium)
+#
+#TTS.convertToAudioSSML(ssml, "wave.wav")
 
 
-    #text = """The wings groaned. Keztral eased back for fear of ripping them off.
-    #Orange tracers zipped over them in lashing ropes. Too high. They were
-    #going fast, hard to lead. Flak detonations sounded behind, a clack as
-    #shrapnel hit their right wing. It stuck there, glowing like a coal.
-    #"""
-#
-    #ssml = SSMLBuilder()
-    #ssml.addText(text)
-    #TTS.convertToAudioSSML(ssml, "normal.wav")
-#
-    #ssml.reset()
-    #ssml.addText(text)
-    #ssml.addPause(2000)
-    #ssml.addText("after pause")
-    #TTS.convertToAudioSSML(ssml, "withPause.wav")
-#
-    #ssml.reset()
-    #ssml.addText(text, rate=RATE.xFast)
-    #TTS.convertToAudioSSML(ssml, "fastRate.wav")
-#
-    #ssml.reset()
-    #ssml.addText(text, pitch=PITCH.xHigh)
-    #print(ssml.getSSMLText())
-    #TTS.convertToAudioSSML(ssml, "highPitch.wav")
-#
-    #TTS.setSpeaker("en_29")
-    #ssml.reset()
-    #ssml.addText(text)
-    #TTS.convertToAudioSSML(ssml, "maleVoice.wav")
+
+
+
+
+
