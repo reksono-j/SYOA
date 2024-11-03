@@ -41,37 +41,54 @@ class VCManager():
         return shortcutsManager
 
     @staticmethod
+    def initializeWidgets():
+        # parent overlay widget
+        VCManager.overlay = QWidget()
+        VCManager.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.75);")
+        
+        # button1
+        VCManager.recordAgainButton = QPushButton("Record")
+        VCManager.recordAgainButton.setParent(VCManager.overlay)
+        VCManager.recordAgainButton.clicked.connect(VCManager.recordAgainFunction)
+
+        # button2
+        VCManager.quitButton = QPushButton("Quit")
+        VCManager.quitButton.setParent(VCManager.overlay)
+        VCManager.quitButton.clicked.connect(VCManager.quitButtonFunction)
+
+        # text
+        VCManager.overlayText = QLabel("")
+        VCManager.overlayText.setParent(VCManager.overlay)
+        VCManager.overlayText.setStyleSheet("color: white; font-size: 30px;")
+
+        # layout
+        layout = QGridLayout()
+        layout.addWidget(VCManager.overlayText,0,0,1,2,Qt.AlignCenter)
+        layout.addWidget(VCManager.recordAgainButton,1,0)
+        layout.addWidget(VCManager.quitButton,1,1)
+
+        VCManager.overlay.setLayout(layout)
+        VCManager.overlay.hide()
+
+    @staticmethod
     def getOverlay():
         if VCManager.overlay is None:
-            # overlay things
-            VCManager.overlay = QWidget()
-            VCManager.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.75);")
-            layout = QGridLayout()
-            VCManager.overlay.setLayout(layout)
-            VCManager.overlay.hide()
-
-            # just to initialize everything
-            VCManager.getOverlayText()
-            VCManager.getQuitButton()
-            VCManager.getRecordAgainButton()
+            VCManager.initializeWidgets()
             
         return VCManager.overlay
 
     @staticmethod
     def getOverlayText():
         if VCManager.overlayText is None:
-            VCManager.overlayText = QLabel("", VCManager.getOverlay())
-            VCManager.overlayText.setStyleSheet("color: white; font-size: 30px;")
-            VCManager.getOverlay().layout().addWidget(VCManager.overlayText,0,0,1,2,Qt.AlignCenter)
+            VCManager.initializeWidgets()
         
         return VCManager.overlayText
 
     @staticmethod
     def getRecordAgainButton():
         if VCManager.recordAgainButton is None:
-            button = QPushButton("Record", VCManager.getOverlay())
-            button.clicked.connect(VCManager.recordAgainFunction)
-            VCManager.getOverlay().layout().addWidget(button,1,0)
+            VCManager.initializeWidgets()
+            
 
         return VCManager.recordAgainButton
     
@@ -83,9 +100,7 @@ class VCManager():
     @staticmethod
     def getQuitButton():
         if VCManager.quitButton is None:
-            button = QPushButton("Quit", VCManager.getOverlay())
-            button.clicked.connect(VCManager.quitButtonFunction)
-            VCManager.getOverlay().layout().addWidget(button,1,1)
+           VCManager.initializeWidgets()
 
         return VCManager.quitButton
     
@@ -133,31 +148,30 @@ class VCManager():
                     VCManager.noShortcutFound(transcription, shortcutStr)
 
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("some window")
-        self.setGeometry(100, 100, 1200, 800)
-
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout()
-
-        self.textbox = QLineEdit(self)
-        layout.addWidget(self.textbox)
-
-        self.button = QPushButton("some button", self)
-        self.button.clicked.connect(self.buttonFunc)
-        layout.addWidget(self.button)
-
-        central_widget.setLayout(layout)
-    
-    def buttonFunc(self):
-        VCManager.showOverlay()
-    
-
 if __name__ == '__main__':
+    class MainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+
+            self.setWindowTitle("some window")
+            self.setGeometry(100, 100, 1200, 800)
+
+            central_widget = QWidget()
+            self.setCentralWidget(central_widget)
+            layout = QVBoxLayout()
+
+            self.textbox = QLineEdit(self)
+            layout.addWidget(self.textbox)
+
+            self.button = QPushButton("some button", self)
+            self.button.clicked.connect(self.buttonFunc)
+            layout.addWidget(self.button)
+
+            central_widget.setLayout(layout)
+
+        def buttonFunc(self):
+            VCManager.noShortcutFound("some random transcriptions","")
+
     app = QApplication(sys.argv)
 
     w = MainWindow()
