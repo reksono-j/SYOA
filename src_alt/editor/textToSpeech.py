@@ -60,7 +60,20 @@ class SSMLBuilder():
     
     def addPause(self,milliseconds:int):
         self.SSMLText += f'\n<break time="{milliseconds}ms"/>'
-    
+
+
+class VOICE(Enum):
+    male1 = "en_7"
+    male2 = "en_15"
+    male3 = "en_17"
+    male4 = "en_19"
+    male5 = "en_20"
+    female1 = "en_0"
+    female2 = "en_3"
+    female3 = "en_5"
+    female4 = "en_11"
+    female5 = "en_14"
+
 class TTS():
     language = 'en'
     model_id = 'v3_en'
@@ -95,6 +108,8 @@ class TTS():
         if(isinstance(SSMLObj, SSMLBuilder)):
             ssmlText = SSMLObj.getSSMLText()
 
+            print(TTS.speaker)
+
             audio = TTS.model.apply_tts(ssml_text=ssmlText,
                                 speaker=TTS.speaker,
                                 sample_rate=TTS.sample_rate)
@@ -110,23 +125,37 @@ class TTS():
         print(TTS.model.speakers)
 
     @staticmethod
-    def setSpeaker(speakerString):
+    def setSpeaker(speaker:VOICE):
         """
         valid speakers are en_0, en_1, ... en_117
         """
-        if speakerString in TTS.model.speakers:
-            TTS.speaker = speakerString
+        if isinstance(speaker, VOICE):
+            TTS.speaker = speaker.value
         else:
-            print(str(speakerString) + " is not a valid speaker")
+            print(f'in setSpeaker(), parameter must be of type VOICE')
+
+        #if speakerString in TTS.model.speakers:
+        #    TTS.speaker = speakerString
+        #else:
+        #    print(str(speakerString) + " is not a valid speaker")
 
 
-#ssml = SSMLBuilder()
-#ssml.addText("hello, what the hell are you doing?")
-#ssml.addPause(500)
-#ssml.addText("I have a question for you though", rate=RATE.xFast, pitch = PITCH.medium)
-#
-#TTS.convertToAudioSSML(ssml, "wave.wav")
 
+if __name__ == '__main__':
+    ssml = SSMLBuilder()
+    ssml.addText("hello, what the hell are you doing?")
+    ssml.addPause(500)
+    ssml.addText("I have a question for you though", rate=RATE.xFast, pitch = PITCH.medium)
+    
+
+    audioBuffer = TTS.convertToAudioSSML(ssml)
+    with open("female.mp3", "wb") as file:
+        file.write(audioBuffer.getvalue())
+
+    TTS.setSpeaker(VOICE.male1)
+    audioBuffer = TTS.convertToAudioSSML(ssml)
+    with open("male.mp3", "wb") as file:
+        file.write(audioBuffer.getvalue())
 
 
 

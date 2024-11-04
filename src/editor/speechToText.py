@@ -10,13 +10,16 @@ import numpy as np
 import torch
 import queue
 import threading
+from PySide6.QtGui import QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
     QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
     QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit
 )
 from PySide6.QtGui import Qt
-
+from audioPlayer import AudioPlayer
+import sys
+import os
 
 
 
@@ -33,20 +36,50 @@ class STT():
 
     overlay = None
     overlayText = None
+    stopButton = None
+
+
+    workingDir = os.path.dirname(os.path.abspath(__file__))
+    _recordingSoundPath = os.path.join(workingDir, "audio", "recording.mp3")
+    _doneRecordingSoundPath = os.path.join(workingDir, "audio", "doneRecording.mp3")
+    _volume = 100
+
+    _textboxWidget = None
+
+    @staticmethod
+    def initializeWidgets():
+        STT.overlay = QWidget()
+        STT.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
+        STT.overlay.hide()
+
+        STT.overlayText = QLabel("Some text idk", STT.overlay)
+        STT.overlayText.setStyleSheet("color: white; font-size: 25px;")
+        STT.overlayText.setAlignment(Qt.AlignCenter)
+
+        STT.stopButton = QPushButton("Stop Recording")
+        STT.stopButton.setParent(STT.overlay)
+        STT.stopButton.clicked.connect(STT.recordCallback)
+
+        layout = QVBoxLayout()
+        layout.addWidget(STT.overlayText)
+        layout.addWidget(STT.stopButton)
+
+        STT.overlay.setLayout(layout)
+        STT.overlay.hide()
 
     @staticmethod
     def getOverlay():
         if STT.overlay is None:
-            # overlay things
-            STT.overlay = QWidget()
-            STT.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
-            STT.overlay.hide()
-            STT.overlayText = QLabel("Some text idk", STT.overlay)
-            STT.overlayText.setStyleSheet("color: white; font-size: 25px;")
-            STT.overlayText.setAlignment(Qt.AlignCenter)
-        else:
-            return STT.overlay
+            STT.initializeWidgets()
+        
+        return STT.overlay
     
+    @staticmethod
+    def getOverlayText():
+        if STT.overlayText is None:
+            STT.initializeWidgets()
+        
+        return STT.overlayText
 
     @staticmethod
     def recordAudioToQueue():
@@ -72,6 +105,8 @@ class STT():
 
     @staticmethod
     def startRecording():
+        AudioPlayer.playMP3(STT._recordingSoundPath, STT._volume)
+
         STT.currentlyRecording = True
         print("Started Recording")
         STT.recordingThread.start()
@@ -79,9 +114,10 @@ class STT():
         STT.setOverlayText("Recording")
         STT.showOverlay()
 
-
     @staticmethod
     def stopRecording():
+        AudioPlayer.playMP3(STT._doneRecordingSoundPath, STT._volume)
+
         print("Stopped Recording")
         STT.currentlyRecording = False
         STT.stopEvent.set() # sets event usedd to stop recording function
@@ -101,7 +137,6 @@ class STT():
 
         STT.hideOverlay()
         
-    
     @staticmethod
     def getLatestTranscription():
         return STT.transcription
@@ -110,22 +145,35 @@ class STT():
     def recordCallback():
         focused_widget = QApplication.focusWidget() # gets the focused widget, which should be the textbox
 
-        if isinstance(focused_widget, QTextEdit):
-            if STT.currentlyRecording:
-                STT.stopRecording()
-            else:
-                STT.startRecording()
+        if isinstance(focused_widget, QTextEdit) or isinstance(focused_widget, QLineEdit):
+            STT._textboxWidget = focused_widget
+        
+        if STT.currentlyRecording:
+            STT.stopRecording()
+        else:
+            STT.startRecording()
+            
+        if(not STT.currentlyRecording) and isinstance(STT._textboxWidget, QTextEdit):
+            STT._textboxWidget.append(STT.getLatestTranscription())
+        if(not STT.currentlyRecording) and isinstance(STT._textboxWidget, QLineEdit):
+            STT._textboxWidget.setText(STT.getLatestTranscription())
 
-            if(not STT.currentlyRecording):
-                focused_widget.append(STT.getLatestTranscription())
-        elif isinstance(focused_widget, QLineEdit):
-            if STT.currentlyRecording:
-                STT.stopRecording()
-            else:
-                STT.startRecording()
-
-            if(not STT.currentlyRecording):
-                focused_widget.setText(STT.getLatestTranscription())
+        #if isinstance(focused_widget, QTextEdit):
+        #    if STT.currentlyRecording:
+        #        STT.stopRecording()
+        #    else:
+        #        STT.startRecording()
+#
+        #    if(not STT.currentlyRecording):
+        #        focused_widget.append(STT.getLatestTranscription())
+        #elif isinstance(focused_widget, QLineEdit):
+        #    if STT.currentlyRecording:
+        #        STT.stopRecording()
+        #    else:
+        #        STT.startRecording()
+#
+        #    if(not STT.currentlyRecording):
+        #        focused_widget.setText(STT.getLatestTranscription())
 
     @staticmethod
     def showOverlay():
@@ -133,7 +181,6 @@ class STT():
         
         STT.getOverlay().setParent(activeWindow)
         STT.getOverlay().setGeometry(activeWindow.rect())
-        STT.overlayText.setGeometry(activeWindow.rect())
         STT.getOverlay().show()
 
     @staticmethod
@@ -142,8 +189,40 @@ class STT():
 
     @staticmethod
     def setOverlayText(s):
-        if STT.overlay is None:
-            STT.getOverlay() # just to initialize overlay and overlayText
-        STT.overlayText.setText(s)
-        
-    
+        STT.getOverlayText().setText(s)
+
+
+
+if __name__ == '__main__':
+    class MainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+
+            self.setWindowTitle("some window")
+            self.setGeometry(100, 100, 1200, 800)
+
+            central_widget = QWidget()
+            self.setCentralWidget(central_widget)
+            layout = QVBoxLayout()
+
+            self.textbox = QLineEdit(self)
+            layout.addWidget(self.textbox)
+
+            self.button = QPushButton("some button1", self)
+            self.button.clicked.connect(self.buttonFunc)
+            layout.addWidget(self.button)
+
+            shortcut = QShortcut(QKeySequence("Ctrl+k"), self)
+            shortcut.activated.connect(STT.recordCallback)
+
+            central_widget.setLayout(layout)
+
+        def buttonFunc(self):
+            STT.showOverlay()
+
+    app = QApplication(sys.argv)
+
+    w = MainWindow()
+    w.show()
+
+    sys.exit(app.exec())
