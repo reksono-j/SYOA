@@ -123,6 +123,7 @@ class SceneView(QMainWindow):
     
     def loadScene(self, sceneName):
         self.sceneData = self.loader.readSceneToDict(sceneName)
+        self.currScene = sceneName
         self.script = self.sceneData['lines']        
         self.currentLineIndex = 0
         self.next()
@@ -131,8 +132,13 @@ class SceneView(QMainWindow):
     def advanceDialogue(self):    
         self.currentLineIndex += 1
         self.next()
-    
+
+    # prospective log of all previously played lines
+    #def updateLog(self):
+    #    self.lineLog.append([self.currScene, self.currentLineIndex])
+
     def onNextButtonClicked(self):
+    #    self.updateLog()
         self.advanceDialogue()
 
     def handleNewLines(self, lines):

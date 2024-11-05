@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from SceneView import SceneView
+import json
 
 class MainMenu(QMainWindow):
     def __init__(self):
@@ -101,7 +102,21 @@ class MainMenu(QMainWindow):
         self.setCentralWidget(self.centralWidget)
 
     def loadSave(self):
-        self.showMessage("Loading saved game (not implemented)")
+        #loadStory function but from a save.json file
+        #self.showMessage("Loading saved game (not implemented)")
+        savePath = os.path.relpath(self.storyFilePath)
+        if os.path.exists(os.path.relpath(self.storyFilePath, "save.json")):
+            with open(savePath, 'r') as file:
+                #figure out saving linelog
+                return 1
+
+    def createSave(self):
+        if (os.path.exists(self.storyFilePath) and isinstance(self.centralWidget, SceneView)):
+            savePath = os.path.relpath(self.storyFilePath, "save.json")
+            with open(savePath, 'w') as file:
+                #add variable manager
+                json.dump({"log": self.centralWidget.lineLog, "current": self.centralWidget.currentLineIndex, "variables": {}}, file)
+        self.showMessage("Progress saved")
 
     def showMessage(self, message):
         QMessageBox.information(self, "Message", message)
