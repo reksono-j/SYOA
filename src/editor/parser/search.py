@@ -4,7 +4,7 @@ from PySide6.QtGui import QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
     QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
-    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QHBoxLayout, QWidget
+    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QHBoxLayout, QWidget, QLayout
 )
 import fuzzyfinder
 import parser
@@ -13,7 +13,7 @@ from variableManager import VariableManager
 import io
 import os
 
-class SearchMenu(QWidget):
+class SearchMenu(QDialog):
     # def __init__(self, SearchManager, parent):
     #     super(SearchMenu, self).__init__(parent)
     #     self.parent = parent
@@ -34,11 +34,11 @@ class SearchMenu(QWidget):
     def initUI(self):
         #TODO: accessibility tags
         
-
+        self.layout = QVBoxLayout()
         # unsure if outside will be dialog or separate menu, internals should remain same, maybe without QGroupBox wrapper 
         self.mainArea = QGroupBox(self)
         self.mainArea.layout = QVBoxLayout()
-
+        
         self.mainArea.layout.setSpacing(20)
 
         #insert search text into
@@ -49,6 +49,7 @@ class SearchMenu(QWidget):
         self.searchButton = QPushButton("Search", self.searchBox)
         self.searchButton.setAccessibleName("Search button")
         #Connect to function that updates combo boxes based on search
+
 
 
         self.searchBox.layout.addWidget(self.searchBar)
@@ -101,10 +102,16 @@ class SearchMenu(QWidget):
         self.mainArea.layout.addWidget(self.linksResultsBox)
         self.mainArea.layout.addWidget(self.inLinksResultsBox)
         self.mainArea.setLayout(self.mainArea.layout)
+        self.layout.addWidget(self.mainArea)
+        self.setLayout(self.layout)
 
         self.searchBar.textChanged.connect(lambda: self.updateResults(self.searchBar.text()))
 
         self.searchButton.clicked.connect(lambda: self.updateResults(self.searchBar.text()))
+
+        self.inFileResultsButton.clicked.connect(lambda: self.goToInCurrent(self.inFileResultsDropdown.currentText()))
+        self.inLinksResultsButton.clicked.connect(lambda: self.goToInLinked(self.inLinksResultsDropdown.currentText()))
+        self.linksResultsButton.clicked.connect(lambda: self.goToLink(self.linksResultsDropdown.currentText()))
         
         self.hide()
 
@@ -131,17 +138,36 @@ class SearchMenu(QWidget):
         for result in inFileResults:
             self.inFileResultsDropdown.addItem("Line: " + str(result))
         for result in inLinkedResults:
-            self.inLinksResultsDropdown.addItem(str(result[0]) + ", Line" + str(result[1]))
+            self.inLinksResultsDropdown.addItem(str(result[0]) + ", Line " + str(result[1]))
         for result in linkedSceneResults:
             self.linksResultsDropdown.addItem(str(result))
 
-
-
-
+    #signals to connect with editor
+    def goToInCurrent(self, line):
+        if (line != ""):
+            lineNum = int(line[5:])
+            self.close()
+            print ([self.searchManager.currFile, lineNum])
+            return [self.searchManager.currFile, lineNum]
+    
+    def goToInLinked(self, result):
+        if (result != ""):
+            result = result.split(',')
+            sceneName = result[0] + ".txt"
+            lineNum = result[1][6:]
+            self.close()
+            print([sceneName, lineNum])
+            return [sceneName, lineNum]
+    
+    def goToLink(self, link):
+        if (link != ""):
+            self.close()
+            print(link + "txt")
+            return link + ".txt"        
+    
 
 class SearchManager:    
-    def __init__(self, window) -> None:
-        #self.window = window
+    def __init__(self, currentFile, storyDirectory) -> None:
         self.storyDirectory = Path(Path.cwd(), Path("Story_EX_DeleteLater")) #TODO:Change this default
         self.currFile = "Scene1.txt"
         self.currFilePath = Path(self.storyDirectory, self.currFile)
@@ -230,7 +256,7 @@ class SearchManager:
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    searchManager = SearchManager(QMainWindow())
+    searchManager = SearchManager("", "")
     searchManager.menu.resize(500, 500)
     searchManager.menu.onOpen()
     sys.exit(app.exec())
