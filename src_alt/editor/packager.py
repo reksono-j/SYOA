@@ -16,7 +16,7 @@ class StoryPackager:
         self.rawScenes = [] # To be serialized
         self.Dialogue = [] # To be have audio generated
         self.startingScene = ""
-    
+        
     @staticmethod
     def _checkVariable(variable: str):
         if variable.isidentifier():
@@ -34,15 +34,24 @@ class StoryPackager:
             
     def loadStoryFiles(self, projectDirectory):
         storyDirectory = Path(projectDirectory)
+        self.variablesPath = storyDirectory.joinpath('variables.json')
         for path in storyDirectory.iterdir():
-            sceneName = path.name.removesuffix('.txt')
-            self.sceneNames.append(sceneName)
-            if path.is_file():	
-                with open(path, 'r') as file:
-                    script = file.read()
-                    scene = readScript(script)
-                    scene.title = sceneName
-                    self.rawScenes.append(scene)
+            if path.name.endswith('.txt'):
+                sceneName = path.name.removesuffix('.txt')
+                self.sceneNames.append(sceneName)
+                if path.is_file():	
+                    with open(path, 'r') as file:
+                        script = file.read()
+                        scene = readScript(script)
+                        scene.title = sceneName
+                        self.rawScenes.append(scene)
+            
+            if path.name.endswith('.json'):
+                if path.name == 'variables.json':
+                    with open(path, 'r') as file:
+                        self.rawVars = file.read()
+                
+            
     
     def _serializeElement(self, el: Element, sceneTitle: str):
         if type(el) == Dialogue:
@@ -131,6 +140,7 @@ class StoryPackager:
                         file.writestr(line["audio"], audioBuffer.getvalue())
                 
                 file.writestr(f"data", json.dumps({"start": self.startingScene}))
+                file.writestr(f"variables.json", self.rawVars)
                 
             # Writes buffer contents to actual zip
             buffer.seek(0) 
