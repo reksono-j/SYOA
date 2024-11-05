@@ -5,7 +5,6 @@ from zipfile import ZipFile
 from variableManager import EditorVariableManager
 import io
 import json
-import math
 from textToSpeech import TTS
 
 
@@ -22,7 +21,8 @@ class StoryPackager:
         if variable.isidentifier():
             vm = EditorVariableManager()
             if vm.isKey(variable):
-                return f"vm.get({variable})"
+                variable = variable.lower()
+                return f"self.vm.get('{variable}')"
             else:
                 print(f"ERROR: variable {variable} doesn't exist") # TODO error checking here to stop compilatin
         else:
@@ -66,15 +66,16 @@ class StoryPackager:
             return dialogue
         if type(el) == Modify:
             action = ""
+            el.variable = el.variable.lower()
             match(el.operation):
                 case Operation.ADD:
-                    action = f"vm.set({el.variable}, vm.get({el.variable}) + {el.amount})"
+                    action = f"self.vm.set('{el.variable}', self.vm.get('{el.variable}') + {el.amount})"
                 case Operation.SUB:
-                    action = f"vm.set({el.variable}, vm.get({el.variable}) - {el.amount})"
+                    action = f"self.vm.set('{el.variable}', self.vm.get('{el.variable}') - {el.amount})"
                 case Operation.SET:
-                    action = f"vm.set({el.variable}, {el.amount})"
+                    action = f"self.vm.set('{el.variable}', {el.amount})"
                 case Operation.MOD:
-                    action = f"vm.set({el.variable}, vm.get({el.variable}) % {el.amount})"
+                    action = f"self.vm.set('{el.variable}', self.vm.get('{el.variable}') % {el.amount})"
             return {"type":"modify", "action": action}
         if type(el) == Conditional:    
             conditional = {}

@@ -153,13 +153,13 @@ class SceneView(QMainWindow):
                         self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element))
                     self.nextButton.hide()
                 case "modify":
-                    self.vm.setVariable(element['name'],element['value'])
+                    eval(element['action'])
                     self.advanceDialogue()
                 case "conditional":
                     if eval(element["comparison"]):
-                       self.handleNewLines(element["ifLines"])
+                       self.handleNewLines(element["ifLines"], element)
                     else:
-                       self.handleNewLines(element["elseLines"])
+                       self.handleNewLines(element["elseLines"], element)
                     self.handleNewLines(element["ifLines"], element)
                 case "branch":
                     self.loadScene(element['next'])

@@ -16,10 +16,10 @@ class ViewerVariableManager(metaclass=Singleton):
             path = os.path.join(scriptDir, 'variables.json')
         self.path = path 
 
-    def setVariable(self, name, value): # TODO : Add error for if the variable doesn't exist
+    def set(self, name, value):
         self.Variables[name.lower()] = value 
     
-    def getVariable(self, name):
+    def get(self, name):
         return self.Variables[name.lower()]
         
     def listVariables(self):
