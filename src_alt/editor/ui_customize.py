@@ -64,6 +64,7 @@ class UICustomizeMenu(QGroupBox):
         self.innerForm.fontColorComboBox.setEditText(self.UICustomizeManager.settingsDict["Font Color"])
         self.innerForm.fontColorComboBox.setEditable(False)
         self.innerForm.fontColorComboBox.addItem("black")
+        self.innerForm.fontColorComboBox.addItem("white")
         self.innerForm.fontColorComboBox.addItem("red")
         self.innerForm.fontColorComboBox.addItem("blue")
         self.innerForm.fontColorComboBox.setCurrentText(self.UICustomizeManager.settingsDict["Font Color"])

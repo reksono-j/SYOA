@@ -17,7 +17,6 @@ class SettingsMenu(QWidget):
 
         self.optionsFrame = QFrame()
         self.optionsFrame.setMinimumSize(300, 200)  
-        self.optionsFrame.setStyleSheet("background-color: #cfe5ff; border-radius: 10px;")  
         self.optionsFrame.setLineWidth(2)
 
         self.optionsLayout = QGridLayout(self.optionsFrame)
@@ -44,7 +43,6 @@ class SettingsMenu(QWidget):
 
     def createButton(self, text, signal):
         button = QPushButton(text)
-        button.setStyleSheet(BUTTON_STYLE)
         button.clicked.connect(signal.emit)  
         button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         return button

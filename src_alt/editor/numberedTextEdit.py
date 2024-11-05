@@ -96,7 +96,10 @@ class NumberedTextEdit(QPlainTextEdit):
         self.lineNumberArea.update()
 
     def keyPressEvent(self, event):
-        super().keyPressEvent(event)
+        if event.key() == Qt.Key_Escape:
+            self.clearFocus()
+        else:
+            super().keyPressEvent(event)
         self.updateLineNumbers()  # Update line numbers when typing
 
     def changeFontSize(self, newSize):

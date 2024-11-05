@@ -59,9 +59,9 @@ class Speakerform(QDialog):
         aliasLabel.setBuddy(aliasInput)
         aliasSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         aliasInput.setSizePolicy(aliasSizePolicy)
-        
-        tagLabel = QLabel(f"Speaker Tags {len(self.tags) + 1}")
-        tagInput = QLineEdit()
+         
+        tagLabel = QLabel(f"Voice model {len(self.tags) + 1}")
+        tagInput = QLineEdit() # TODO: replace with drop down that shows the available models
         tagInput.setText(tags)
         # TODO: Accessible name
         tagLabel.setBuddy(tagInput)

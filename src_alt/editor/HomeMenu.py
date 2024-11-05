@@ -19,8 +19,8 @@ class HomeMenu(QWidget):
         self.setLayout(self.layout)
 
         self.optionsFrame = QFrame()
-        self.optionsFrame.setMinimumSize(300, 400)  
-        self.optionsFrame.setStyleSheet("background-color: #039dfc; border-radius: 10px; padding: 10px;")  
+        self.optionsFrame.setObjectName("homeMenuFrame") 
+        self.optionsFrame.setMinimumSize(300, 400) 
 
         self.optionsLayout = QVBoxLayout(self.optionsFrame)
         self.optionsLayout.setContentsMargins(0, 0, 0, 0)  
@@ -39,13 +39,12 @@ class HomeMenu(QWidget):
 
         self.layout.addWidget(self.optionsFrame, alignment=Qt.AlignCenter)
 
-        self.ShowTutorial.connect(lambda: self.printMessage("Tutorial", "Showing tutorial..."))
-        self.OpenPreferences.connect(lambda: self.printMessage("Preferences", "Opening preferences..."))
-        self.ShowFaq.connect(lambda: self.printMessage("FAQ", "Showing FAQ..."))
+        self.ShowTutorial.connect(lambda: self.printMessage("Tutorial", "WIP: Tutorial under construction")) # TODO: add Tutorial
+        self.OpenPreferences.connect(lambda: self.OpenPreferences)
+        self.ShowFaq.connect(lambda: self.printMessage("FAQ", "WIP: FAQ under construction")) # TODO: add FAQ
 
     def createButton(self, text, signal):
         button = QPushButton(text)
-        button.setStyleSheet(BUTTON_STYLE)
         button.clicked.connect(signal.emit)  
         button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         return button

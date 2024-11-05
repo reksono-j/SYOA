@@ -20,6 +20,7 @@ class MainMenu(QMainWindow):
         self.setWindowTitle("Story App")
         self.setGeometry(100, 100, 1280, 720)
         self.setMinimumSize(1024, 768)
+        self.setFixedSize(1280, 720)
 
         self.centralWidget = QWidget(self)
         self.setCentralWidget(self.centralWidget)

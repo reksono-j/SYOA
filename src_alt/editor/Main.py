@@ -13,6 +13,8 @@ from styles import *
 from ProjectMenu import ProjectMenu
 from packager import StoryPackager
 from variableManagerGUI import VariableManagerDialog
+from characterManagerGUI import CharacterManagerDialog
+from variableManager import EditorVariableManager
 import ui_customize
 import keybinds
 import speechToText
@@ -21,7 +23,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setGeometry(100, 100, 800, 600) 
-        self.setMinimumSize(1280, 720)
+        self.setFixedSize(1280, 720)
         scriptDirectory = os.path.dirname(os.path.abspath(__file__))
         self.projectsDirectory = os.path.join(scriptDirectory, 'projects')  
         if not os.path.exists(self.projectsDirectory):
@@ -44,23 +46,21 @@ class MainWindow(QMainWindow):
         self.currentFileMenu = None
         self.preferencesMenu = self.uiSettingsManager.menu
         
-        
         self.centralWidget.addWidget(self.homeMenu)
         self.centralWidget.addWidget(self.settingsMenu)
         self.centralWidget.addWidget(self.projectMenu)
         self.centralWidget.addWidget(self.preferencesMenu)
         
         # Menu Bar
-        self.menuBar().setStyleSheet(MENUBAR_STYLE)
         self.initMenuBar()
 
         self.centralWidget.setCurrentWidget(self.homeMenu)
         statusBar = QStatusBar()
-        statusBar.setStyleSheet(STATUSBAR_STYLE)
         self.setStatusBar(statusBar)
 
         self.homeMenu.CreateProject.connect(self.projectMenu.createProject)
         self.homeMenu.OpenExistingProject.connect(self.projectMenu.openExistingProject)
+        self.homeMenu.OpenPreferences.connect(self.showPreferencesMenu)
         self.projectMenu.CreateProject.connect(self.onCreateProject)
         self.projectMenu.OpenProject.connect(self.onOpenProject)
 
@@ -96,7 +96,9 @@ class MainWindow(QMainWindow):
         
         self.optionsMenu = self.menuBar().addMenu("&Options")
         self.openVariableManager = QAction("&Variables", self)
+        self.openCharacterManager = QAction("Characters", self)
         self.optionsMenu.addAction(self.openVariableManager)
+        self.optionsMenu.addAction(self.openCharacterManager)
         
         # Connect actions to their slots
         self.openFileAction.triggered.connect(self.openFile)
@@ -107,6 +109,7 @@ class MainWindow(QMainWindow):
         self.openPreferencesAction.triggered.connect(self.showPreferencesMenu)
         self.compileProjectAction.triggered.connect(self.compileProject)
         self.openVariableManager.triggered.connect(self.showVariableManager)
+        self.openCharacterManager.triggered.connect(self.showCharacterManager)
 
     def updateMenuBar(self):
         self.fileMenu.clear()
@@ -124,19 +127,27 @@ class MainWindow(QMainWindow):
             self.fileMenu.addAction(self.compileProjectAction)
 
     def compileProject(self):
-        self.dialog = PickFilepathDialog()
+        folderPath = os.path.join(self.projectsDirectory, self.projectManager.currentProject["name"])
+        self.dialog = PickFilepathDialog(folderPath)
         if self.dialog.exec() == QDialog.Accepted:
             filePath = self.dialog.getFilePath()
-            if filePath:
+            startingScene = self.dialog.getStartingScene()
+            if filePath and startingScene:
                 filePath = filePath + ".syoa"
                 compiler = StoryPackager()
+                compiler.setStartingScene(startingScene)
                 compiler.loadStoryFiles(self.projectManager.getCurrentFilePath())
                 if compiler.serializeScenes(filePath):
                     QMessageBox.information(self, "Success", f"Compilation complete. Saved to {filePath}")
                 else:
                     QMessageBox.warning(self, "Warning", "Compilation failed.")
             else:
-                print("No file path provided.")
+                if not startingScene and not filePath:
+                    QMessageBox.warning(self, "Please select a starting scene and filepath.")
+                if not startingScene:
+                    QMessageBox.warning(self, "Please select a starting scene.")
+                if not filePath:
+                    QMessageBox.warning(self, "Please provide a filepath")
 
     def updateFileMenu(self, projectName): 
         newFileMenu = ProjectMenu(self.filePathFromName(projectName))
@@ -153,10 +164,14 @@ class MainWindow(QMainWindow):
         return os.path.join(self.projectsDirectory, projectName)  
     
     def onCreateProject(self, projectName: str):
+        folderPath = os.path.join(self.projectsDirectory, projectName)
+        EditorVariableManager(folderPath) # TODO: Make Variable manager clear when opening a different project
         self.projectOpened = True
         self.updateFileMenu(projectName)
     
     def onOpenProject(self, projectName: str):
+        folderPath = os.path.join(self.projectsDirectory, projectName)
+        EditorVariableManager(folderPath) 
         self.projectOpened = True
         self.updateFileMenu(projectName)
     
@@ -167,6 +182,13 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")
     
+    def showCharacterManager(self):
+        if self.projectOpened:
+            self.dialog = CharacterManagerDialog(self.projectManager.getCurrentFilePath())
+            self.dialog.exec()
+        else:
+            QMessageBox.warning(self, "Warning", "Open project first.")
+            
     def showFileMenu(self):
         if self.currentFileMenu:
             self.centralWidget.setCurrentWidget(self.currentFileMenu)
@@ -186,6 +208,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyleSheet(APP_STYLE)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
