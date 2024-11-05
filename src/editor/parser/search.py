@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
     QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
     QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QHBoxLayout, QWidget, QLayout
 )
-import fuzzyfinder
 import parser
 from pathlib import Path
 from variableManager import VariableManager
