@@ -32,7 +32,7 @@ class files(type=Singleton):
         saveDataFolder = self.dataFolder/'Save'
         try:
             if not saveDataFolder.exists():
-                saveDataFolder.mkdir(parents=True, exist_ok=False   
+                saveDataFolder.mkdir(parents=True, exist_ok=False)
         except Exception as e:
             print(f"Failed to create folder: {e}")
 

@@ -3,6 +3,8 @@ from PySide6.QtWidgets import QApplication, QTextEdit, QMainWindow, QPushButton,
 from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer
 from PySide6.QtGui import QFont, QPalette, QColor, QPainter, QPixmap
 from loader import Loader
+from audioManager import AudioManager
+from variables import ViewerVariableManager
 
 class SceneViewBackground(QWidget):
     def __init__(self):
@@ -40,13 +42,14 @@ class SceneView(QMainWindow):
         super().__init__()
         self.setGeometry(100, 100, 800, 600)
         self.setMinimumSize(1280, 720)
+                
+        self.audio = AudioManager()
         
         self.background = SceneViewBackground()
         self.background.setBackground('grid.jpg')
         self.setCentralWidget(self.background)
         self.background.setGeometry(self.rect())
         self.background.show()
-        
         
         self.dialogueHistory = []
         self.nextEntry = {}
@@ -108,12 +111,14 @@ class SceneView(QMainWindow):
         self.updateContainerGeometry()
         self.container.setGeometry(100, 100, self.minWidth, self.minHeight)
 
-
         self.loader = Loader()
         self.loader.setProject(filePath)
         self.loader.readStoryFilePaths()
+        self.loader.readVariablesIntoManager()
         self.loadScene(self.loader.getStartScene())
         self.running = True
+
+        self.vm = ViewerVariableManager()
         
         self.adjustSizeToContent()
         self.container.show()
@@ -148,14 +153,13 @@ class SceneView(QMainWindow):
                         self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element))
                     self.nextButton.hide()
                 case "modify":
-                    # TODO: Add Variable Manager
+                    self.vm.setVariable(element['name'],element['value'])
                     self.advanceDialogue()
                 case "conditional":
-                    # TODO: Add Variable Manager
-                    # if eval(element["comparison"]):
-                    #   self.handleNewLines(element["ifLines"])
-                    # else:
-                    #   self.handleNewLines(element["elseLines"])
+                    if eval(element["comparison"]):
+                       self.handleNewLines(element["ifLines"])
+                    else:
+                       self.handleNewLines(element["elseLines"])
                     self.handleNewLines(element["ifLines"], element)
                 case "branch":
                     self.loadScene(element['next'])
@@ -168,6 +172,16 @@ class SceneView(QMainWindow):
             self.nextButton.clicked.connect(QApplication.quit)
         self.adjustSizeToContent()
 
+    def playCurrentElementAudio(self):
+        if self.currentLineIndex < len(self.script):
+            element = self.script[self.currentLineIndex]
+            if 'audio' in element:
+                if element['type'] == 'dialogue':
+                    self.audio.playDialogue(element['audio'], True, self.loader.getPackagePath())
+                if element['type'] == 'sfx':
+                    self.audio.playSoundEffect(element['audio'], True, self.loader.getPackagePath())
+                if element['type'] == 'bgm':
+                    self.audio.playBackgroundMusic(element['audio'], True, self.loader.getPackagePath())
     
     def loadScene(self, sceneName):
         self.sceneData = self.loader.readSceneToDict(sceneName)
@@ -300,6 +314,8 @@ class SceneView(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Z:
             self.nextButton.click()
+        elif event.key() == Qt.Key_X:
+            self.playCurrentElementAudio()
         else:
             super().keyPressEvent(event)
 

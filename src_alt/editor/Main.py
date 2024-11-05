@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setGeometry(100, 100, 800, 600) 
-        self.setMinimumSize(1280, 720)
+        self.setFixedSize(1280, 720)
         scriptDirectory = os.path.dirname(os.path.abspath(__file__))
         self.projectsDirectory = os.path.join(scriptDirectory, 'projects')  
         if not os.path.exists(self.projectsDirectory):

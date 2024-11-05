@@ -22,7 +22,7 @@ class StoryPackager:
         if variable.isidentifier():
             vm = EditorVariableManager()
             if vm.isKey(variable):
-                return f"<VariableManager>[{variable}]"
+                return f"vm.get({variable})"
             else:
                 print(f"ERROR: variable {variable} doesn't exist") # TODO error checking here to stop compilatin
         else:
@@ -56,17 +56,16 @@ class StoryPackager:
             self.Dialogue.append(dialogue)
             return dialogue
         if type(el) == Modify:
-            action = f"<VariableManager>[{el.variable}] "
+            action = ""
             match(el.operation):
                 case Operation.ADD:
-                    action += "+= "
+                    action = f"vm.set({el.variable}, vm.get({el.variable}) + {el.amount})"
                 case Operation.SUB:
-                    action += "-= "
+                    action = f"vm.set({el.variable}, vm.get({el.variable}) - {el.amount})"
                 case Operation.SET:
-                    action += "= "
+                    action = f"vm.set({el.variable}, {el.amount})"
                 case Operation.MOD:
-                    action += "%= "
-            action +=  f"{el.amount}"
+                    action = f"vm.set({el.variable}, vm.get({el.variable}) % {el.amount})"
             return {"type":"modify", "action": action}
         if type(el) == Conditional:    
             conditional = {}

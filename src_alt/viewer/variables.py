@@ -38,10 +38,8 @@ class ViewerVariableManager(metaclass=Singleton):
                 data = json.load(f)
                 self.Variables = data.get('variables', {}) 
         
-    def loadInitialVariables(self,path=None):
-        if os.path.exists(self.path):
-            with open(self.path, 'r') as f:
-                self.Variables = json.load(f)
+    def loadInitialVariables(self,data):
+        self.Variables = json.load(data)
 
 
 class VariableViewerGUI(QWidget):

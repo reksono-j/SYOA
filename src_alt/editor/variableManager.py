@@ -20,8 +20,13 @@ class EditorVariableManager(metaclass=Singleton):
             return True
         return False
 
+    def get(self, name):
+        if name.lower() in self.Variables:
+            return self.Variables[name.lower()]
+        print("ERROR: Variable doesn't exist")
+    
     def isKey(self, name):
-        if name in self.Variables:
+        if name.lower() in self.Variables:
             return True
         return False
     
