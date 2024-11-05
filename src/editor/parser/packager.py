@@ -50,6 +50,19 @@ class storyPackager:
                         scene = readScript(script)
                         scene.title = sceneName
                         self.rawScenes.append(scene)
+
+    def loadStoryFilesFromDirectory(self, file_path):
+        for path in file_path.iterdir():
+            if path.name.endswith(".json") != True:
+                sceneName = path.name.removesuffix('.txt')
+                self.sceneNames.append(sceneName)
+                if path.is_file():	
+                    with open(path, 'r', errors="ignore") as file:
+                        script = file.read()
+                        scene = readScript(script)
+                        scene.title = sceneName
+                        self.rawScenes.append(scene)
+
                         
     
     def _serializeElement(self, el: Element, sceneTitle: str):
