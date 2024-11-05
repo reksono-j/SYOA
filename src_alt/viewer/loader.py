@@ -35,7 +35,7 @@ class Loader():
         with zipfile.ZipFile(self._package, 'r') as file:
             with file.open('variables.json') as data:
                 vm = ViewerVariableManager()
-                vm.loadInitialVariables(data.read())
+                vm.loadInitialVariables(data)
         
     def getStartScene(self):
         with zipfile.ZipFile(self._package, 'r') as file:

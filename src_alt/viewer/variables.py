@@ -15,7 +15,6 @@ class ViewerVariableManager(metaclass=Singleton):
             scriptDir = os.path.dirname(os.path.abspath(__file__)) 
             path = os.path.join(scriptDir, 'variables.json')
         self.path = path 
-        self.loadInitialVariables()
 
     def setVariable(self, name, value): # TODO : Add error for if the variable doesn't exist
         self.Variables[name.lower()] = value 
