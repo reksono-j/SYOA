@@ -1,16 +1,22 @@
 import sys
+import os
+import json
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
     QHBoxLayout, QMessageBox, QScrollArea, QDialog, QLineEdit
 )
 from Speakerform import *
 
-class CharacterManagerGUI(QWidget):
-    def __init__(self):
+class CharacterManagerDialog(QDialog):
+    def __init__(self, path=None):
         super().__init__()
-
+        self.setMinimumSize(600, 800)
+        
         self.layout = QVBoxLayout()
-
+        if path is None:
+            path = os.path.dirname(os.path.abspath(__file__)) 
+        path = os.path.join(path, 'character.json')  
+        
         # List Title
         self.label = QLabel("Character List")
         self.label.setAccessibleName("Character List")
@@ -74,11 +80,20 @@ class CharacterManagerGUI(QWidget):
         nameLayout.addWidget(deleteButton)
         self.nameLayout.addLayout(nameLayout)  
         
-    def loadCharacterData(self, characterList):
-        for characterName, aliasList in characterList:
-            self.characters.append([characterName, aliasList])
-            self.addAliasRow(characterName)
+    def loadCharacterData(self):
+        if os.path.exists(self.path):
+            with open(self.path, 'r') as f:  
+                charDict = json.load(f)
+                for name, data in charDict:
+                    self.characters.append([name, data])
             
+    def saveCharacterData(self):
+        charDict = {}
+        for character in self.characters:
+            charDict[character[0]] = character[1]
+        with open(self.path, 'w') as f:  
+            json.dump(charDict, f)
+        
     def openNameDialog(self):
         dialog = NameDialog()
         if dialog.exec_() == QDialog.Accepted:  
@@ -160,15 +175,3 @@ class NameDialog(QDialog):
         return self.nameInput.text().strip()  
       
 
-if __name__ == "__main__":
-    ExampleCharacterList = [
-        ["Deckard", [["Deckard", "Decky"], ["Rick",  "Decks"]]],
-        ["Ripley",  [["Ripley",  "Ripley"], ["Ellen", "Rip"]]],
-        ["Cooper",  [["Cooper",  "Coop"], ["Joseph",""]]]
-    ]
-    app = QApplication(sys.argv)
-    editor = CharacterManagerGUI()
-    editor.loadCharacterData(ExampleCharacterList)
-    editor.resize(300, 400)
-    editor.show()
-    sys.exit(app.exec_())

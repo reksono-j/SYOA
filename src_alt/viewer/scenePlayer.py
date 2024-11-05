@@ -3,12 +3,15 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from sceneWidgets import DialogueWidget, ChoiceWidget
 from loader import Loader
+from audioManager import AudioManager
 
 class ScenePlayer(QWidget):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
         self.layout.setSpacing(0)
+        
+        self.audioManager = AudioManager()
         
         self.loader = Loader()
         self.loader.setProject("SYOA/src/viewer/Story_EX_DeleteLater/testStory.syoa") # TODO: setup to take a project path

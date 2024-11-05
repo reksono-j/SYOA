@@ -15,6 +15,7 @@ class StoryPackager:
         self.sceneNames = [] # For validation
         self.rawScenes = [] # To be serialized
         self.Dialogue = [] # To be have audio generated
+        self.startingScene = ""
     
     @staticmethod
     def _checkVariable(variable: str):
@@ -23,7 +24,7 @@ class StoryPackager:
             if vm.isKey(variable):
                 return f"<VariableManager>[{variable}]"
             else:
-                print("ERROR This variable doesn't exist") # TODO error checking here to stop compilatin
+                print(f"ERROR: variable {variable} doesn't exist") # TODO error checking here to stop compilatin
         else:
             try:
                 int(variable)
@@ -113,16 +114,9 @@ class StoryPackager:
             lines.append(self._serializeElement(element, scene.title))
         return {"title": scene.title, "lines": lines, "links": scene.links}
     
+    def setStartingScene(self, sceneName: str):
+        self.startingScene = sceneName
     
-    # TODO : I'm currently using some example code from https://realpython.com/python-wav-files/ to make the files
-    FRAMES_PER_SECOND = 44100
-
-    def sound_wave(self, frequency, num_seconds):
-        for frame in range(round(num_seconds * self.FRAMES_PER_SECOND)):
-            time = frame / self.FRAMES_PER_SECOND
-            amplitude = math.sin(2 * math.pi * frequency * time)
-            yield round((amplitude + 1) / 2 * 255)
-
     def serializeScenes(self, filepath):
         try:
             buffer = io.BytesIO()
@@ -136,6 +130,9 @@ class StoryPackager:
                     if "audio" in line:
                         audioBuffer = TTS.convertToAudio(line["text"])
                         file.writestr(line["audio"], audioBuffer.getvalue())
+                
+                file.writestr(f"data", json.dumps({"start": self.startingScene}))
+                
             # Writes buffer contents to actual zip
             buffer.seek(0) 
             with open(filepath, "wb") as zipFile:

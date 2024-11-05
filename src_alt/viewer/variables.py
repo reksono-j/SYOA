@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from singleton import Singleton
 
+# TODO: Make this reset when opening a new project
 class ViewerVariableManager(metaclass=Singleton):
     def __init__(self, path=None):
         self.Variables = {}
@@ -25,9 +26,12 @@ class ViewerVariableManager(metaclass=Singleton):
     def listVariables(self):
         return self.Variables.items()
 
+    def getVariables(self):
+        return self.Variables
+    
     def isValidName(self, name):
-        return name.isidentifier() and name[0].isalpha()  
-
+        return name.isidentifier() and name[0].isalpha()
+    
     def loadFromSavefile(self, savePath):
         if os.path.exists(savePath):
             with open(savePath, 'r') as f:

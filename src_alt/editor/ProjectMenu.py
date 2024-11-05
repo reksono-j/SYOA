@@ -5,15 +5,13 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Signal, Qt
 from numberedTextEdit import NumberedTextEdit
-from styles import PROJECTMENU_STYLE
 from Tabs import TabsWidget
 
 class ProjectMenu(QWidget):
     def __init__(self, folderPath):
         super().__init__()
-        self.setStyleSheet(PROJECTMENU_STYLE)
         self.layout = QVBoxLayout(self)
-
+        
         self.tabsWidget = TabsWidget()
         self.layout.addWidget(self.tabsWidget)
 
@@ -22,7 +20,25 @@ class ProjectMenu(QWidget):
         self.layout.addWidget(self.addTabButton)
 
         self.openNewTab(folderPath)
+        self.setupFocusOrder()
+        
+    def setupFocusOrder(self):
+        for index in range(self.tabsWidget.tabBar.count()):
+            projectFileMenu = self.tabsWidget.getTabWidget(index)
 
+            if isinstance(projectFileMenu, ProjectFileMenu):
+                fileListWidget = projectFileMenu.fileListWidget.fileListWidget
+                textEdit = projectFileMenu.textEditWidget.textEdit
+                saveButton = projectFileMenu.textEditWidget.saveButton
+                closeButton = projectFileMenu.textEditWidget.closeButton
+                
+                self.setTabOrder(self.tabsWidget.tabBar, fileListWidget)
+                self.setTabOrder(fileListWidget, textEdit)
+                self.setTabOrder(textEdit, saveButton)
+                self.setTabOrder(saveButton, closeButton)
+                self.setTabOrder(closeButton, self.tabsWidget.tabBar)
+                self.setTabOrder(self.addTabButton, self.tabsWidget.tabBar)
+                
     def openNewTab(self, folderPath):
         projectFileMenu = ProjectFileMenu(folderPath)
 
@@ -34,11 +50,13 @@ class ProjectMenu(QWidget):
         tabIndex = self.tabsWidget.tabBar.count() 
         tabTitle = f"File {tabIndex + 1}"
         self.tabsWidget.addTab(tabTitle, projectFileMenu)
+        
+        self.setupFocusOrder()
+
 
     def updateFileLists(self):
         for tab in self.tabsWidget.getAllTabs():
-          print(tab[0])
-          tab[1].fileListWidget.populateFileList()
+            tab[1].fileListWidget.populateFileList()
     
     def updateTabTitle(self, projectFileMenu, filename):
         tabIndex = self.tabsWidget.tabContents.indexOf(projectFileMenu)
@@ -75,18 +93,15 @@ class ProjectFileMenu(QMainWindow):
 
 
     def openFile(self, fullPath):
-        # Check if the file is already open
         if fullPath in self.openedFiles:
             QMessageBox.warning(self, "File Already Open", f"The file '{os.path.basename(fullPath)}' is already open.")
             return
 
-        # If not, proceed to open the file
         self.openedFiles.add(fullPath)  # Mark file as open
         self.textEditWidget.loadFile(fullPath)
         self.stackedWidget.setCurrentWidget(self.textEditWidget)  # Switch to the text editor
 
     def closeFile(self):
-        # Remove the file from the opened files set
         self.openedFiles.discard(self.textEditWidget.currentFile)  # Remove file from set
         self.stackedWidget.setCurrentWidget(self.fileListWidget)  # Switch back to the file list
 
@@ -96,7 +111,9 @@ class FileListWidget(QWidget):
     def __init__(self, folderPath, openFileCallback):
         super().__init__()
         self.folderPath = folderPath
+        self.setContentsMargins(0,0,0,0)
         self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.fileListWidget = QListWidget()
 
         self.populateFileList()

@@ -1,7 +1,7 @@
 import os
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QDialog, QTreeWidget, QTreeWidgetItem,
-    QVBoxLayout, QMenuBar, QMessageBox, QListWidget, QPushButton,
+    QDialog, QTreeWidget, QTreeWidgetItem,
+    QVBoxLayout, QMessageBox, QListWidget, QPushButton,
     QLineEdit, QLabel, QFileDialog
 )
 from PySide6.QtCore import Qt
@@ -91,10 +91,12 @@ class OpenFileDialog(QDialog):
 
 
 class PickFilepathDialog(QDialog):
-    def __init__(self):
+    def __init__(self, projectPath: str):
         super().__init__()
         self.setWindowTitle("Create New File")
-
+        self.projectPath = projectPath
+        self.startingScene = ""
+        
         self.layout = QVBoxLayout(self)
 
         self.fileNameInput = QLineEdit(self)
@@ -106,46 +108,51 @@ class PickFilepathDialog(QDialog):
         self.layout.addWidget(self.directoryButton)
 
         self.selectedDirectoryLabel = QLabel("No directory selected", self)
+        self.selectedDirectoryLabel.setFocusPolicy(Qt.StrongFocus)
         self.layout.addWidget(self.selectedDirectoryLabel)
-
+        
+        self.startingSceneButton = QPushButton("Select Starting Scene", self)
+        self.layout.addWidget(self.startingSceneButton)
+        
+        self.startingSceneLabel = QLabel("No starting scene selected", self)
+        self.startingSceneLabel.setFocusPolicy(Qt.StrongFocus)
+        self.layout.addWidget(self.startingSceneLabel)
+        
         self.okButton = QPushButton("OK", self)
         self.layout.addWidget(self.okButton)
 
         self.directoryButton.clicked.connect(self.openDirectoryDialog)
+        self.startingSceneButton.clicked.connect(self.openStartSceneDialog)
         self.okButton.clicked.connect(self.accept)
+
+        self.setTabOrder(self.fileNameInput, self.directoryButton)
+        self.setTabOrder(self.directoryButton, self.selectedDirectoryLabel)
+        self.setTabOrder(self.selectedDirectoryLabel, self.startingSceneButton)
+        self.setTabOrder(self.startingSceneButton, self.startingSceneLabel)
+        self.setTabOrder(self.startingSceneLabel, self.okButton)
+        self.setTabOrder(self.okButton, self.fileNameInput)
+    
+    def openStartSceneDialog(self):
+        scene = QFileDialog.getOpenFileName(self, "Select Starting Scene", self.projectPath)
+        if scene:
+            scene = os.path.splitext(os.path.basename(scene[0]))[0]
+            self.startingSceneLabel.setText(f"Starting Scene: {scene}")
+            self.startingScene = scene
 
     def openDirectoryDialog(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
             self.selectedDirectoryLabel.setText(f"Selected Directory: {directory}")
             self.selectedDirectory = directory
-
+    
     def getFilePath(self):
         fileName = self.fileNameInput.text()
         if hasattr(self, 'selectedDirectory') and fileName:
             return os.path.join(self.selectedDirectory, f"{fileName}")
         return None
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Main Window")
-        self.resize(600, 400)
-        menuBar = self.menuBar()
-        fileMenu = menuBar.addMenu("File")
-        openFileAction = QAction("Open File", self)
-        openFileAction.triggered.connect(self.openFileMenu)
-        fileMenu.addAction(openFileAction)
-        
-    def openFileMenu(self):
-        folder_path = os.path.dirname(os.path.abspath(__file__)) + '//' + "projects" + '//' + "TestProject"
-        self.file_dialog = OpenFileDialog(folder_path)
-        self.file_dialog.show()
-
     
-if __name__ == "__main__":
-    app = QApplication([])
-    mainWindow = MainWindow()
-    mainWindow.show()
-    app.exec()
+    def getStartingScene(self):
+        if self.startingScene:
+            return self.startingScene
+        return None
+

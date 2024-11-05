@@ -1,15 +1,55 @@
+import sys, os
 from PySide6.QtWidgets import QApplication, QTextEdit, QMainWindow, QPushButton, QWidget, QVBoxLayout
-from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, Signal, QTimer
-from PySide6.QtGui import QFont, QPalette, QColor
-import sys
+from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer
+from PySide6.QtGui import QFont, QPalette, QColor, QPainter, QPixmap
 from loader import Loader
 
+class SceneViewBackground(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.background = QPixmap()
+        
+    def setBackground(self, filepath):
+        if os.path.exists(filepath):
+            self.background = QPixmap(filepath)
+            if self.background.isNull():
+                print(f"Failed to load image: {filepath}")
+            self.update() 
+        else:
+            print(f"Image file not found: {filepath}")
+        
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        if not self.background.isNull():
+            aspectRatio = self.background.height() / self.background.width()
+            newWidth = self.width() + 30
+            newHeight = int(newWidth * aspectRatio)
 
+            scaledPixmap = self.background.scaled(newWidth, newHeight, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+            painter.drawPixmap((self.width() - scaledPixmap.width()) // 2 - 15, 
+                               (self.height() - scaledPixmap.height()) // 2 - 15, 
+                               scaledPixmap)
+    
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update()
+        
 class SceneView(QMainWindow):
     def __init__(self, filePath):
         super().__init__()
         self.setGeometry(100, 100, 800, 600)
         self.setMinimumSize(1280, 720)
+        
+        self.background = SceneViewBackground()
+        self.background.setBackground('grid.jpg')
+        self.setCentralWidget(self.background)
+        self.background.setGeometry(self.rect())
+        self.background.show()
+        
+        
+        self.dialogueHistory = []
+        self.nextEntry = {}
         
         self.minWidth = 200
         self.minHeight = 100
@@ -25,7 +65,7 @@ class SceneView(QMainWindow):
         self.container.setStyleSheet("""
             QWidget {
                 border-radius: 15px;
-                background-color: #34495e;
+                background-color: #333;
                 color: #ecf0f1;
                 border: 1px solid #3498db;
             }
@@ -39,7 +79,6 @@ class SceneView(QMainWindow):
         self.textBox.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.textBox.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.layout.addWidget(self.textBox)
-
 
         self.nextButton = QPushButton("Next", self)
         self.nextButton.setStyleSheet("""
@@ -73,7 +112,8 @@ class SceneView(QMainWindow):
         self.loader = Loader()
         self.loader.setProject(filePath)
         self.loader.readStoryFilePaths()
-        self.loadScene("Scene1") # TODO: Setup whatever the beginning script is.
+        self.loadScene(self.loader.getStartScene())
+        self.running = True
         
         self.adjustSizeToContent()
         self.container.show()
@@ -85,19 +125,27 @@ class SceneView(QMainWindow):
             element = self.script[self.currentLineIndex]
             match element['type']:
                 case "dialogue":
+                    self.nextEntry['type'] = 'dialogue'
                     if element["speaker"]:
-                        self.setTextLetterByLetter(f'{element['speaker']}: "{element['text']}"')
+                        text = f'{element['speaker']}: "{element['text']}"'
+                        self.setTextLetterByLetter(text)
+                        self.nextEntry['speaker'] = element['speaker']
+                        self.nextEntry['text'] = text
                         #self.textBox.setText(f'{element['speaker']}: "{element['text']}"')
                     else:
                         self.setTextLetterByLetter(f"{element['text']}")
+                        self.nextEntry['text'] = element['text']
                         #self.textBox.setText(f"{element['text']}")
                     if "audio" in element:
                         self.audioPath = element["audio"]
+                        self.nextEntry['audio'] = element["audio"]
                     QApplication.processEvents() 
                     self.adjustSizeToContent()
+                    self.textBox.setFocus()
                 case "choice":
+                    self.nextEntry['type'] = 'choice'
                     for i, choice in enumerate(element['choices']):
-                        self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines']))
+                        self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element))
                     self.nextButton.hide()
                 case "modify":
                     # TODO: Add Variable Manager
@@ -107,8 +155,8 @@ class SceneView(QMainWindow):
                     # if eval(element["comparison"]):
                     #   self.handleNewLines(element["ifLines"])
                     # else:
-                    #   self.handleNewLines(element["ifLines"])
-                    self.handleNewLines(element["ifLines"])
+                    #   self.handleNewLines(element["elseLines"])
+                    self.handleNewLines(element["ifLines"], element)
                 case "branch":
                     self.loadScene(element['next'])
                 case _:
@@ -116,8 +164,8 @@ class SceneView(QMainWindow):
         else:
             self.textBox.setText("The End")
             self.nextButton.setText("Close")
-            self.nextButton.clicked.disconnect()
-            self.nextButton.clicked.connect(self.close)
+            self.running = False
+            self.nextButton.clicked.connect(QApplication.quit)
         self.adjustSizeToContent()
 
     
@@ -126,16 +174,21 @@ class SceneView(QMainWindow):
         self.script = self.sceneData['lines']        
         self.currentLineIndex = 0
         self.next()
-        self.adjustSize()
         
-    def advanceDialogue(self):    
+    def advanceDialogue(self):
         self.currentLineIndex += 1
+        if bool(self.nextEntry):
+            self.dialogueHistory.append(self.nextEntry.copy())
+        self.nextEntry.clear()
         self.next()
     
     def onNextButtonClicked(self):
-        self.advanceDialogue()
+        if (self.running and self.script[self.currentLineIndex]['type'] != 'choice'):
+            self.advanceDialogue()
 
-    def handleNewLines(self, lines):
+    def handleNewLines(self, lines, element):
+        if 'text' in element:
+            self.nextEntry['text'] = element['text']
         for button in self.container.findChildren(QPushButton):
             if button is not self.nextButton:
                 self.nextButton.show()
@@ -234,12 +287,21 @@ class SceneView(QMainWindow):
         newX = (self.width() - self.container.width()) // 2
         newY = (self.height() - self.container.height()) // 2
         self.container.move(newX, newY)
-
-            
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.setFocus()
+        
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.adjustSizeToContent()
         self.updateContainerGeometry()
+        
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Z:
+            self.nextButton.click()
+        else:
+            super().keyPressEvent(event)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

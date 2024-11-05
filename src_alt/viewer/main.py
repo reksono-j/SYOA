@@ -88,7 +88,7 @@ class MainMenu(QMainWindow):
             self.beginStoryButton.setEnabled(True)
             self.loadSaveButton.setEnabled(True)
             self.updateButtonStyles()
-
+    
     def showOptions(self):
         self.showMessage("Options menu (not implemented)")
 

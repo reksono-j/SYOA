@@ -36,6 +36,13 @@ class ProjectManager:
     def getCurrentFilePath(self):
         return os.path.join(self.baseDirectory, self.currentProject['name'])
     
+    # TODO: Figure out a good place to use this
+    def setStartScene(self, sceneName):
+        self.currentProject['startScene'] = sceneName
+        projectPath = os.path.join(self.baseDirectory, self.currentProject['name'])
+        with open(os.path.join(projectPath, "project.json"), 'w') as f:
+            json.dump(self.currentProject, f)
+
     @staticmethod
     def isValidProjectName(projectName):
         return bool(re.match("^[A-Za-z0-9_]+$", projectName))
@@ -44,7 +51,7 @@ class ProjectManager:
         projectPath = os.path.join(self.baseDirectory, projectName)
         with open(os.path.join(projectPath, "project.json"), 'r') as f:
             metadata = json.load(f)
-        self.currentProject = metadata
+        self.currentProject = metadata  
         return metadata
     
     def listProjects(self):

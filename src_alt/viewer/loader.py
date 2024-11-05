@@ -29,6 +29,12 @@ class Loader():
                         if not sceneName in self._audioFilePaths:
                             self._audioFilePaths[sceneName] = []
                         self._audioFilePaths[sceneName].append(item.filename)
+
+                        
+    def getStartScene(self):
+        with zipfile.ZipFile(self._package, 'r') as file:
+            with file.open('data') as scene:
+                return json.loads(scene.read().decode('utf-8'))['start']
     
     def readSceneToJSONString(self, sceneName: str) -> str: 
         with zipfile.ZipFile(self._package, 'r') as file:
