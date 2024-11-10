@@ -4,7 +4,7 @@ from pathlib import Path
 import platform
 
 
-class files(type=Singleton):
+class FileManager(metaclass=Singleton):
     def __init__(self):
         if platform.system() == 'Windows':
             self.dataFolder = Path(os.getenv('LOCALAPPDATA'))/'SYOA'
@@ -16,6 +16,9 @@ class files(type=Singleton):
         if not self.dataFolder.exists():
             self.createDataFolder()
 
+    def getFilepath(self):
+        return self.dataFolder
+        
     def createDataFolder(self,):
         if not self.dataFolder.exists():
             try:
@@ -36,9 +39,20 @@ class files(type=Singleton):
         except Exception as e:
             print(f"Failed to create folder: {e}")
 
-        filePath = saveDataFolder / filename
+        filepath = saveDataFolder / filename
         try:
-            with open(filePath, 'w') as file:
+            with open(filepath, 'w') as file:
                 json.dump(data, file)
         except Exception as e:
             print(f"Failed to write save file: {e}")
+    
+    def readSaveFile(self, filepath:str) -> dict:
+        data = None
+        try:
+            with open(filepath, 'r') as file:
+                data = json.load(file)
+        except Exception as e:
+            print(f"Failed to read save file: {e}")
+        return data
+        
+    

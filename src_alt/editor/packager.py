@@ -105,8 +105,8 @@ class StoryPackager:
             return conditional
         if type(el) == Choice:
             choices =  []
-            for option in el.options:
-                choice = {"text": option.text, "lines": []}
+            for i, option in enumerate(el.options, 1):
+                choice = {"text": option.text, "index":i, "lines": []}
                 for lineElement in option.consequences:
                     choice["lines"].append(self._serializeElement(lineElement, sceneTitle))
                 choices.append(choice)
