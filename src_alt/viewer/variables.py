@@ -31,11 +31,8 @@ class ViewerVariableManager(metaclass=Singleton):
     def isValidName(self, name):
         return name.isidentifier() and name[0].isalpha()
     
-    def loadFromSavefile(self, savePath):
-        if os.path.exists(savePath):
-            with open(savePath, 'r') as f:
-                data = json.load(f)
-                self.Variables = data.get('variables', {}) 
+    def loadFromDict(self, data:dict):
+        self.Variables = data
         
     def loadInitialVariables(self,data):
         self.Variables = json.load(data)
