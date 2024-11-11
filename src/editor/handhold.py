@@ -1,5 +1,6 @@
 import sys
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 
 class HandHoldMenu(QtWidgets.QScrollArea):
     def __init__(self, HandHoldManager, parent):
@@ -24,115 +25,145 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         title = True
 
         self.label = QtWidgets.QLabel('Give a title for this event:', self)
-        self.label.setGeometry(self.count,100,200,30)
         self.groupBox.layout.addWidget(self.label)
         self.tbx = QtWidgets.QTextEdit(self)
         self.tbx.setAccessibleName("Event title text box. ")
         self.tbx.setAccessibleDescription("Insert an event title here.")
-        self.count = self.count + 30
-        count = self.count
-        self.tbx.setGeometry(100, self.count, 100, 30)
         self.groupBox.layout.addWidget(self.tbx)
-        button = QtWidgets.QPushButton("Add", self)
-        button.setGeometry(200, self.count, 100, 30)
-        self.groupBox.layout.addWidget(button)
-        self.count = button.y()
-        print(self.count)
-        button.clicked.connect(self.add)
-        if button.clicked:
-            print("hello")
-        self.groupBox.setLayout(self.groupBox.layout)
-
-
-    def add(self):
-        button = QtWidgets.QPushButton("Dialogue", self)
-        button.setGeometry(200, self.count, 100, 30)
-        self.groupBox.layout.addWidget(button)
-        self.count = button.y()
-        print(self.count)
-        button.clicked.connect(self.talking)
-        if button.clicked:
-            print("hello")
-        button = QtWidgets.QPushButton("Choice", self)
-        button.setGeometry(200, self.count, 100, 30)
-        self.groupBox.layout.addWidget(button)
-        self.count = button.y()
-        button.clicked.connect(self.add)
-        if button.clicked:
-            print("hello")
-        button = QtWidgets.QPushButton("Split", self)
-        button.setGeometry(200, self.count, 100, 30)
-        self.groupBox.layout.addWidget(button)
-        self.count = button.y()
-        button.clicked.connect(self.eee)
-        if button.clicked:
-            print("hello")
-        button = QtWidgets.QPushButton("Option 4", self)
-        button.setGeometry(200, self.count, 100, 30)
-        self.groupBox.layout.addWidget(button)
-
-        self.count = button.y()
-        button.clicked.connect(self.add)
-        if button.clicked:
-            print("hello")
-
-
-    def talking(self):
-        count = self.count
-        self.label = QtWidgets.QLabel('Who is talking?', self)
-        self.label.setGeometry(100, count, 300, 30)
-        self.groupBox.layout.addWidget(self.label)
-        self.tbx = QtWidgets.QTextEdit(self)
-        self.tbx.setAccessibleName("Speaker name text box.")
-        self.tbx.setAccessibleDescription("Insert the speaker name.")
-        count = count + 30
-        self.tbx.setGeometry(100, count, 100, 30)
-        self.groupBox.layout.addWidget(self.tbx)
-        count = self.count
-        self.label = QtWidgets.QLabel('What is the dialogue?', self)
-        self.label.setGeometry(100, count, 300, 30)
-        self.groupBox.layout.addWidget(self.label)
-        self.tbx = QtWidgets.QTextEdit(self)
-        self.tbx.setAccessibleName("Speaker dialogue text box.")
-        self.tbx.setAccessibleDescription("Insert the dialogue for the speaker.")
-        count = count + 30
-        self.tbx.setGeometry(100, count, 100, 30)
-        self.groupBox.layout.addWidget(self.tbx)
-        self.button = QtWidgets.QPushButton("Add", self)
-        self.button.setGeometry(200, count, 100, 30)
+        self.button = QPushButton("Add")
         self.groupBox.layout.addWidget(self.button)
-        self.count = self.button.y()
-        print(self.count)
-        self.button.clicked.connect(self.add)
+        self.button.clicked.connect(lambda: self.add(self.button))
+
+        self.groupBox.setLayout(self.groupBox.layout)
+
+
+    def add(self, button):
+
+        # Create a new button
+        new_button = QPushButton("Dialodue")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        new_button.clicked.connect(lambda: self.talking(new_button))
+        new_button = QPushButton("Choice")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)+1
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        new_button.clicked.connect(lambda: self.eee(new_button))
+        new_button = QPushButton("Split")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)+2
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        button.clicked.connect(lambda: self.add(new_button))
+        new_button = QPushButton("O4")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)+3
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        new_button.clicked.connect(lambda: self.add(new_button))
+
+
+
+    def talking(self, button):
+        label = QtWidgets.QLabel('Name of the speaker:')
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)
+
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, label)
+
+        tbx =  QtWidgets.QTextEdit(self)
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)+1
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, tbx)
+
+        label = QtWidgets.QLabel('What is the dialogue?')
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)+2
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, label)
+        tbx =  QtWidgets.QTextEdit(self)
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)+3
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, tbx)
+        new_button = QPushButton("Add")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)+4
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        new_button.clicked.connect(lambda: self.add(new_button))
         self.groupBox.setLayout(self.groupBox.layout)
 
 
 
-    def eee(self):
-        count = self.count
-        self.label = QtWidgets.QLabel('Choose an existing event or type a new one.', self)
-        self.label.setAccessibleName('Choose an existing event or type a new one.')
-        self.label.setAccessibleDescription("Answer with following buttons")
-        self.label.setGeometry(100, self.count, 600, 30)
-        self.groupBox.layout.addWidget(self.label)
-        self.tbx = QtWidgets.QTextEdit(self)
-        count = count + 30
-        self.button = QtWidgets.QPushButton("Existing", self)
-        self.button.setGeometry(100, self.count, 100, 30)
-        self.groupBox.layout.addWidget(self.button)
-        count = count + 30
-        self.tbx = QtWidgets.QTextEdit(self)
-        self.tbx.setAccessibleName("Speaker dialogue text box.")
-        self.tbx.setAccessibleDescription("Insert the dialogue for the speaker.")
-        button = QtWidgets.QPushButton("Add", self)
-        count = count + 30
-        self.tbx.setGeometry(100, self.count, 100, 30)
-        self.groupBox.layout.addWidget(self.tbx)
-        button.setGeometry(200, self.count, 100, 30)
-        self.groupBox.layout.addWidget(button)
-        self.count = button.y()
-        button.clicked.connect(self.add)
+    def eee(self, button):
+
+        label = QtWidgets.QLabel('Type an existing event or a new one.')
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, label)
+
+        new_button = QPushButton("Add another event")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button) + 1
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        new_button.clicked.connect(lambda: self.addtbx(new_button))
+
+        tbx = QtWidgets.QTextEdit(self)
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button) + 2
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, tbx)
+
+        new_button = QPushButton("Add")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button) + 3
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        new_button.clicked.connect(lambda: self.add(new_button))
         self.groupBox.setLayout(self.groupBox.layout)
+
+    def addtbx(self, button):
+        tbx = QtWidgets.QTextEdit(self)
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index, tbx)
 
     def toggleUI(self):
         if (self.opened):
