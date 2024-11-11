@@ -1,6 +1,6 @@
 import sys
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLineEdit, QTextEdit
 
 class HandHoldMenu(QtWidgets.QScrollArea):
     def __init__(self, HandHoldManager, parent):
@@ -21,8 +21,6 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout = QtWidgets.QVBoxLayout()
         # printing pressed
         print("pressed")
-        self.count = 100
-        title = True
 
         self.label = QtWidgets.QLabel('Give a title for this event:', self)
         self.groupBox.layout.addWidget(self.label)
@@ -38,6 +36,12 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
 
     def add(self, button):
+
+        #DO NOT DELETE THIS IS HOW TO READ TEXTEDIT
+        #print(self.tbx.toPlainText())
+        # DO NOT DELETE THIS IS HOW TO READ LINEEDIT
+        # print(self.tbx.text())
+
 
         # Create a new button
         new_button = QPushButton("Dialodue")
@@ -56,24 +60,59 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.eee(new_button))
-        new_button = QPushButton("Split")
+        new_button = QPushButton("Split (in progress)")
 
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button)+2
 
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
-        button.clicked.connect(lambda: self.add(new_button))
-        new_button = QPushButton("O4")
+        new_button.clicked.connect(lambda: self.splf(new_button))
+        new_button = QPushButton("Save (testing)")
 
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button)+3
 
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
+
+        new_button.clicked.connect(self.OOO)
+    def splf(self, button):
+
+        label = QtWidgets.QLabel('List the split options:')
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button)
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, label)
+
+        new_button = QPushButton("Add another split")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button) + 1
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
+        new_button.clicked.connect(lambda: self.addtbx(new_button))
+
+        tbx = QtWidgets.QTextEdit(self)
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button) + 2
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, tbx)
+
+        new_button = QPushButton("Add")
+
+        # Find the index of the clicked button in the layout
+        index = self.groupBox.layout.indexOf(button) + 3
+
+        # Insert the new button after the clicked button
+        self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.add(new_button))
-
-
+        self.groupBox.setLayout(self.groupBox.layout)
 
     def talking(self, button):
         label = QtWidgets.QLabel('Name of the speaker:')
@@ -118,6 +157,14 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.setLayout(self.groupBox.layout)
 
 
+    def OOO(self):
+
+        for i in range(self.groupBox.layout.count()):
+            widget = self.groupBox.layout.itemAt(i).widget()
+            if isinstance(widget, QLineEdit):
+                print(widget.text())
+            if isinstance(widget, QTextEdit):
+                print(widget.toPlainText())
 
     def eee(self, button):
 
