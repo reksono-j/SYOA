@@ -164,20 +164,16 @@ class MainWindow(QMainWindow):
         return os.path.join(self.projectsDirectory, projectName)  
     
     def onCreateProject(self, projectName: str):
-        folderPath = os.path.join(self.projectsDirectory, projectName)
-        EditorVariableManager(folderPath) # TODO: Make Variable manager clear when opening a different project
         self.projectOpened = True
         self.updateFileMenu(projectName)
     
     def onOpenProject(self, projectName: str):
-        folderPath = os.path.join(self.projectsDirectory, projectName)
-        EditorVariableManager(folderPath) 
         self.projectOpened = True
         self.updateFileMenu(projectName)
     
     def showVariableManager(self):
         if self.projectOpened:
-            self.dialog = VariableManagerDialog(self.projectManager.getCurrentFilePath())
+            self.dialog = VariableManagerDialog()
             self.dialog.exec()
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")

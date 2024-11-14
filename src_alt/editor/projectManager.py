@@ -7,12 +7,15 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Signal
 from DirectoryDialogs import ProjectFolderSelectDialog
+from singleton import Singleton
 
-class ProjectManager:
+class ProjectManager(metaclass=Singleton):
+    changedProject = Signal()
     def __init__(self, baseDirectory):
         self.baseDirectory = baseDirectory
         self.projects = []
         self.currentProject = {}
+
         
     def createProject(self, projectName):
         if not self.isValidProjectName(projectName):
@@ -31,6 +34,8 @@ class ProjectManager:
         
         with open(os.path.join(projectPath, "project.json"), 'w') as f:
             json.dump(metadata, f)
+        self.currentProject = metadata 
+        self.changedProject.emit()
         return metadata
 
     def getCurrentFilePath(self):
@@ -52,6 +57,7 @@ class ProjectManager:
         with open(os.path.join(projectPath, "project.json"), 'r') as f:
             metadata = json.load(f)
         self.currentProject = metadata  
+        self.changedProject.emit()
         return metadata
     
     def listProjects(self):
