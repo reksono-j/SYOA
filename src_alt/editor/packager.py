@@ -3,6 +3,7 @@ from pathlib import Path
 from parser import readScript
 from zipfile import ZipFile
 from variableManager import EditorVariableManager
+from characterManager import CharacterManager
 import io
 import json
 from textToSpeech import TTS
@@ -16,8 +17,8 @@ class StoryPackager:
         self.Dialogue = [] # To be have audio generated
         self.startingScene = ""
         
-    @staticmethod
-    def _checkVariable(variable: str):
+        
+    def _checkVariable(self, variable: str):
         if variable.isidentifier():
             vm = EditorVariableManager()
             if vm.isKey(variable):
@@ -51,16 +52,28 @@ class StoryPackager:
                     with open(path, 'r') as file:
                         self.rawVars = file.read()
                 
-            
+    def _checkCharacter(self, name: str):
+        if name:
+            cm = CharacterManager()
+            data = cm.getAliasInfo(name)
+            if data:
+                return data
+            else:
+                print(f"ERROR: Unknown alias {name}") # TODO exception
+                return ""
+        else:
+            return {}    
     
     def _serializeElement(self, el: Element, sceneTitle: str):
         if type(el) == Dialogue:
             self.counter += 1 # TODO : Add character manager speaker id validation
             dialogue = {}
+            speaker = self._checkCharacter(el.speaker)
+            print(speaker)
             if not any(char.isalnum() for char in el.text):
-                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text} 
+                dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text} 
             else:
-                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
+                dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
                 
             self.Dialogue.append(dialogue)
             return dialogue
@@ -131,15 +144,16 @@ class StoryPackager:
             buffer = io.BytesIO()
             with ZipFile(buffer, 'w') as file:
                 # Reads each scene file
+                print(1)
                 for scene in self.rawScenes:
                     sceneData = self._serializeScene(scene)
                     file.writestr(f"scripts/{sceneData["title"]}", json.dumps(sceneData, indent = 2))
-                    
+                print(2)
                 for line in self.Dialogue:
                     if "audio" in line:
                         audioBuffer = TTS.convertToAudio(line["text"])
                         file.writestr(line["audio"], audioBuffer.getvalue())
-                
+                print(3)
                 file.writestr(f"data", json.dumps({"start": self.startingScene}))
                 file.writestr(f"variables.json", self.rawVars)
                 
@@ -151,16 +165,3 @@ class StoryPackager:
         except:
             return False
         
-
-
-
-            
-
-
-if __name__ == "__main__":
-    vm = EditorVariableManager()
-    vm.setVariable("rock", 10)
-    compiler = StoryPackager()
-    compiler.loadStoryFiles()
-    compiler.serializeScenes()
-    #compiler.serializeManagerData()

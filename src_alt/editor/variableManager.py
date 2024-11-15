@@ -51,9 +51,10 @@ class EditorVariableManager(metaclass=Singleton):
             json.dump(self.Variables, f)
 
     def loadVariables(self):
+        self.clearVariables()
         if os.path.exists(self.path):
             with open(self.path, 'r') as f:  
                 self.Variables = json.load(f)
 
     def clearVariables(self):
-        self.Variables = {}
+        self.Variables.clear()

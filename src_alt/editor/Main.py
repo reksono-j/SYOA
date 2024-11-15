@@ -13,8 +13,7 @@ from styles import *
 from ProjectMenu import ProjectMenu
 from packager import StoryPackager
 from variableManagerGUI import VariableManagerDialog
-from characterManagerGUI import CharacterManagerDialog
-from variableManager import EditorVariableManager
+from characterManager import CharacterManagerDialog
 import ui_customize
 import keybinds
 import speechToText
@@ -173,15 +172,15 @@ class MainWindow(QMainWindow):
     
     def showVariableManager(self):
         if self.projectOpened:
-            self.dialog = VariableManagerDialog()
-            self.dialog.exec()
+            dialog = VariableManagerDialog()
+            dialog.exec()
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")
     
     def showCharacterManager(self):
         if self.projectOpened:
-            self.dialog = CharacterManagerDialog(self.projectManager.getCurrentFilePath())
-            self.dialog.exec()
+            dialog = CharacterManagerDialog()
+            dialog.exec()
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")
             
@@ -191,6 +190,7 @@ class MainWindow(QMainWindow):
             self.updateMenuBar() 
     
     def showHomeMenu(self):
+        self.projectOpen = False
         self.centralWidget.setCurrentWidget(self.homeMenu)
         self.updateMenuBar() 
 
