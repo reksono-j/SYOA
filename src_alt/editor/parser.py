@@ -76,7 +76,10 @@ class Parsed(Enum):
   ELSE = 3,
   CHOICE = 4,
   BRANCH = 5,
-  DIALOGUE = 6
+  DIALOGUE = 6,
+  SFX = 7,
+  BGM = 8,
+  BG = 9
 
 def parseText(text: str):
   Speaker     = Regex('([A-Za-z0-9]*?)(?=[ :])')
@@ -92,6 +95,9 @@ def parseText(text: str):
   If          = CaselessKeyword('IF') + Compare('comparison')
   Else        = CaselessKeyword('ELSE')
   End         = CaselessKeyword('END')
+  Sfx         = CaselessKeyword('SFX') + Word(alphanums)('name') + Optional(one_of("HIGH MED LOW", caseless=True)("volume"))
+  Bgm         = CaselessKeyword('BGM') + Word(alphanums)('name')
+  Background  = CaselessKeyword('Background') + Word(alphanums)('name')
   
   def LabelElement(ElementType: Parsed):
     def parseAction(str, loc, tok):
@@ -104,7 +110,10 @@ def parseText(text: str):
               Else.setParseAction(LabelElement(Parsed.ELSE))     |
               Choice.setParseAction(LabelElement(Parsed.CHOICE)) |
               Branch.setParseAction(LabelElement(Parsed.BRANCH)) |
-              Dialogue.setParseAction(LabelElement(Parsed.DIALOGUE)))
+              Dialogue.setParseAction(LabelElement(Parsed.DIALOGUE))|
+              Sfx.setParseAction(LabelElement(Parsed.SFX))|
+              Bgm.setParseAction(LabelElement(Parsed.BGM)) |
+              Background.setParseAction(LabelElement(Parsed.BG)))
   
   parsedList = [x[0][0] for x in Element.scan_string(text)]
   return parsedList
@@ -149,6 +158,12 @@ def buildScene(parsedList):
         case Parsed.BRANCH:
           activeContext.append(Branch(content['scene']))
           scene.links.append(content['scene'])
+        case Parsed.SFX:
+          activeContext.append(Asset("sfx", content['name']))
+        case Parsed.BGM:
+          activeContext.append(Asset("bgm", content['name']))
+        case Parsed.BG:
+          activeContext.append(Asset("background", content['name'], content['volume']))
   return scene
   
 def readScript(script: str):

@@ -1,0 +1,17 @@
+Speaker1 : Hello world
+CHOICE Hi there
+Speaker2: Hi there
+END
+Choice Pick up rock
+You picked up a rock
+modify rock add 1 
+END
+IF rock eq 1
+Speaker1 : That's a sweet rock
+Speaker2 : Isn't it?
+ELSE
+Speaker 1 looks at the ground, leans over, and picks up a rock.
+Speaker1 : Wow this is an awesome rock.
+Speaker2: Woah, you're right.
+END
+Branch Scene2

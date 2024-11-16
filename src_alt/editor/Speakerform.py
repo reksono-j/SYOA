@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QSizePolicy
 
-class Speakerform(QDialog):
+class SpeakerForm(QDialog):
     def __init__(self, character):
         super().__init__()
         self.layout = QGridLayout()
@@ -59,9 +59,9 @@ class Speakerform(QDialog):
         aliasLabel.setBuddy(aliasInput)
         aliasSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         aliasInput.setSizePolicy(aliasSizePolicy)
-        
-        tagLabel = QLabel(f"Speaker Tags {len(self.tags) + 1}")
-        tagInput = QLineEdit()
+         
+        tagLabel = QLabel(f"Voice model {len(self.tags) + 1}")
+        tagInput = QLineEdit() # TODO: replace with drop down that shows the available models
         tagInput.setText(tags)
         # TODO: Accessible name
         tagLabel.setBuddy(tagInput)
@@ -106,6 +106,6 @@ class Speakerform(QDialog):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = Speakerform(["test", []])
+    window = SpeakerForm(["test", []])
     window.show()
     sys.exit(app.exec_())

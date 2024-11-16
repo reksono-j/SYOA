@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from singleton import Singleton
 
+# TODO: Make this reset when opening a new project
 class ViewerVariableManager(metaclass=Singleton):
     def __init__(self, path=None):
         self.Variables = {}
@@ -14,30 +15,27 @@ class ViewerVariableManager(metaclass=Singleton):
             scriptDir = os.path.dirname(os.path.abspath(__file__)) 
             path = os.path.join(scriptDir, 'variables.json')
         self.path = path 
-        self.loadInitialVariables()
 
-    def setVariable(self, name, value): # TODO : Add error for if the variable doesn't exist
+    def set(self, name, value):
         self.Variables[name.lower()] = value 
     
-    def getVariable(self, name):
+    def get(self, name):
         return self.Variables[name.lower()]
         
     def listVariables(self):
         return self.Variables.items()
 
+    def getVariables(self):
+        return self.Variables
+    
     def isValidName(self, name):
-        return name.isidentifier() and name[0].isalpha()  
-
-    def loadFromSavefile(self, savePath):
-        if os.path.exists(savePath):
-            with open(savePath, 'r') as f:
-                data = json.load(f)
-                self.Variables = data.get('variables', {}) 
+        return name.isidentifier() and name[0].isalpha()
+    
+    def loadFromDict(self, data:dict):
+        self.Variables = data
         
-    def loadInitialVariables(self,path=None):
-        if os.path.exists(self.path):
-            with open(self.path, 'r') as f:
-                self.Variables = json.load(f)
+    def loadInitialVariables(self,data):
+        self.Variables = json.load(data)
 
 
 class VariableViewerGUI(QWidget):

@@ -1,6 +1,7 @@
 import json
 import zipfile
 from pathlib import Path
+from variables import ViewerVariableManager
 
 projectPath = Path("SYOA/src/viewer/Story_EX_DeleteLater")
 
@@ -29,6 +30,17 @@ class Loader():
                         if not sceneName in self._audioFilePaths:
                             self._audioFilePaths[sceneName] = []
                         self._audioFilePaths[sceneName].append(item.filename)
+
+    def readVariablesIntoManager(self):
+        with zipfile.ZipFile(self._package, 'r') as file:
+            with file.open('variables.json') as data:
+                vm = ViewerVariableManager()
+                vm.loadInitialVariables(data)
+        
+    def getStartScene(self):
+        with zipfile.ZipFile(self._package, 'r') as file:
+            with file.open('data') as scene:
+                return json.loads(scene.read().decode('utf-8'))['start']
     
     def readSceneToJSONString(self, sceneName: str) -> str: 
         with zipfile.ZipFile(self._package, 'r') as file:
@@ -38,6 +50,8 @@ class Loader():
     def readSceneToDict(self, sceneName: str):
         return json.loads(self.readSceneToJSONString(sceneName))
 
+    def getPackagePath(self):
+        return self._package
     
 if __name__ == "__main__":
     loader = Loader()

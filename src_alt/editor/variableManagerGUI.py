@@ -29,13 +29,13 @@ class AddVariableDialog(QDialog):
         return name, valueText
 
 class VariableManagerDialog(QDialog):
-    def __init__(self, path=None, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setGeometry(100, 100, 600, 400)
         self.setContentsMargins(0, 0, 0, 0)
         
         layout = QVBoxLayout(self)
-        self.variableManagerGUI = EditorVariableManagerGUI(path)
+        self.variableManagerGUI = EditorVariableManagerGUI()
         self.variableManagerGUI.closeGUI.connect(self.close)
         layout.addWidget(self.variableManagerGUI)
         self.setLayout(layout)
@@ -43,10 +43,10 @@ class VariableManagerDialog(QDialog):
 class EditorVariableManagerGUI(QWidget):
     closeGUI = Signal()
     
-    def __init__(self, path=None):
+    def __init__(self):
         super().__init__()
 
-        self.vm = EditorVariableManager(path)  
+        self.vm = EditorVariableManager()  
         self.vm.loadVariables()  
         self.lastEditedVariable = None  
         self.initUI()

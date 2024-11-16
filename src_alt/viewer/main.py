@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from SceneView import SceneView
+from files import FileManager
 import json
 
 class MainMenu(QMainWindow):
@@ -20,6 +21,7 @@ class MainMenu(QMainWindow):
         self.setWindowTitle("Story App")
         self.setGeometry(100, 100, 1280, 720)
         self.setMinimumSize(1024, 768)
+        self.setFixedSize(1280, 720)
 
         self.centralWidget = QWidget(self)
         self.setCentralWidget(self.centralWidget)
@@ -97,27 +99,24 @@ class MainMenu(QMainWindow):
         self.close()
 
     def beginStory(self):
-        self.centralWidget = SceneView(self.storyFilePath)
+        self.centralWidget = SceneView(self.storyFilePath, True)
         self.setStyleSheet("background-color: #333;")
         self.setCentralWidget(self.centralWidget)
 
     def loadSave(self):
-        #loadStory function but from a save.json file
-        #self.showMessage("Loading saved game (not implemented)")
-        savePath = os.path.relpath(self.storyFilePath)
-        if os.path.exists(os.path.relpath(self.storyFilePath, "save.json")):
-            with open(savePath, 'r') as file:
-                #figure out saving linelog
-                return 1
-
-    def createSave(self):
-        if (os.path.exists(self.storyFilePath) and isinstance(self.centralWidget, SceneView)):
-            savePath = os.path.relpath(self.storyFilePath, "save.json")
-            with open(savePath, 'w') as file:
-                #add variable manager
-                json.dump({"log": self.centralWidget.lineLog, "current": self.centralWidget.currentLineIndex, "variables": {}}, file)
-        self.showMessage("Progress saved")
-
+        files = FileManager()
+        savefolder = str(files.getFilepath()/'Save')
+        filepath = QFileDialog.getOpenFileName(self, "Select a File", savefolder)[0]
+        try:
+            scene = SceneView(self.storyFilePath, False)
+            scene.loadGame(filepath)
+            self.centralWidget = scene
+            self.setStyleSheet("background-color: #333;")
+            self.setCentralWidget(self.centralWidget)
+        except Exception as e:
+            print(f"There was an error loading save file: {e}")
+            
+        
     def showMessage(self, message):
         QMessageBox.information(self, "Message", message)
 

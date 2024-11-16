@@ -3,9 +3,9 @@ from pathlib import Path
 from parser import readScript
 from zipfile import ZipFile
 from variableManager import EditorVariableManager
+from characterManager import CharacterManager
 import io
 import json
-import math
 from textToSpeech import TTS
 
 
@@ -15,15 +15,17 @@ class StoryPackager:
         self.sceneNames = [] # For validation
         self.rawScenes = [] # To be serialized
         self.Dialogue = [] # To be have audio generated
-    
-    @staticmethod
-    def _checkVariable(variable: str):
+        self.startingScene = ""
+        
+        
+    def _checkVariable(self, variable: str):
         if variable.isidentifier():
             vm = EditorVariableManager()
             if vm.isKey(variable):
-                return f"<VariableManager>[{variable}]"
+                variable = variable.lower()
+                return f"self.vm.get('{variable}')"
             else:
-                print("ERROR This variable doesn't exist") # TODO error checking here to stop compilatin
+                print(f"ERROR: variable {variable} doesn't exist") # TODO error checking here to stop compilatin
         else:
             try:
                 int(variable)
@@ -33,39 +35,59 @@ class StoryPackager:
             
     def loadStoryFiles(self, projectDirectory):
         storyDirectory = Path(projectDirectory)
+        self.variablesPath = storyDirectory.joinpath('variables.json')
         for path in storyDirectory.iterdir():
-            sceneName = path.name.removesuffix('.txt')
-            self.sceneNames.append(sceneName)
-            if path.is_file():	
-                with open(path, 'r') as file:
-                    script = file.read()
-                    scene = readScript(script)
-                    scene.title = sceneName
-                    self.rawScenes.append(scene)
+            if path.name.endswith('.txt'):
+                sceneName = path.name.removesuffix('.txt')
+                self.sceneNames.append(sceneName)
+                if path.is_file():	
+                    with open(path, 'r') as file:
+                        script = file.read()
+                        scene = readScript(script)
+                        scene.title = sceneName
+                        self.rawScenes.append(scene)
+            
+            if path.name.endswith('.json'):
+                if path.name == 'variables.json':
+                    with open(path, 'r') as file:
+                        self.rawVars = file.read()
+                
+    def _checkCharacter(self, name: str):
+        if name:
+            cm = CharacterManager()
+            data = cm.getAliasInfo(name)
+            if data:
+                return data
+            else:
+                print(f"ERROR: Unknown alias {name}") # TODO exception
+                return ""
+        else:
+            return {}    
     
     def _serializeElement(self, el: Element, sceneTitle: str):
         if type(el) == Dialogue:
             self.counter += 1 # TODO : Add character manager speaker id validation
             dialogue = {}
+            speaker = self._checkCharacter(el.speaker)
             if not any(char.isalnum() for char in el.text):
-                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text} 
+                dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text} 
             else:
-                dialogue = {"type":"dialogue", "speaker":el.speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
+                dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
                 
             self.Dialogue.append(dialogue)
             return dialogue
         if type(el) == Modify:
-            action = f"<VariableManager>[{el.variable}] "
+            action = ""
+            el.variable = el.variable.lower()
             match(el.operation):
                 case Operation.ADD:
-                    action += "+= "
+                    action = f"self.vm.set('{el.variable}', self.vm.get('{el.variable}') + {el.amount})"
                 case Operation.SUB:
-                    action += "-= "
+                    action = f"self.vm.set('{el.variable}', self.vm.get('{el.variable}') - {el.amount})"
                 case Operation.SET:
-                    action += "= "
+                    action = f"self.vm.set('{el.variable}', {el.amount})"
                 case Operation.MOD:
-                    action += "%= "
-            action +=  f"{el.amount}"
+                    action = f"self.vm.set('{el.variable}', self.vm.get('{el.variable}') % {el.amount})"
             return {"type":"modify", "action": action}
         if type(el) == Conditional:    
             conditional = {}
@@ -95,8 +117,8 @@ class StoryPackager:
             return conditional
         if type(el) == Choice:
             choices =  []
-            for option in el.options:
-                choice = {"text": option.text, "lines": []}
+            for i, option in enumerate(el.options, 1):
+                choice = {"text": option.text, "index":i, "lines": []}
                 for lineElement in option.consequences:
                     choice["lines"].append(self._serializeElement(lineElement, sceneTitle))
                 choices.append(choice)
@@ -105,6 +127,9 @@ class StoryPackager:
             if not (el.scene in self.sceneNames):
                 print("ERROR: Scene does not exist") # TODO ERR CHECKING
             return {"type":"branch", "next": el.scene}
+        if type(el) == Asset: # TODO: add verification that the files exist
+            return {"type": el.type, "file":el.fileName, "option": el.fileName}
+                
     
     def _serializeScene(self, scene: Scene):
         self.counter = 0
@@ -113,47 +138,51 @@ class StoryPackager:
             lines.append(self._serializeElement(element, scene.title))
         return {"title": scene.title, "lines": lines, "links": scene.links}
     
+    def setStartingScene(self, sceneName: str):
+        self.startingScene = sceneName
     
-    # TODO : I'm currently using some example code from https://realpython.com/python-wav-files/ to make the files
-    FRAMES_PER_SECOND = 44100
-
-    def sound_wave(self, frequency, num_seconds):
-        for frame in range(round(num_seconds * self.FRAMES_PER_SECOND)):
-            time = frame / self.FRAMES_PER_SECOND
-            amplitude = math.sin(2 * math.pi * frequency * time)
-            yield round((amplitude + 1) / 2 * 255)
-
-    def serializeScenes(self, filepath):
+    
+    def serializeScenes(self, filepath, progressCallback=None):
         try:
+            totalTasks = len(self.rawScenes) + len(self.Dialogue) + 2  # Scenes + Audio + Metadata & Variables
+            currentTask = 0
+
+            def updateProgress():
+                if progressCallback:
+                    progressCallback(int((currentTask / totalTasks) * 100))
+
             buffer = io.BytesIO()
             with ZipFile(buffer, 'w') as file:
                 # Reads each scene file
                 for scene in self.rawScenes:
                     sceneData = self._serializeScene(scene)
-                    file.writestr(f"scripts/{sceneData["title"]}", json.dumps(sceneData, indent = 2))
-                    
+                    file.writestr(f"scripts/{sceneData['title']}.json", json.dumps(sceneData, indent=2))
+                    currentTask += 1
+                    updateProgress()
+
+                # Generate and add audio files
                 for line in self.Dialogue:
                     if "audio" in line:
                         audioBuffer = TTS.convertToAudio(line["text"])
                         file.writestr(line["audio"], audioBuffer.getvalue())
-            # Writes buffer contents to actual zip
-            buffer.seek(0) 
+                    currentTask += 1
+                    updateProgress()
+
+                # Write metadata and variables
+                file.writestr("data", json.dumps({"start": self.startingScene}, indent=2))
+                currentTask += 1
+                updateProgress()
+
+                file.writestr("variables.json", self.rawVars)
+                currentTask += 1
+                updateProgress()
+
+            # Writes buffer contents to the actual zip file
+            buffer.seek(0)
             with open(filepath, "wb") as zipFile:
                 zipFile.write(buffer.read())
+
             return True
-        except:
+        except Exception as e:
+            print(f"Error during serialization: {e}")
             return False
-        
-
-
-
-            
-
-
-if __name__ == "__main__":
-    vm = EditorVariableManager()
-    vm.setVariable("rock", 10)
-    compiler = StoryPackager()
-    compiler.loadStoryFiles()
-    compiler.serializeScenes()
-    #compiler.serializeManagerData()

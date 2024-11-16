@@ -1,15 +1,106 @@
-from PySide6.QtWidgets import QApplication, QTextEdit, QMainWindow, QPushButton, QWidget, QVBoxLayout
-from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, Signal, QTimer
-from PySide6.QtGui import QFont, QPalette, QColor
-import sys
+import sys, os
+from datetime import datetime
+from PySide6.QtWidgets import QApplication, QTextEdit, QMainWindow, QPushButton, QWidget, QVBoxLayout, QDialog
+from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer, Signal
+from PySide6.QtGui import QFont, QPalette, QColor, QPainter, QPixmap
 from loader import Loader
+from audioManager import AudioManager
+from variables import ViewerVariableManager
+from files import FileManager
+
+class SceneViewMenuOverlay(QDialog):
+    closeMenu = Signal()
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setFixedSize(400, 300)
+
+        self.layout = QVBoxLayout(self)
+
+        BUTTON_STYLE = """
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+            QPushButton:pressed {
+                background-color: #2471a3;
+            }
+        """
+        
+        self.saveButton = QPushButton("Save", self)
+        self.saveButton.setStyleSheet(BUTTON_STYLE)
+        self.layout.addWidget(self.saveButton)
+
+        self.loadButton = QPushButton("Load", self)
+        self.loadButton.setStyleSheet(BUTTON_STYLE)
+        self.layout.addWidget(self.loadButton)
+
+        self.optionsButton = QPushButton("Options", self)
+        self.optionsButton.setStyleSheet(BUTTON_STYLE)
+        self.layout.addWidget(self.optionsButton)
+
+        self.closeButton = QPushButton("Close", self)
+        self.closeButton.setStyleSheet(BUTTON_STYLE)
+        self.layout.addWidget(self.closeButton)
+
+        self.closeButton.clicked.connect(self.closeMenu.emit)
 
 
+class SceneViewBackground(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.background = QPixmap()
+        
+    def setBackground(self, filepath):
+        if os.path.exists(filepath):
+            self.background = QPixmap(filepath)
+            if self.background.isNull():
+                print(f"Failed to load image: {filepath}")
+            self.update() 
+        else:
+            print(f"Image file not found: {filepath}")
+        
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        if not self.background.isNull():
+            aspectRatio = self.background.height() / self.background.width()
+            newWidth = self.width() + 30
+            newHeight = int(newWidth * aspectRatio)
+
+            scaledPixmap = self.background.scaled(newWidth, newHeight, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+            painter.drawPixmap((self.width() - scaledPixmap.width()) // 2 - 15, 
+                               (self.height() - scaledPixmap.height()) // 2 - 15, 
+                               scaledPixmap)
+    
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update()
+        
 class SceneView(QMainWindow):
-    def __init__(self, filePath):
+    def __init__(self, filePath, freshStart):
         super().__init__()
         self.setGeometry(100, 100, 800, 600)
         self.setMinimumSize(1280, 720)
+                
+        self.audio = AudioManager()
+        
+        self.background = SceneViewBackground()
+        self.background.setBackground('grid.jpg')
+        self.setCentralWidget(self.background)
+        self.background.setGeometry(self.rect())
+        self.background.show()
+        
+        self.dialogueHistory = []
+        self.nextEntry = {}
         
         self.minWidth = 200
         self.minHeight = 100
@@ -25,7 +116,7 @@ class SceneView(QMainWindow):
         self.container.setStyleSheet("""
             QWidget {
                 border-radius: 15px;
-                background-color: #34495e;
+                background-color: #333;
                 color: #ecf0f1;
                 border: 1px solid #3498db;
             }
@@ -39,8 +130,8 @@ class SceneView(QMainWindow):
         self.textBox.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.textBox.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.layout.addWidget(self.textBox)
-
-
+        self.textToDisplay = ""
+        
         self.nextButton = QPushButton("Next", self)
         self.nextButton.setStyleSheet("""
             QPushButton {
@@ -69,92 +160,248 @@ class SceneView(QMainWindow):
         self.updateContainerGeometry()
         self.container.setGeometry(100, 100, self.minWidth, self.minHeight)
 
-
+        self.menuOverlay = SceneViewMenuOverlay()
+        self.menuOverlay.setParent(self)
+        self.menuOverlay.hide()
+        self.menuOverlay.closeMenu.connect(self.toggleMenuOverlay)    
+        
         self.loader = Loader()
         self.loader.setProject(filePath)
         self.loader.readStoryFilePaths()
-        self.loadScene("Scene1") # TODO: Setup whatever the beginning script is.
+        self.loader.readVariablesIntoManager()
+
+        self.vm = ViewerVariableManager()
+        self.files = FileManager()
         
-        self.adjustSizeToContent()
-        self.container.show()
-        
-    # SCENE PLAYER STUFF
+        if freshStart:
+            self.loadScene(self.loader.getStartScene())
+            self.adjustSizeToContent()
+            self.container.show()
+            self.running = True
+            self.showingNext = True
+       
+    # SCENE PLAYER 
     
     def next(self):
         if self.currentLineIndex < len(self.script):
+            self.showingNext = True
             element = self.script[self.currentLineIndex]
             match element['type']:
                 case "dialogue":
+                    self.nextEntry['type'] = 'dialogue'
                     if element["speaker"]:
-                        self.setTextLetterByLetter(f'{element['speaker']}: "{element['text']}"')
+                        text = f'{element['speaker']}: "{element['text']}"'
+                        self.setTextLetterByLetter(text)
+                        self.nextEntry['speaker'] = element['speaker']
+                        self.nextEntry['text'] = text
                         #self.textBox.setText(f'{element['speaker']}: "{element['text']}"')
                     else:
                         self.setTextLetterByLetter(f"{element['text']}")
+                        self.nextEntry['text'] = element['text']
                         #self.textBox.setText(f"{element['text']}")
                     if "audio" in element:
                         self.audioPath = element["audio"]
+                        self.nextEntry['audio'] = element["audio"]
                     QApplication.processEvents() 
                     self.adjustSizeToContent()
+                    self.textBox.setFocus()
                 case "choice":
+                    self.nextEntry['type'] = 'choice'
                     for i, choice in enumerate(element['choices']):
-                        self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines']))
+                        self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element, choice['index']))
                     self.nextButton.hide()
-                case "modify":
-                    # TODO: Add Variable Manager
-                    self.advanceDialogue()
+                    self.showingNext = False
                 case "conditional":
-                    # TODO: Add Variable Manager
-                    # if eval(element["comparison"]):
-                    #   self.handleNewLines(element["ifLines"])
-                    # else:
-                    #   self.handleNewLines(element["ifLines"])
-                    self.handleNewLines(element["ifLines"])
+                    if eval(element["comparison"]):
+                       self.handleNewLines(element["ifLines"], element)
+                       self.conditionalsLog.append(1)
+                    else:
+                       self.handleNewLines(element["elseLines"], element)
+                       self.conditionalsLog.append(0)
+                    self.handleNewLines(element["ifLines"], element)
+                case "modify":
+                    eval(element['action'])
+                    self.advanceScript()
+                case "sfx":
+                    self.playCurrentElementAudio(self)
+                    self.advanceScript()
+                case "bgm":
+                    self.playCurrentElementAudio(self)
+                    self.advanceScript()
                 case "branch":
                     self.loadScene(element['next'])
+                case "background": # TODO
+                    pass 
                 case _:
                     print(element)
         else:
             self.textBox.setText("The End")
             self.nextButton.setText("Close")
-            self.nextButton.clicked.disconnect()
-            self.nextButton.clicked.connect(self.close)
+            self.running = False
+            self.nextButton.clicked.connect(QApplication.quit)
         self.adjustSizeToContent()
 
+    def playCurrentElementAudio(self):
+        if self.currentLineIndex < len(self.script):
+            element = self.script[self.currentLineIndex]
+            if 'audio' in element:
+                if element['type'] == 'dialogue':
+                    self.audio.playDialogue(element['audio'], True, self.loader.getPackagePath())
+                if element['type'] == 'sfx':
+                    self.audio.playSoundEffect(element['audio'], True, self.loader.getPackagePath())
+                if element['type'] == 'bgm':
+                    self.audio.playBackgroundMusic(element['audio'], True, self.loader.getPackagePath())
     
     def loadScene(self, sceneName):
         self.sceneData = self.loader.readSceneToDict(sceneName)
-        self.currScene = sceneName
+        self.currentScene = sceneName
+        self.choiceLog = []
+        self.conditionalsLog = []
         self.script = self.sceneData['lines']        
         self.currentLineIndex = 0
         self.next()
-        self.adjustSize()
         
-    def advanceDialogue(self):    
+    def advanceScript(self):
         self.currentLineIndex += 1
+        self.UpdateDialogueHistory()
         self.next()
 
+    def UpdateDialogueHistory(self):
+        if bool(self.nextEntry):
+            self.dialogueHistory.append(self.nextEntry.copy())
+            if len(self.dialogueHistory) > 25:
+                self.dialogueHistory.pop(0)
+            self.nextEntry.clear()
+        
     # prospective log of all previously played lines
-    #def updateLog(self):
-    #    self.lineLog.append([self.currScene, self.currentLineIndex])
+    # def updateLog(self):
+    #    self.lineLog.append([self.currentScene, self.currentLineIndex])
 
     def onNextButtonClicked(self):
-    #    self.updateLog()
-        self.advanceDialogue()
+        if (self.running and self.script[self.currentLineIndex]['type'] != 'choice'):
+            self.advanceScript()
 
-    def handleNewLines(self, lines):
+    def handleNewLines(self, lines, element, choiceIndex:int=-1, loading: bool= False):
+        if 'text' in element:
+            self.nextEntry['text'] = element['text']
         for button in self.container.findChildren(QPushButton):
             if button is not self.nextButton:
+                self.showinNext = True
                 self.nextButton.show()
                 self.clearButtons()
                 break
         for line in lines:
             self.script.insert(self.currentLineIndex + 1, line)
-        self.advanceDialogue()
+        if not loading:
+            if choiceIndex != -1:
+                self.choiceLog.append(choiceIndex)
+            self.advanceScript()
 
+    # Saves
+    
+    def saveGame(self):
+        savefile = {}
+        savefile['variables'] = self.vm.getVariables()
+        time = datetime.now()
+        savefile['date'] = str(time)
+        savefile['currentScene'] = self.currentScene
+        savefile['currentLineIndex'] = self.currentLineIndex
+        savefile['choiceLog'] = self.choiceLog
+        savefile['conditionalsLog'] = self.conditionalsLog
+        savefile['dialogueHistory'] = self.dialogueHistory
+        filename = time.strftime("save_%Y_%m_%d_%H_%M_%S")
+        self.files.createSaveFile(filename, savefile)
+    
+    def loadGame(self, filepath: str):
+        self.container.hide()
+        self.nextButton.hide()
+        
+        
+        savedata = self.files.readSaveFile(filepath)
+        self.vm.loadFromDict(savedata['variables'])
+        self.currentScene = savedata['currentScene']
+        self.sceneData = self.loader.readSceneToDict(self.currentScene)
+        self.script = self.sceneData['lines']        
+        self.choiceLog = savedata['choiceLog']
+        self.conditionalsLog = savedata['conditionalsLog']
+        self.dialogueHistory = savedata['dialogueHistory']
+        targetIndex = savedata['currentLineIndex']
+        
+        choiceLog = self.choiceLog.copy()   
+        conditionalsLog = self.conditionalsLog.copy()
+        
+        self.currentLineIndex = 0
+        while self.currentLineIndex < targetIndex:
+            self.showingNext = True
+            element = self.script[self.currentLineIndex]
+            match element['type']:
+                case "dialogue":
+                    self.nextEntry['type'] = 'dialogue'
+                    if element["speaker"]:
+                        text = f'{element['speaker']}: "{element['text']}"'
+                        self.textBox.setText(text)
+                        self.nextEntry['speaker'] = element['speaker']
+                        self.nextEntry['text'] = text
+                    else:
+                        self.textBox.setText(f"{element['text']}")
+                        self.nextEntry['text'] = element['text']
+                    if "audio" in element:
+                        self.audioPath = element["audio"]
+                        self.nextEntry['audio'] = element["audio"]
+                    QApplication.processEvents() 
+                    self.adjustSizeToContent()
+                    self.textBox.setFocus()
+                case "choice":
+                    self.nextEntry['type'] = 'choice'
+                    if not choiceLog:
+                        for i, choice in enumerate(element['choices']):
+                            self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element, choice['index']))
+                        self.nextButton.hide()
+                        self.showingNext = False
+                    else:
+                        for choice in element['choices']:
+                            if choice['index'] == choiceLog[0]:
+                                self.handleNewLines(choice['lines'], element, choice['index'],loading=True)
+                                choiceLog.pop(0)
+                case "conditional":
+                    if conditionalsLog[0] == 1:
+                       self.handleNewLines(element["ifLines"], element, loading=True)
+                    else:
+                       self.handleNewLines(element["elseLines"], element ,loading=True)
+                    conditionalsLog.pop(0)
+                case _:
+                    pass
+            self.currentLineIndex += 1
+        
+        self.adjustSizeToContent()
+        self.running = True
+        self.container.show()
+        if self.showingNext:
+            self.nextButton.show()
 
+        
+        
     
-    # UI STUFF
+    # UI
     
+    def toggleMenuOverlay(self):
+        if self.menuOverlay.isVisible():
+            self.menuOverlay.hide()
+            if self.showingNext:
+                self.nextButton.show()
+            self.setKeyEventsEnabled(True)
+            self.setSceneElementsEnabled(True) 
+            self.container.show()  
+        else:
+            self.setKeyEventsEnabled(False)
+            self.setSceneElementsEnabled(False) 
+            if self.showingNext:
+                self.nextButton.hide()
+            self.menuOverlay.raise_()
+            self.menuOverlay.move(self.rect().center() - self.menuOverlay.rect().center())
+            self.menuOverlay.show()
+            self.container.hide()
+
     def addButtonToTextBoxArea(self, buttonText="Button", onClick=None):
         newButton = QPushButton(buttonText, self.container)
         newButton.setStyleSheet("""
@@ -240,15 +487,40 @@ class SceneView(QMainWindow):
         newX = (self.width() - self.container.width()) // 2
         newY = (self.height() - self.container.height()) // 2
         self.container.move(newX, newY)
-
-            
+    
+    # Events
+    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.setFocus()
+        
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.adjustSizeToContent()
         self.updateContainerGeometry()
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    mainWindow = SceneView("SYOA/src_alt/viewer/Story_EX_DeleteLater/testStory.syoa")
-    mainWindow.show()
-    sys.exit(app.exec())
+    def setKeyEventsEnabled(self, enabled):
+        if enabled:
+            self.setFocusPolicy(Qt.StrongFocus)
+        else:
+            self.setFocusPolicy(Qt.NoFocus)
+            
+    def setSceneElementsEnabled(self, enabled):
+        for widget in self.findChildren(QPushButton):
+            if widget.parent() != self.menuOverlay:
+                widget.setEnabled(enabled)
+        self.container.setEnabled(enabled)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_M:
+            self.toggleMenuOverlay()
+        elif event.key() == Qt.Key_Z:
+            if not self.menuOverlay.isVisible():
+                self.nextButton.click()
+        elif event.key() == Qt.Key_X:
+            if not self.menuOverlay.isVisible():
+                self.playCurrentElementAudio()
+        elif event.key() == Qt.Key_P:
+            self.saveGame()
+        else:
+            super().keyPressEvent(event)

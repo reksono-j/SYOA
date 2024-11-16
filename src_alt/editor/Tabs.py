@@ -1,6 +1,5 @@
 from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabBar, QStackedWidget
-from styles import TABBAR_STYLE
 
 class TabsWidget(QWidget):
     def __init__(self):
@@ -8,17 +7,17 @@ class TabsWidget(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0) 
-        self.setStyleSheet(TABBAR_STYLE)
         
         # TabBar for the tabs
         self.tabBar = QTabBar()
+        self.tabBar.setObjectName("projectMenuTabBar")
         self.tabBar.setFocusPolicy(Qt.StrongFocus)
         self.tabBar.setMovable(True)
         
         # TabContents for the actual widgets
         self.tabContents = QStackedWidget()
-        self.tabContents.setContentsMargins(0, 0, 0, 0)  # Ensure no margins here
-        self.tabContents.setStyleSheet("padding: 0px; margin: 0px;")  # Set padding and margin to zero
+        self.tabContents.setObjectName("projectMenuStack")
+        self.tabContents.setContentsMargins(0, 0, 0, 0)  
         
         self.tabBar.installEventFilter(self)
         self.focusedIndex = 0  
@@ -28,9 +27,7 @@ class TabsWidget(QWidget):
     def addTab(self, title, contentWidget):
         self.tabBar.addTab(title)
         
-        # Set the content widget's margins and padding
-        contentWidget.setContentsMargins(0, 0, 0, 0)  # Ensure no margins on the widget
-        contentWidget.setStyleSheet("padding: 0px; margin: 0px;")  # Set padding and margin to zero
+        contentWidget.setContentsMargins(0, 0, 0, 0) 
         
         self.tabContents.addWidget(contentWidget)
         
@@ -45,6 +42,9 @@ class TabsWidget(QWidget):
             tabWidget = self.tabContents.widget(index)
             tabs.append((tabTitle, tabWidget))
         return tabs
+    
+    def getTabWidget(self, index):
+        return self.tabContents.widget(index) if index < self.tabContents.count() else None
     
     def eventFilter(self, obj, event):
         if obj == self.tabBar:
