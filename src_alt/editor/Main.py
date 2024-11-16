@@ -1,10 +1,13 @@
 import sys
 import os
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QStackedWidget, QStatusBar, QDialog,
-    QMessageBox
+from PySide6.QtCore import (
+    Qt, QThread, Signal
 )
-from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QStackedWidget, QStatusBar, 
+    QDialog, QMessageBox, QProgressDialog
+)
+from PySide6.QtGui import QAccessibleValueChangeEvent, QAction, QAccessible
 from projectManager import ProjectManager, ProjectManagerGUI
 from HomeMenu import HomeMenu
 from SettingsMenu import SettingsMenu
@@ -13,11 +16,11 @@ from styles import *
 from ProjectMenu import ProjectMenu
 from packager import StoryPackager
 from variableManagerGUI import VariableManagerDialog
-from characterManagerGUI import CharacterManagerDialog
-from variableManager import EditorVariableManager
+from characterManager import CharacterManagerDialog
 import ui_customize
 import keybinds
 import speechToText
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -125,7 +128,7 @@ class MainWindow(QMainWindow):
             self.fileMenu.addAction(self.openExistingProjectAction)
         elif isinstance(currentWidget, ProjectMenu):
             self.fileMenu.addAction(self.compileProjectAction)
-
+    
     def compileProject(self):
         folderPath = os.path.join(self.projectsDirectory, self.projectManager.currentProject["name"])
         self.dialog = PickFilepathDialog(folderPath)
@@ -137,10 +140,35 @@ class MainWindow(QMainWindow):
                 compiler = StoryPackager()
                 compiler.setStartingScene(startingScene)
                 compiler.loadStoryFiles(self.projectManager.getCurrentFilePath())
-                if compiler.serializeScenes(filePath):
-                    QMessageBox.information(self, "Success", f"Compilation complete. Saved to {filePath}")
-                else:
-                    QMessageBox.warning(self, "Warning", "Compilation failed.")
+
+                # Progress dialog kept disappearing and reappearing. This stops that from happening
+                if not hasattr(self, 'progressDialog') or self.progressDialog is None:
+                    self.progressDialog = QProgressDialog("Compiling project...", "Cancel", 0, 100, self)
+                self.progressDialog.setWindowModality(Qt.WindowModal)
+                self.progressDialog.setAutoClose(False)
+                self.progressDialog.setAutoReset(False)
+                
+                def announceProgress(value):
+                    self.progressDialog.setValue(value)
+                    event = QAccessibleValueChangeEvent(self.progressDialog, value)
+                    QAccessible.updateAccessibility(event)
+                
+                def handleCompilation(success):
+                    self.progressDialog.close() 
+                    self.progressDialog.deleteLater()
+                    self.progressDialog = None
+                    if success:
+                        QMessageBox.information(self, "Success", f"Compilation complete. Saved to {filePath}")
+                    else:
+                        QMessageBox.warning(self, "Warning", "Compilation failed.")
+                
+                self.thread = CompileThread(compiler, filePath)
+                self.thread.progress.connect(announceProgress)
+                self.thread.result.connect(lambda success: handleCompilation(success))
+                self.thread.start()
+
+                self.progressDialog.canceled.connect(self.thread.terminate)
+                self.progressDialog.exec()
             else:
                 if not startingScene and not filePath:
                     QMessageBox.warning(self, "Please select a starting scene and filepath.")
@@ -148,6 +176,8 @@ class MainWindow(QMainWindow):
                     QMessageBox.warning(self, "Please select a starting scene.")
                 if not filePath:
                     QMessageBox.warning(self, "Please provide a filepath")
+    
+
 
     def updateFileMenu(self, projectName): 
         newFileMenu = ProjectMenu(self.filePathFromName(projectName))
@@ -164,28 +194,24 @@ class MainWindow(QMainWindow):
         return os.path.join(self.projectsDirectory, projectName)  
     
     def onCreateProject(self, projectName: str):
-        folderPath = os.path.join(self.projectsDirectory, projectName)
-        EditorVariableManager(folderPath) # TODO: Make Variable manager clear when opening a different project
         self.projectOpened = True
         self.updateFileMenu(projectName)
     
     def onOpenProject(self, projectName: str):
-        folderPath = os.path.join(self.projectsDirectory, projectName)
-        EditorVariableManager(folderPath) 
         self.projectOpened = True
         self.updateFileMenu(projectName)
     
     def showVariableManager(self):
         if self.projectOpened:
-            self.dialog = VariableManagerDialog(self.projectManager.getCurrentFilePath())
-            self.dialog.exec()
+            dialog = VariableManagerDialog()
+            dialog.exec()
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")
     
     def showCharacterManager(self):
         if self.projectOpened:
-            self.dialog = CharacterManagerDialog(self.projectManager.getCurrentFilePath())
-            self.dialog.exec()
+            dialog = CharacterManagerDialog()
+            dialog.exec()
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")
             
@@ -195,6 +221,7 @@ class MainWindow(QMainWindow):
             self.updateMenuBar() 
     
     def showHomeMenu(self):
+        self.projectOpen = False
         self.centralWidget.setCurrentWidget(self.homeMenu)
         self.updateMenuBar() 
 
@@ -205,6 +232,20 @@ class MainWindow(QMainWindow):
     def showPreferencesMenu(self):
         self.centralWidget.setCurrentWidget(self.preferencesMenu)
         self.updateMenuBar()
+
+class CompileThread(QThread):
+    progress = Signal(int) 
+    result = Signal(bool) 
+
+    def __init__(self, compiler, filePath):
+        super().__init__()
+        self.compiler = compiler
+        self.filePath = filePath
+
+    def run(self):
+        success = self.compiler.serializeScenes(self.filePath, self.progress.emit)
+        self.result.emit(success)
+                         
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

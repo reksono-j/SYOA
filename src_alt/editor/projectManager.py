@@ -5,14 +5,33 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QListWidget, QMessageBox, QInputDialog, QDialog
 )
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QObject
 from DirectoryDialogs import ProjectFolderSelectDialog
 
-class ProjectManager:
-    def __init__(self, baseDirectory):
-        self.baseDirectory = baseDirectory
+class ProjectManager(QObject):
+    changedProject = Signal()
+    
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(ProjectManager, cls).__new__(cls)
+        return cls._instance
+    
+    def __init__(self, baseDirectory=None):
+        if hasattr(self, 'initialized') and self.initialized:
+            return
+        super().__init__()
+        
+        if baseDirectory is not None:
+            self.baseDirectory = baseDirectory
+            if not os.path.exists(self.baseDirectory):
+                os.makedirs(self.baseDirectory)
+        
         self.projects = []
         self.currentProject = {}
+        self.initialized = True
+
         
     def createProject(self, projectName):
         if not self.isValidProjectName(projectName):
@@ -31,6 +50,8 @@ class ProjectManager:
         
         with open(os.path.join(projectPath, "project.json"), 'w') as f:
             json.dump(metadata, f)
+        self.currentProject = metadata 
+        self.changedProject.emit()
         return metadata
 
     def getCurrentFilePath(self):
@@ -52,12 +73,12 @@ class ProjectManager:
         with open(os.path.join(projectPath, "project.json"), 'r') as f:
             metadata = json.load(f)
         self.currentProject = metadata  
+        self.changedProject.emit()
         return metadata
     
     def listProjects(self):
         self.projects = [d for d in os.listdir(self.baseDirectory) if os.path.isdir(os.path.join(self.baseDirectory, d))]
         return self.projects
-
 
 class ProjectManagerGUI(QWidget):
     CreateProject = Signal(str)

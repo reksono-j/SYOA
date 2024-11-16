@@ -1,18 +1,23 @@
 import os
 import json
 from singleton import Singleton
+from projectManager import ProjectManager
 
 class EditorVariableManager(metaclass=Singleton):
-    def __init__(self, path=None):
+    def __init__(self):
+        self.projectManager = ProjectManager()
         self.Variables = {}
+        
+        self.projectManager.changedProject.connect(self.updatePath)
+        self.updatePath()
 
-        if path is None:
-            path = os.path.dirname(os.path.abspath(__file__)) 
+    def updatePath(self):
+        path = self.projectManager.getCurrentFilePath()
         path = os.path.join(path, 'variables.json')  
         self.path = path 
         if path:
             self.loadVariables()  
-
+            
     def setVariable(self, name, value):
         if self.isValidName(name):
             self.Variables[name.lower()] = value  
@@ -46,9 +51,10 @@ class EditorVariableManager(metaclass=Singleton):
             json.dump(self.Variables, f)
 
     def loadVariables(self):
+        self.clearVariables()
         if os.path.exists(self.path):
             with open(self.path, 'r') as f:  
                 self.Variables = json.load(f)
 
     def clearVariables(self):
-        self.Variables = {}
+        self.Variables.clear()

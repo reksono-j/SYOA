@@ -81,7 +81,18 @@ class Choice(Element):
         self.options = []
     def __repr__(self):
         return 'Choice(%s)' % self.options
-    
+
+
+class Asset(Element):
+    type: str
+    fileName: str
+    options: list[str] # This currently allows for a single option but could be turned into a list later if more are needed
+    def __init__(self, _type, _fileName, _options=""):
+        self.type = _type
+        self.fileName = _fileName
+        self.options = _options
+    def __repr__(self):
+        return 'Asset(%s, %s)' % (self.type, self.fileName)
     
 class Scene:
     title : str
@@ -93,4 +104,4 @@ class Scene:
     def add_line(self, element:Element):
         self.lines.append(element)
         
-        
+
