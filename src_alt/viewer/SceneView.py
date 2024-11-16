@@ -211,9 +211,6 @@ class SceneView(QMainWindow):
                         self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element, choice['index']))
                     self.nextButton.hide()
                     self.showingNext = False
-                case "modify":
-                    eval(element['action'])
-                    self.advanceDialogue()
                 case "conditional":
                     if eval(element["comparison"]):
                        self.handleNewLines(element["ifLines"], element)
@@ -222,8 +219,19 @@ class SceneView(QMainWindow):
                        self.handleNewLines(element["elseLines"], element)
                        self.conditionalsLog.append(0)
                     self.handleNewLines(element["ifLines"], element)
+                case "modify":
+                    eval(element['action'])
+                    self.advanceScript()
+                case "sfx":
+                    self.playCurrentElementAudio(self)
+                    self.advanceScript()
+                case "bgm":
+                    self.playCurrentElementAudio(self)
+                    self.advanceScript()
                 case "branch":
                     self.loadScene(element['next'])
+                case "background": # TODO
+                    pass 
                 case _:
                     print(element)
         else:
@@ -253,7 +261,7 @@ class SceneView(QMainWindow):
         self.currentLineIndex = 0
         self.next()
         
-    def advanceDialogue(self):
+    def advanceScript(self):
         self.currentLineIndex += 1
         self.UpdateDialogueHistory()
         self.next()
@@ -271,7 +279,7 @@ class SceneView(QMainWindow):
 
     def onNextButtonClicked(self):
         if (self.running and self.script[self.currentLineIndex]['type'] != 'choice'):
-            self.advanceDialogue()
+            self.advanceScript()
 
     def handleNewLines(self, lines, element, choiceIndex:int=-1, loading: bool= False):
         if 'text' in element:
@@ -287,7 +295,7 @@ class SceneView(QMainWindow):
         if not loading:
             if choiceIndex != -1:
                 self.choiceLog.append(choiceIndex)
-            self.advanceDialogue()
+            self.advanceScript()
 
     # Saves
     

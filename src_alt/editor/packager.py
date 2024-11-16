@@ -69,7 +69,6 @@ class StoryPackager:
             self.counter += 1 # TODO : Add character manager speaker id validation
             dialogue = {}
             speaker = self._checkCharacter(el.speaker)
-            print(speaker)
             if not any(char.isalnum() for char in el.text):
                 dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text} 
             else:
@@ -128,6 +127,9 @@ class StoryPackager:
             if not (el.scene in self.sceneNames):
                 print("ERROR: Scene does not exist") # TODO ERR CHECKING
             return {"type":"branch", "next": el.scene}
+        if type(el) == Asset: # TODO: add verification that the files exist
+            return {"type": el.type, "file":el.fileName, "option": el.fileName}
+                
     
     def _serializeScene(self, scene: Scene):
         self.counter = 0
@@ -139,29 +141,48 @@ class StoryPackager:
     def setStartingScene(self, sceneName: str):
         self.startingScene = sceneName
     
-    def serializeScenes(self, filepath):
+    
+    def serializeScenes(self, filepath, progressCallback=None):
         try:
+            totalTasks = len(self.rawScenes) + len(self.Dialogue) + 2  # Scenes + Audio + Metadata & Variables
+            currentTask = 0
+
+            def updateProgress():
+                if progressCallback:
+                    progressCallback(int((currentTask / totalTasks) * 100))
+
             buffer = io.BytesIO()
             with ZipFile(buffer, 'w') as file:
                 # Reads each scene file
-                print(1)
                 for scene in self.rawScenes:
                     sceneData = self._serializeScene(scene)
-                    file.writestr(f"scripts/{sceneData["title"]}", json.dumps(sceneData, indent = 2))
-                print(2)
+                    file.writestr(f"scripts/{sceneData['title']}.json", json.dumps(sceneData, indent=2))
+                    currentTask += 1
+                    updateProgress()
+
+                # Generate and add audio files
                 for line in self.Dialogue:
                     if "audio" in line:
                         audioBuffer = TTS.convertToAudio(line["text"])
                         file.writestr(line["audio"], audioBuffer.getvalue())
-                print(3)
-                file.writestr(f"data", json.dumps({"start": self.startingScene}))
-                file.writestr(f"variables.json", self.rawVars)
-                
-            # Writes buffer contents to actual zip
-            buffer.seek(0) 
+                    currentTask += 1
+                    updateProgress()
+
+                # Write metadata and variables
+                file.writestr("data", json.dumps({"start": self.startingScene}, indent=2))
+                currentTask += 1
+                updateProgress()
+
+                file.writestr("variables.json", self.rawVars)
+                currentTask += 1
+                updateProgress()
+
+            # Writes buffer contents to the actual zip file
+            buffer.seek(0)
             with open(filepath, "wb") as zipFile:
                 zipFile.write(buffer.read())
+
             return True
-        except:
+        except Exception as e:
+            print(f"Error during serialization: {e}")
             return False
-        
