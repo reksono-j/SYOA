@@ -13,10 +13,11 @@ from HomeMenu import HomeMenu
 from SettingsMenu import SettingsMenu
 from DirectoryDialogs import OpenFileDialog, PickFilepathDialog
 from styles import *
-from ProjectMenu import ProjectMenu
+from ProjectMenu import ProjectMenu, ProjectFileMenu
 from packager import StoryPackager
 from variableManagerGUI import VariableManagerDialog
 from characterManager import CharacterManagerDialog
+from search import SearchMenuDialog
 import ui_customize
 import keybinds
 import speechToText
@@ -75,6 +76,7 @@ class MainWindow(QMainWindow):
         shortcutsManager.addShortcut("Ctrl+Q","Quit",self.close)
         shortcutsManager.addShortcut("Ctrl+/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
         shortcutsManager.addShortcut("Ctrl+T","Start Transcription",speechToText.STT.recordCallback)
+        shortcutsManager.addShortcut("Ctrl+F","Open Search Menu",self.showSearchMenu)
     
     def initMenuBar(self):
         self.fileMenu = self.menuBar().addMenu("&File")
@@ -246,6 +248,24 @@ class CompileThread(QThread):
         success = self.compiler.serializeScenes(self.filePath, self.progress.emit)
         self.result.emit(success)
                          
+
+    def showSearchMenu(self):
+        #Move logic into search.py
+        currentWidget = self.centralWidget.currentWidget()
+
+        if isinstance(currentWidget, ProjectMenu):
+            for index in range(currentWidget.tabsWidget.tabBar.count()):
+                projectFileMenu = currentWidget.tabsWidget.getTabWidget(index)
+
+            if isinstance(projectFileMenu, ProjectFileMenu):
+                openScene = projectFileMenu.textEditWidget
+                openScenePath = openScene.currentFile
+                openScene.saveFile()
+                if openScene:
+                    self.dialog = SearchMenuDialog(self.projectManager.getCurrentFilePath(), openScenePath, openScene)
+                    self.dialog.exec()
+                else:
+                    QMessageBox.warning(self, "Warning", "Open scene first.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
