@@ -12,7 +12,7 @@ from variableManager import VariableManager
 import io
 import os
 
-class SearchMenu(QDialog):
+class SearchMenuDialog(QDialog):
     # def __init__(self, SearchManager, parent):
     #     super(SearchMenu, self).__init__(parent)
     #     self.parent = parent
@@ -20,19 +20,21 @@ class SearchMenu(QDialog):
     #     self.initParameters()
     #     self.initUI()
 
-    def __init__(self, SearchManager):
-        super(SearchMenu, self).__init__()
-        self.searchManager = SearchManager
-        self.initParameters()
-        self.initUI()
-
-    def initParameters(self):
+    def __init__(self, storyPath=None, currFilePath=None):
+        super().__init__()
+        #TODO: Error checking on path
+        self.storyDirectory = storyPath
+        self.currFile = currFilePath
         self.setWindowTitle("Search Menu")
-        return 1
+        self.loadSceneLinks()
+
+        self.initUI()
+        
 
     def initUI(self):
         #TODO: accessibility tags
         
+        self.setMinimumSize(600, 800)
         self.layout = QVBoxLayout()
         # unsure if outside will be dialog or separate menu, internals should remain same, maybe without QGroupBox wrapper 
         self.mainArea = QGroupBox(self)
@@ -42,6 +44,7 @@ class SearchMenu(QDialog):
 
         #insert search text into
         self.searchBox = QGroupBox(self.mainArea)
+        self.searchBox.setTitle("Search")
         self.searchBox.layout = QHBoxLayout()
         self.searchBar = QLineEdit(self.searchBox)
         self.searchBar.setAccessibleName("Search text box")
@@ -58,6 +61,7 @@ class SearchMenu(QDialog):
         #results boxes
         #in-file
         self.inFileResultsBox = QGroupBox(self.mainArea)
+        self.inFileResultsBox.setTitle("Inside current file")
         self.inFileResultsBox.layout = QHBoxLayout()
         self.inFileResultsDropdown = QComboBox(self.inFileResultsBox)
         self.inFileResultsDropdown.setAccessibleName("In opened files results dropdown")        
@@ -71,6 +75,7 @@ class SearchMenu(QDialog):
 
         #link names
         self.linksResultsBox = QGroupBox(self.mainArea)
+        self.linksResultsBox.setTitle("Links from current file")
         self.linksResultsBox.layout = QHBoxLayout()
         self.linksResultsDropdown = QComboBox(self.linksResultsBox)
         self.linksResultsDropdown.setAccessibleName("Link names results dropdown")
@@ -84,6 +89,7 @@ class SearchMenu(QDialog):
         
         #in-link results
         self.inLinksResultsBox = QGroupBox(self.mainArea)
+        self.inLinksResultsBox.setTitle("Inside linked files")
         self.inLinksResultsBox.layout = QHBoxLayout()
         self.inLinksResultsDropdown = QComboBox(self.inLinksResultsBox)
         self.inLinksResultsDropdown.setAccessibleName("In linked files results dropdown")
@@ -117,7 +123,7 @@ class SearchMenu(QDialog):
 
     def onOpen(self):
         self.show()
-        self.searchManager.loadSceneLinks()
+
 
     def updateResults(self, query):
         #annotate files with potentially update texts and links
@@ -162,17 +168,8 @@ class SearchMenu(QDialog):
         if (link != ""):
             self.close()
             print(link + "txt")
-            return link + ".txt"        
-    
-
-class SearchManager:    
-    def __init__(self, currentFile, storyDirectory) -> None:
-        self.storyDirectory = Path(Path.cwd(), Path("Story_EX_DeleteLater")) #TODO:Change this default
-        self.currFile = "Scene1.txt"
-        self.currFilePath = Path(self.storyDirectory, self.currFile)
-        #self.menu = SearchMenu(self, window)
-        self.menu = SearchMenu(self)
-        self.loadSceneLinks()
+            return link + ".txt"     
+        
 
     def changeStoryFolder(self, path):
         self.storyDirectory = Path(path)
@@ -252,10 +249,6 @@ class SearchManager:
                 results.append(link)
         return results
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    searchManager = SearchManager("", "")
-    searchManager.menu.resize(500, 500)
-    searchManager.menu.onOpen()
     sys.exit(app.exec())
