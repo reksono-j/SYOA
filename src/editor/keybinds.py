@@ -7,7 +7,16 @@ from PySide6.QtWidgets import (
 import json
 import sys
 import os
-from util import randomFunctions
+
+def stripShortcutsName(transcription:str):
+    """
+    Gets rid of punctuation and spaces, turns string to lowercase.
+    Used to standardize the key in dictionary of callback functions in keybinds.py so that
+    voiceCommands.py can work better.
+    """
+    stripped = transcription.lower().replace(",", "").replace(".", "").replace("?","")
+    stripped = stripped.replace("!","").replace("-","").replace(" ","")
+    return stripped
 
 # for opening the shortcuts changer menu
 class ShortcutsMenu(QDialog):
@@ -129,14 +138,14 @@ class ShortcutsManager:
             shortcut.activated.connect(callbackFunction)
             self.shortcutDict[dictKey] = shortcut
         
-        dictKeyStripped = randomFunctions.stripShortcutsName(dictKey)
+        dictKeyStripped = stripShortcutsName(dictKey)
         self.shortcutFunctionDict[dictKeyStripped] = callbackFunction
 
     def openShortcutsMenu(self):
         # Open the options menu
-        menu = ShortcutsMenu(self, self.window)
+        self.menu = ShortcutsMenu(self, self.window)
         #QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogStart))
-        menu.exec_()  # This will block execution until the dialog is closed
+        self.menu.exec_()  # This will block execution until the dialog is closed
         #QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogEnd))
     
     def saveShortcuts(self):

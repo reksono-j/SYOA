@@ -9,3 +9,4 @@ silero
 torchaudio
 pyaudio
 pydub
+pytest

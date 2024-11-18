@@ -5,7 +5,7 @@
         "Open IDE": "Ctrl+O",
         "Open Hand Held Mode": "Ctrl+P",
         "Start Transcription": "Ctrl+T",
-        "Voice Command": "Ctrl+V"
+        "Voice Command": "Ctrl+N"
     },
     "uiSettings": {
         "Font Family": "Segoe UI",

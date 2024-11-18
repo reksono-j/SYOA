@@ -108,8 +108,6 @@ class TTS():
         if(isinstance(SSMLObj, SSMLBuilder)):
             ssmlText = SSMLObj.getSSMLText()
 
-            print(TTS.speaker)
-
             audio = TTS.model.apply_tts(ssml_text=ssmlText,
                                 speaker=TTS.speaker,
                                 sample_rate=TTS.sample_rate)
@@ -143,10 +141,9 @@ class TTS():
 
 if __name__ == '__main__':
     ssml = SSMLBuilder()
-    ssml.addText("hello, what the hell are you doing?")
-    ssml.addPause(500)
-    ssml.addText("I have a question for you though", rate=RATE.xFast, pitch = PITCH.medium)
-    
+    ssml.addText("Primordial black holes are thought to have formed in the early universe, soon after the big bang.")
+    ssml.addPause(1000)
+    ssml.addText("Stellar black holes form when the center of a very massive star collapses in upon itself.", rate=RATE.xFast)
 
     audioBuffer = TTS.convertToAudioSSML(ssml)
     with open("female.mp3", "wb") as file:

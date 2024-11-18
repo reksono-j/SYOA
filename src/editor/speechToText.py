@@ -158,23 +158,6 @@ class STT():
         if(not STT.currentlyRecording) and isinstance(STT._textboxWidget, QLineEdit):
             STT._textboxWidget.setText(STT.getLatestTranscription())
 
-        #if isinstance(focused_widget, QTextEdit):
-        #    if STT.currentlyRecording:
-        #        STT.stopRecording()
-        #    else:
-        #        STT.startRecording()
-#
-        #    if(not STT.currentlyRecording):
-        #        focused_widget.append(STT.getLatestTranscription())
-        #elif isinstance(focused_widget, QLineEdit):
-        #    if STT.currentlyRecording:
-        #        STT.stopRecording()
-        #    else:
-        #        STT.startRecording()
-#
-        #    if(not STT.currentlyRecording):
-        #        focused_widget.setText(STT.getLatestTranscription())
-
     @staticmethod
     def showOverlay():
         activeWindow =  QApplication.activeWindow()
@@ -218,7 +201,7 @@ if __name__ == '__main__':
             central_widget.setLayout(layout)
 
         def buttonFunc(self):
-            STT.showOverlay()
+            STT.recordCallback()
 
     app = QApplication(sys.argv)
 
