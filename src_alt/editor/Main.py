@@ -235,20 +235,6 @@ class MainWindow(QMainWindow):
         self.centralWidget.setCurrentWidget(self.preferencesMenu)
         self.updateMenuBar()
 
-class CompileThread(QThread):
-    progress = Signal(int) 
-    result = Signal(bool) 
-
-    def __init__(self, compiler, filePath):
-        super().__init__()
-        self.compiler = compiler
-        self.filePath = filePath
-
-    def run(self):
-        success = self.compiler.serializeScenes(self.filePath, self.progress.emit)
-        self.result.emit(success)
-                         
-
     def showSearchMenu(self):
         #Move logic into search.py
         currentWidget = self.centralWidget.currentWidget()
@@ -266,6 +252,22 @@ class CompileThread(QThread):
                     self.dialog.exec()
                 else:
                     QMessageBox.warning(self, "Warning", "Open scene first.")
+
+class CompileThread(QThread):
+    progress = Signal(int) 
+    result = Signal(bool) 
+
+    def __init__(self, compiler, filePath):
+        super().__init__()
+        self.compiler = compiler
+        self.filePath = filePath
+
+    def run(self):
+        success = self.compiler.serializeScenes(self.filePath, self.progress.emit)
+        self.result.emit(success)
+                         
+
+    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
