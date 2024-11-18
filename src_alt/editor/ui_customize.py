@@ -1,7 +1,12 @@
 import sys
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
+from PySide6.QtGui import (
+    QAccessible
+)
+from PySide6.QtWidgets import (
+    QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
+    QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
+    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QGridLayout,
+)
 import json
 import os
 

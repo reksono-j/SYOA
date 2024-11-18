@@ -5,8 +5,8 @@ from PySide6.QtWidgets import (
     QPushButton, QSizePolicy, QWidget, QVBoxLayout, 
     QHBoxLayout, QMessageBox, QScrollArea
 )
-from singleton import Singleton
-from projectManager import ProjectManager
+from src_alt.editor.singleton import Singleton
+from src_alt.editor.projectManager import ProjectManager
 
 # Character class with aliases management
 class Character:
