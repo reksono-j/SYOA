@@ -179,8 +179,6 @@ class MainWindow(QMainWindow):
                 if not filePath:
                     QMessageBox.warning(self, "Please provide a filepath")
     
-
-
     def updateFileMenu(self, projectName): 
         newFileMenu = ProjectMenu(self.filePathFromName(projectName))
         self.centralWidget.addWidget(newFileMenu)
@@ -252,7 +250,7 @@ class MainWindow(QMainWindow):
                     self.dialog.exec()
                 else:
                     QMessageBox.warning(self, "Warning", "Open scene first.")
-
+                
 class CompileThread(QThread):
     progress = Signal(int) 
     result = Signal(bool) 
@@ -265,7 +263,6 @@ class CompileThread(QThread):
     def run(self):
         success = self.compiler.serializeScenes(self.filePath, self.progress.emit)
         self.result.emit(success)
-                         
 
     
 

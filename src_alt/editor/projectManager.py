@@ -1,12 +1,11 @@
-import os
-import re
-import json
+import os, re, json
+import secrets, string
 from datetime import datetime
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QListWidget, QMessageBox, QInputDialog, QDialog
 )
 from PySide6.QtCore import Signal, QObject
-from src_alt.editor.DirectoryDialogs import ProjectFolderSelectDialog
+from DirectoryDialogs import ProjectFolderSelectDialog
 
 class ProjectManager(QObject):
     changedProject = Signal()
@@ -42,10 +41,10 @@ class ProjectManager(QObject):
             raise FileExistsError("Project already exists.")
         os.makedirs(projectPath)
 
-        # TODO : Add other useful info
         metadata = {
             "name": projectName,
-            "createdAt": str(datetime.now())
+            "createdAt": str(datetime.now()),
+            "id" : ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
         }
         
         with open(os.path.join(projectPath, "project.json"), 'w') as f:
@@ -57,7 +56,6 @@ class ProjectManager(QObject):
     def getCurrentFilePath(self):
         return os.path.join(self.baseDirectory, self.currentProject['name'])
     
-    # TODO: Figure out a good place to use this
     def setStartScene(self, sceneName):
         self.currentProject['startScene'] = sceneName
         projectPath = os.path.join(self.baseDirectory, self.currentProject['name'])

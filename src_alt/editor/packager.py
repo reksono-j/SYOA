@@ -49,8 +49,11 @@ class StoryPackager:
             
             if path.name.endswith('.json'):
                 if path.name == 'variables.json':
-                    with open(path, 'r') as file:
+                    with open(path, 'r', encoding='utf-8') as file:
                         self.rawVars = file.read()
+                if path.name == 'project.json':
+                    with open(path, 'r', encoding='utf-8') as file:
+                        self.ID = json.loads(file.read())["id"]
                 
     def _checkCharacter(self, name: str):
         if name:
@@ -144,7 +147,7 @@ class StoryPackager:
     
     def serializeScenes(self, filepath, progressCallback=None):
         try:
-            totalTasks = len(self.rawScenes) + len(self.Dialogue) + 2  # Scenes + Audio + Metadata & Variables
+            totalTasks = len(self.rawScenes) + len(self.Dialogue) + 2 + 5 # Scenes + Audio + Metadata & Variables + Writing
             currentTask = 0
 
             def updateProgress():
@@ -169,7 +172,7 @@ class StoryPackager:
                     updateProgress()
 
                 # Write metadata and variables
-                file.writestr("data", json.dumps({"start": self.startingScene}, indent=2))
+                file.writestr("data", json.dumps({"start": self.startingScene, "id": self.ID}, indent=2))
                 currentTask += 1
                 updateProgress()
 
@@ -181,7 +184,10 @@ class StoryPackager:
             buffer.seek(0)
             with open(filepath, "wb") as zipFile:
                 zipFile.write(buffer.read())
-
+            
+            currentTask += 5
+            updateProgress()
+            
             return True
         except Exception as e:
             print(f"Error during serialization: {e}")
