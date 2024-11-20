@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from SceneView import SceneView
 from files import FileManager
-import json
 
 class MainMenu(QMainWindow):
     def __init__(self):
