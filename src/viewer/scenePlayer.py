@@ -13,7 +13,7 @@ class ScenePlayer(QWidget):
         self.loader = Loader()
         self.loader.setProject("SYOA/src/viewer/Story_EX_DeleteLater/testStory.syoa") # TODO: setup to take a project path
         self.loader.readStoryFilePaths()
-        self.loadScene("Scene1")
+        self.loadScene(self.loader.getStartScene())
         self.setLayout(self.layout)
         self.show()
 

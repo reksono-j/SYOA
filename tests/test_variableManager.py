@@ -24,8 +24,8 @@ class Test(unittest.TestCase):
         workingDir = os.path.dirname(os.path.abspath(__file__))
         parent_path = os.path.dirname(workingDir)
         self.projectM = ProjectManager(parent_path)
-        self.projectM.createProject("testProject")
-        self.testProjectDir = os.path.join(parent_path, "testProject")
+        self.projectM.createProject("variableManagerProject")
+        self.testProjectDir = os.path.join(parent_path, "variableManagerProject")
         self.varM = variableManager.EditorVariableManager()
         
         return super().setUp()

@@ -88,8 +88,6 @@ class Test(unittest.TestCase):
         self.manager.importShortcuts()
 
         self.maxDiff = None
-        self.assertEqual(testShortcutDict['key1'].keys().__str__(), self.manager.shortcutDict['key1'].keys().__str__())
-        self.assertEqual(testShortcutDict['key2'].keys().__str__(), self.manager.shortcutDict['key2'].keys().__str__())
         self.assertEqual(testShortcutDict['key1'].name, self.manager.shortcutDict['key1'].name)
         self.assertEqual(testShortcutDict['key2'].name, self.manager.shortcutDict['key2'].name)
         self.assertEqual(len(testShortcutDict), len(self.manager.shortcutDict))

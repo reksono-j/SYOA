@@ -1,6 +1,15 @@
 {
     "shortcutSettings": {
-        "kEy1": "a",
-        "kEy2": "b"
+        "quit": "Ctrl+Q",
+        "replace shortcuts menu": "Ctrl+/",
+        "open ide": "Ctrl+O",
+        "open hand held mode": "Ctrl+P",
+        "start transcription": "Ctrl+T",
+        "voice command": "Ctrl+V"
+    },
+    "uiSettings": {
+        "Font Family": "Segoe Script",
+        "Font Size": "16",
+        "Font Color": "white"
     }
 }

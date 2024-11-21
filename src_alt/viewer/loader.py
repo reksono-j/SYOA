@@ -1,21 +1,26 @@
-import json
+import json, os
 import zipfile
-from pathlib import Path
-from variables import ViewerVariableManager
+from src_alt.viewer.variables import ViewerVariableManager
+from src_alt.viewer.singleton import Singleton
 
-projectPath = Path("SYOA/src/viewer/Story_EX_DeleteLater")
-
-# TODO : Possibly make this into a singleton
-class Loader():
+class Loader(metaclass=Singleton):
     def __init__(self):
         self._sceneFilePaths = {}
         self._audioFilePaths = {}
-        self._package = ""
+        self._package = "" # Project File Path
+        self._data = {}
+        self.projectLoaded = False
     
     def setProject(self, filePath: str):
         self._package = filePath
+        self.projectLoaded = True
     
-    def readStoryFilePaths(self):
+    def loadPackage(self):
+        self._readVariablesIntoManager()
+        self._readStoryFilePaths()
+        self._readMetadata()
+        
+    def _readStoryFilePaths(self):
         with zipfile.ZipFile(self._package, 'r') as file:
             for item in file.infolist():
                 if not item.is_dir():
@@ -23,24 +28,26 @@ class Loader():
                         #self.audioFilePaths[Path(item.filename).name]
                         pathParts = item.filename.split('/')
                         sceneName = pathParts[1]
+                        sceneName, ext = os.path.splitext(sceneName)
                         self._sceneFilePaths[sceneName] = item.filename
                     elif item.filename.startswith('audio/'):
                         pathParts = item.filename.split('/')
-                        sceneName = pathParts[1]
-                        if not sceneName in self._audioFilePaths:
-                            self._audioFilePaths[sceneName] = []
-                        self._audioFilePaths[sceneName].append(item.filename)
-
-    def readVariablesIntoManager(self):
+                        audioName = pathParts[1]
+                        audioName, ext = os.path.splitext(audioName)
+                        if not audioName in self._audioFilePaths:
+                            self._audioFilePaths[audioName] = []
+                        self._audioFilePaths[audioName].append(item.filename)
+    
+    def _readVariablesIntoManager(self):
         with zipfile.ZipFile(self._package, 'r') as file:
             with file.open('variables.json') as data:
                 vm = ViewerVariableManager()
                 vm.loadInitialVariables(data)
-        
-    def getStartScene(self):
+    
+    def _readMetadata(self):
         with zipfile.ZipFile(self._package, 'r') as file:
-            with file.open('data') as scene:
-                return json.loads(scene.read().decode('utf-8'))['start']
+            with file.open('data') as data:
+                self._data = json.load(data)
     
     def readSceneToJSONString(self, sceneName: str) -> str: 
         with zipfile.ZipFile(self._package, 'r') as file:
@@ -53,10 +60,13 @@ class Loader():
     def getPackagePath(self):
         return self._package
     
-if __name__ == "__main__":
-    loader = Loader()
-    loader.setProject(projectPath.joinpath("testStory.syoa"))
-    loader.readStoryFilePaths()
-    print(loader.readSceneToJSONString("Scene1"))
-    #print(loader.readSceneToDict("Scene1"))
+    def getID(self) -> str: 
+        return self._data['id']
     
+    def getStartScene(self) -> str:
+        return self._data['start']
+    
+    
+    def projectLoaded(self):
+        return self.projectLoaded
+            

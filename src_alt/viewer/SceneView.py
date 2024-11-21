@@ -1,58 +1,156 @@
 import sys, os
 from datetime import datetime
-from PySide6.QtWidgets import QApplication, QTextEdit, QMainWindow, QPushButton, QWidget, QVBoxLayout, QDialog
-from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer, Signal
+from PySide6.QtWidgets import (
+    QApplication, QTextEdit, QMainWindow, QPushButton, 
+    QWidget, QVBoxLayout, QDialog, QStackedWidget, QLabel,
+    QScrollArea, QHBoxLayout, QSpacerItem, QSizePolicy
+)
+from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer, Signal, QCoreApplication
 from PySide6.QtGui import QFont, QPalette, QColor, QPainter, QPixmap
-from loader import Loader
-from audioManager import AudioManager
-from variables import ViewerVariableManager
-from files import FileManager
+from src_alt.viewer.loader import Loader
+from src_alt.viewer.audioManager import AudioManager
+from src_alt.viewer.variables import ViewerVariableManager
+from src_alt.viewer.files import FileManager
 
-class SceneViewMenuOverlay(QDialog):
-    closeMenu = Signal()
+class DialogueLog(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowFlag(Qt.FramelessWindowHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(400, 300)
 
-        self.layout = QVBoxLayout(self)
 
-        BUTTON_STYLE = """
-            QPushButton {
-                background-color: #3498db;
-                color: white;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-size: 16px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-            QPushButton:pressed {
-                background-color: #2471a3;
-            }
-        """
+
+class SceneViewMenuOverlay(QWidget):
+    closeMenu = Signal()
+    
+    BUTTON_STYLE = """
+        QPushButton {
+            background-color: #3498db;
+            color: white;
+            padding: 20px 40px; 
+            border-radius: 12px; 
+            font-size: 20px; 
+            font-weight: bold;
+            min-width: 70px;
+            min-height: 30px; 
+        }
+        QPushButton:hover {
+            background-color: #2980b9;
+        }
+        QPushButton:pressed {
+            background-color: #2471a3;
+        }
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.setAttribute(Qt.WA_TranslucentBackground)  
+        self.setWindowFlags(Qt.FramelessWindowHint) 
         
-        self.saveButton = QPushButton("Save", self)
-        self.saveButton.setStyleSheet(BUTTON_STYLE)
-        self.layout.addWidget(self.saveButton)
+        self.layout = QVBoxLayout(self)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setMouseTracking(True)  
 
-        self.loadButton = QPushButton("Load", self)
-        self.loadButton.setStyleSheet(BUTTON_STYLE)
-        self.layout.addWidget(self.loadButton)
+        self.menuStack = QStackedWidget()
+        self.menuStack.setStyleSheet("background: transparent; border: none;")
+        self.layout.addWidget(self.menuStack)
 
-        self.optionsButton = QPushButton("Options", self)
-        self.optionsButton.setStyleSheet(BUTTON_STYLE)
-        self.layout.addWidget(self.optionsButton)
+        self.pauseMenu = self.createPauseMenu()
+        self.saveMenu = self.createSaveLoadMenu(isSaveMenu=True)
+        self.loadMenu = self.createSaveLoadMenu(isSaveMenu=False)
+        self.settingsMenu = self.createSettingsMenu()
 
-        self.closeButton = QPushButton("Close", self)
-        self.closeButton.setStyleSheet(BUTTON_STYLE)
-        self.layout.addWidget(self.closeButton)
+        self.menuStack.addWidget(self.pauseMenu)
+        self.menuStack.addWidget(self.saveMenu)
+        self.menuStack.addWidget(self.loadMenu)
+        self.menuStack.addWidget(self.settingsMenu)
 
-        self.closeButton.clicked.connect(self.closeMenu.emit)
+        self.menuStack.setCurrentWidget(self.pauseMenu)
+        
+    def createPauseMenu(self):
+        menu = QWidget()
+        layout = QVBoxLayout(menu)
+        layout.setAlignment(Qt.AlignCenter)
 
+        layout.setSpacing(20) 
+        
+        resumeButton = QPushButton("Resume")
+        saveButton = QPushButton("Save")
+        loadButton = QPushButton("Load")
+        settingsButton = QPushButton("Settings")
+        quitButton = QPushButton("Quit")
+
+        for btn in [resumeButton, saveButton, loadButton, settingsButton, quitButton]:
+            btn.setStyleSheet(self.BUTTON_STYLE)
+            layout.addWidget(btn)
+
+        resumeButton.clicked.connect(self.closeMenu.emit) 
+        saveButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.saveMenu))
+        loadButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.loadMenu))
+        settingsButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.settingsMenu))
+        quitButton.clicked.connect(QCoreApplication.quit)
+
+        return menu
+
+    def createSaveLoadMenu(self, isSaveMenu):
+        menu = QWidget()
+        layout = QVBoxLayout(menu)
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        title = QLabel("Save Menu" if isSaveMenu else "Load Menu")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("font-size: 20px; color: white; padding: 10px;")
+        layout.addWidget(title)
+
+        layout.setSpacing(20) 
+        scrollArea = QScrollArea()
+        scrollArea.setStyleSheet("""
+            border-radius: 15px;
+            background-color: #333;
+            border: 1px solid #3498db;
+        """)
+        scrollArea.setWidgetResizable(True)
+        
+        # The scroll area will be where the saves are laid out
+        slotContainer = QWidget()
+        slotLayout = QVBoxLayout(slotContainer)
+
+        for i in range(10):  
+            slotWidget = QWidget()
+            slotWidget.setStyleSheet("border: 1px solid #3498db;")
+            slotLayoutRow = QHBoxLayout(slotWidget)
+            slotLabel = QLabel(f"Slot {i+1} - Empty")  # TODO: Actually load saves
+            slotLabel.setStyleSheet("color: white; font-size: 16px;")
+            slotLayoutRow.addWidget(slotLabel)
+            slotLayoutRow.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))
+            
+            slotLayout.addWidget(slotWidget)
+
+        slotContainer.setLayout(slotLayout)
+        scrollArea.setWidget(slotContainer)
+        layout.addWidget(scrollArea)
+
+        backButton = QPushButton("Back")
+        backButton.setStyleSheet(self.BUTTON_STYLE)
+        backButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.pauseMenu))
+        layout.addWidget(backButton)
+        menu.setLayout(layout)
+        
+        return menu 
+      
+    def createSettingsMenu(self):
+        menu = QWidget()
+        layout = QVBoxLayout(menu)
+        layout.setAlignment(Qt.AlignCenter)
+
+        warningLabel = QLabel("OUT OF ORDER")
+        warningLabel.setStyleSheet("font-size: 32px; color: white;")
+        layout.addWidget(warningLabel)
+
+        backButton = QPushButton("Back")
+        backButton.setStyleSheet(self.BUTTON_STYLE)
+        backButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.pauseMenu))
+        layout.addWidget(backButton)
+
+        return menu
 
 class SceneViewBackground(QWidget):
     def __init__(self):
@@ -97,7 +195,7 @@ class SceneView(QMainWindow):
         self.background.setBackground('grid.jpg')
         self.setCentralWidget(self.background)
         self.background.setGeometry(self.rect())
-        self.background.show()
+        #self.background.show()
         
         self.dialogueHistory = []
         self.nextEntry = {}
@@ -125,7 +223,7 @@ class SceneView(QMainWindow):
         self.textBox = QTextEdit(self)
         self.textBox.setReadOnly(True)
         font = QFont("Arial", 24, QFont.Weight.Bold) 
-        self.textBox.document().setDefaultFont(font)
+        self.textBox.setCurrentFont(font)
         self.textBox.setStyleSheet("padding: 15px; border: none; background-color: #3498db; color: white;")
         self.textBox.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.textBox.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -167,8 +265,7 @@ class SceneView(QMainWindow):
         
         self.loader = Loader()
         self.loader.setProject(filePath)
-        self.loader.readStoryFilePaths()
-        self.loader.readVariablesIntoManager()
+        self.loader.loadPackage()
 
         self.vm = ViewerVariableManager()
         self.files = FileManager()
@@ -389,16 +486,14 @@ class SceneView(QMainWindow):
             self.menuOverlay.hide()
             if self.showingNext:
                 self.nextButton.show()
-            self.setKeyEventsEnabled(True)
-            self.setSceneElementsEnabled(True) 
             self.container.show()  
         else:
-            self.setKeyEventsEnabled(False)
-            self.setSceneElementsEnabled(False) 
+            self.menuOverlay.setGeometry(self.rect())
             if self.showingNext:
                 self.nextButton.hide()
             self.menuOverlay.raise_()
             self.menuOverlay.move(self.rect().center() - self.menuOverlay.rect().center())
+            self.menuOverlay.setFocus()
             self.menuOverlay.show()
             self.container.hide()
 
@@ -499,17 +594,6 @@ class SceneView(QMainWindow):
         self.adjustSizeToContent()
         self.updateContainerGeometry()
 
-    def setKeyEventsEnabled(self, enabled):
-        if enabled:
-            self.setFocusPolicy(Qt.StrongFocus)
-        else:
-            self.setFocusPolicy(Qt.NoFocus)
-            
-    def setSceneElementsEnabled(self, enabled):
-        for widget in self.findChildren(QPushButton):
-            if widget.parent() != self.menuOverlay:
-                widget.setEnabled(enabled)
-        self.container.setEnabled(enabled)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_M:
@@ -524,3 +608,5 @@ class SceneView(QMainWindow):
             self.saveGame()
         else:
             super().keyPressEvent(event)
+
+
