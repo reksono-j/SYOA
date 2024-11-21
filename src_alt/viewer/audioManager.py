@@ -2,7 +2,7 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtCore import QUrl, QTimer
 import zipfile, tempfile
 import os, atexit, time
-from singleton import Singleton
+from src_alt.viewer.singleton import Singleton
 
 class AudioManager(metaclass=Singleton):
     def __init__(self):

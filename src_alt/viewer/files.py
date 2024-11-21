@@ -1,6 +1,6 @@
 import os, json, time, re, uuid
-from singleton import Singleton
-from loader import Loader
+from src_alt.viewer.singleton import Singleton
+from src_alt.viewer.loader import Loader
 from pathlib import Path
 import platform
 from PySide6.QtWidgets import (

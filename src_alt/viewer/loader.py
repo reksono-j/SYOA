@@ -1,7 +1,7 @@
 import json, os
 import zipfile
-from variables import ViewerVariableManager
-from singleton import Singleton
+from src_alt.viewer.variables import ViewerVariableManager
+from src_alt.viewer.singleton import Singleton
 
 class Loader(metaclass=Singleton):
     def __init__(self):

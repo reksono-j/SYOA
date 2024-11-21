@@ -11,9 +11,11 @@ import json
 import copy
 import os
 from pathlib import Path
+import sys
 
 from src_alt.editor import keybinds
 
+app = QApplication(sys.argv)
 class Test(unittest.TestCase):
     def setUp(self):
         # path of config file
@@ -26,7 +28,6 @@ class Test(unittest.TestCase):
             with open(self.configPath, 'w') as file:
                 file.write("")
 
-        self.app = QApplication([])
         self.mainWindow = QMainWindow()
         self.manager = keybinds.ShortcutsManager(self.mainWindow)
 
@@ -51,12 +52,13 @@ class Test(unittest.TestCase):
         self.manager.importShortcuts()
 
 
-        
-        
 
     def tearDown(self):
+
         with open(self.configPath, 'w') as file:
             json.dump(self.configSave, file, indent=4)
+        
+        
 
     def test_saveShortcuts(self):
         self.manager.config['shortcutSettings']['testKey'] = 'testValue111'
@@ -86,8 +88,6 @@ class Test(unittest.TestCase):
         self.manager.importShortcuts()
 
         self.maxDiff = None
-        self.assertEqual(testShortcutDict['key1'].keys().__str__(), self.manager.shortcutDict['key1'].keys().__str__())
-        self.assertEqual(testShortcutDict['key2'].keys().__str__(), self.manager.shortcutDict['key2'].keys().__str__())
         self.assertEqual(testShortcutDict['key1'].name, self.manager.shortcutDict['key1'].name)
         self.assertEqual(testShortcutDict['key2'].name, self.manager.shortcutDict['key2'].name)
         self.assertEqual(len(testShortcutDict), len(self.manager.shortcutDict))

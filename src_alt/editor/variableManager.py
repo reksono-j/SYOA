@@ -1,7 +1,7 @@
 import os
 import json
-from singleton import Singleton
-from projectManager import ProjectManager
+from src_alt.editor.singleton import Singleton
+from src_alt.editor.projectManager import ProjectManager
 
 class EditorVariableManager(metaclass=Singleton):
     def __init__(self):
