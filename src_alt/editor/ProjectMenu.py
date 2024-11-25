@@ -52,6 +52,7 @@ class ProjectMenu(QWidget):
         self.tabsWidget.addTab(tabTitle, projectFileMenu)
         
         self.setupFocusOrder()
+        return projectFileMenu
 
 
     def updateFileLists(self):

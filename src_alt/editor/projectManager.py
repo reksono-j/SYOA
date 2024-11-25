@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QListWidget, QMessageBox, QInputDialog, QDialog
 )
 from PySide6.QtCore import Signal, QObject
-from src_alt.editor.DirectoryDialogs import ProjectFolderSelectDialog
+from DirectoryDialogs import ProjectFolderSelectDialog
 
 class ProjectManager(QObject):
     changedProject = Signal()
