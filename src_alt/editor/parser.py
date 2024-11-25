@@ -1,6 +1,6 @@
 from pyparsing import Word, CaselessKeyword, Literal, Regex, Optional, one_of, alphanums, nums, printables
 from enum import Enum
-from src_alt.editor.sceneStructure import *
+from sceneStructure import *
 
 # Grammar 
 # Dialogue - Speaker:Sentence or Sentence -> string:string or string

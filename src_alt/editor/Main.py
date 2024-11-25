@@ -238,15 +238,15 @@ class MainWindow(QMainWindow):
         currentWidget = self.centralWidget.currentWidget()
 
         if isinstance(currentWidget, ProjectMenu):
-            for index in range(currentWidget.tabsWidget.tabBar.count()):
-                projectFileMenu = currentWidget.tabsWidget.getTabWidget(index)
+            projectFileMenu = currentWidget.tabsWidget.getTabWidget(currentWidget.tabsWidget.tabBar.currentIndex())
 
             if isinstance(projectFileMenu, ProjectFileMenu):
+                openProject = projectFileMenu
                 openScene = projectFileMenu.textEditWidget
                 openScenePath = openScene.currentFile
                 openScene.saveFile()
-                if openScene:
-                    self.dialog = SearchMenuDialog(self.projectManager.getCurrentFilePath(), openScenePath, openScene)
+                if openScene and openScenePath:
+                    self.dialog = SearchMenuDialog(self.projectManager.getCurrentFilePath(), openScenePath, openProject, currentWidget)
                     self.dialog.exec()
                 else:
                     QMessageBox.warning(self, "Warning", "Open scene first.")
