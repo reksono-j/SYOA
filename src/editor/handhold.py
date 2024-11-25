@@ -21,16 +21,65 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout = QtWidgets.QVBoxLayout()
         # printing pressed
         print("pressed")
+        self.saver = False
+        self.saver2 = False
+        self.button33 = QPushButton("Reset")
+
+        self.groupBox.layout.addWidget(self.button33)
+        self.button33.clicked.connect(lambda: self.res(self.button33))
+
         self.button = QPushButton("Save")
 
         self.groupBox.layout.addWidget(self.button)
         self.button.clicked.connect(lambda: self.save(self.button))
 
-        self.button = QPushButton("Add")
+        self.button12 = QPushButton("Add")
+
+        self.groupBox.layout.addWidget(self.button12)
+        self.button12.clicked.connect(lambda: self.add(self.button12))
+
+        self.button3 = QPushButton("Save")
+
+        self.groupBox.layout.addWidget(self.button3)
+        self.button3.clicked.connect(lambda: self.save(self.button3))
+
+        self.button34 = QPushButton("Reset")
+
+        self.groupBox.layout.addWidget(self.button34)
+        self.button34.clicked.connect(lambda: self.res(self.button34))
+        self.groupBox.setLayout(self.groupBox.layout)
+
+    def res(self,button):
+        for i in range(self.groupBox.layout.count()):
+            item = self.groupBox.layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        self.saver = False
+        self.saver2 = False
+        self.button33 = QPushButton("Reset")
+
+        self.groupBox.layout.addWidget(self.button33)
+        self.button33.clicked.connect(lambda: self.res(self.button33))
+
+        self.button = QPushButton("Save")
 
         self.groupBox.layout.addWidget(self.button)
-        self.button.clicked.connect(lambda: self.add(self.button))
+        self.button.clicked.connect(lambda: self.save(self.button))
 
+        self.button12 = QPushButton("Add")
+
+        self.groupBox.layout.addWidget(self.button12)
+        self.button12.clicked.connect(lambda: self.add(self.button12))
+
+        self.button3 = QPushButton("Save")
+
+        self.groupBox.layout.addWidget(self.button3)
+        self.button3.clicked.connect(lambda: self.save(self.button3))
+
+        self.button34 = QPushButton("Reset")
+
+        self.groupBox.layout.addWidget(self.button34)
+        self.button34.clicked.connect(lambda: self.res(self.button34))
         self.groupBox.setLayout(self.groupBox.layout)
 
     def save(self, button):
@@ -88,6 +137,55 @@ class HandHoldMenu(QtWidgets.QScrollArea):
                 print(widget.toPlainText())
 
         print(final_string)
+        index = self.groupBox.layout.indexOf(button)
+        if index < 4:
+
+            if self.saver:
+                item = self.groupBox.layout.takeAt(index-1)
+                if item.widget():
+                    item.widget().deleteLater()
+                item = self.groupBox.layout.takeAt(index - 2)
+                if item.widget():
+                    item.widget().deleteLater()
+                index = index - 2
+
+            self.saver = True
+            QApplication.clipboard().setText(final_string)
+            label = QtWidgets.QLabel('The code is automatically copied. Hit Control V to paste into the IDE')
+            index = index - 1
+            # Insert the new button after the clicked button
+            self.groupBox.layout.insertWidget(index + 1, label)
+            tbx = QtWidgets.QTextEdit(self)
+            tbx.setPlainText(final_string)
+
+
+            # Find the index of the clicked button in the layout
+            index = index + 1
+
+            # Insert the new button after the clicked button
+            self.groupBox.layout.insertWidget(index + 1, tbx)
+        else:
+
+            if self.saver2:
+                item = self.groupBox.layout.takeAt(index+1)
+                if item.widget():
+                    item.widget().deleteLater()
+                item = self.groupBox.layout.takeAt(index + 1)
+                if item.widget():
+                    item.widget().deleteLater()
+            QApplication.clipboard().setText(final_string)
+            label = QtWidgets.QLabel('The code is automatically copied. Hit Control V to paste into the IDE')
+
+            # Insert the new button after the clicked button
+            self.groupBox.layout.insertWidget(index + 1, label)
+            self.saver2 = True
+            index = index + 1
+            tbx = QtWidgets.QTextEdit(self)
+            tbx.setPlainText(final_string)
+
+
+            # Insert the new button after the clicked button
+            self.groupBox.layout.insertWidget(index + 1, tbx)
     def add(self, button):
 
         #DO NOT DELETE THIS IS HOW TO READ TEXTEDIT
