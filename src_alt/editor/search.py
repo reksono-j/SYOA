@@ -13,14 +13,17 @@ import os
 from ProjectMenu import *
 
 class SearchMenuDialog(QDialog):   
-    def __init__(self, storyPath=None, currFilePath=None, currTextEdit=None):
+    def __init__(self, storyPath=None, currFilePath=None, currProject=None, currProjectMenu=None):
         super().__init__()
         self.setMinimumSize(600, 800)
         #TODO: Error checking on path
         self.changeStoryFolder(storyPath)
         self.changeCurrFile(currFilePath)
 
-        self.currTextEdit = currTextEdit
+        self.currProject = currProject
+        self.currTextEdit = currProject.textEditWidget.textEdit
+        self.currProjectMenu = currProjectMenu
+        
 
         self.loadSceneLinks()
         self.initUI()
@@ -141,23 +144,56 @@ class SearchMenuDialog(QDialog):
         if (line != ""):
             lineNum = int(line[5:])
             self.close()
-            print ([self.currFile, lineNum])
+            print([self.currFile, lineNum])
+            self.currTextEdit.jumpToLine(lineNum)
             return [self.currFile, lineNum]
     
     def goToInLinked(self, result):
         if (result != ""):
             result = result.split(',')
             sceneName = result[0] + ".txt"
-            lineNum = result[1][6:]
+            lineNum = int(result[1][6:])
             self.close()
             print([sceneName, lineNum])
+            tab = self.currProjectMenu.tabsWidget.getTabIndex(sceneName)
+            if tab is None: #tab is not opened
+                targetPath = Path(self.storyDirectory, sceneName)
+                self.currProject = self.currProjectMenu.openNewTab(self.storyDirectory)
+                self.currProject.openFile(targetPath)
+
+                tab = self.currProjectMenu.tabsWidget.getTabIndex(sceneName)
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            else:
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currProject = self.currProjectMenu.tabsWidget.tabContents.currentWidget()
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            self.currTextEdit.jumpToLine(lineNum)
             return [sceneName, lineNum]
     
     def goToLink(self, link):
         if (link != ""):
             self.close()
             print(link + "txt")
-            return link + ".txt"     
+            link = link + ".txt"
+            tab = self.currProjectMenu.tabsWidget.getTabIndex(link)
+            if tab is None: #tab is not opened
+                targetPath = Path(self.storyDirectory, link)
+                self.currProject = self.currProjectMenu.openNewTab(self.storyDirectory)
+                self.currProject.openFile(targetPath)
+
+                tab = self.currProjectMenu.tabsWidget.getTabIndex(link)
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            else:
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currProject = self.currProjectMenu.tabsWidget.tabContents.currentWidget()
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            return link 
         
 
     def changeStoryFolder(self, path):

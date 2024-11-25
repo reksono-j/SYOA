@@ -46,6 +46,15 @@ class TabsWidget(QWidget):
     def getTabWidget(self, index):
         return self.tabContents.widget(index) if index < self.tabContents.count() else None
     
+    def getTabIndex(self, title):
+        tabs = self.getAllTabs()
+        index = 0
+        for tab in tabs:
+            if tab[0] == title:
+                return index
+            index += 1
+        return None
+    
     def eventFilter(self, obj, event):
         if obj == self.tabBar:
             if event.type() == QEvent.KeyPress:
