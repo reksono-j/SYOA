@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal
 from styles import *
+import tutorial
 
 class HomeMenu(QWidget):
     CreateProject = Signal()
@@ -39,7 +40,7 @@ class HomeMenu(QWidget):
 
         self.layout.addWidget(self.optionsFrame, alignment=Qt.AlignCenter)
 
-        self.ShowTutorial.connect(lambda: self.printMessage("Tutorial", "WIP: Tutorial under construction")) # TODO: add Tutorial
+        self.ShowTutorial.connect(lambda: self.showTutorial)
         self.OpenPreferences.connect(lambda: self.OpenPreferences)
         self.ShowFaq.connect(lambda: self.printMessage("FAQ", "WIP: FAQ under construction")) # TODO: add FAQ
 
@@ -47,8 +48,14 @@ class HomeMenu(QWidget):
         button = QPushButton(text)
         button.clicked.connect(signal.emit)  
         button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        button.setAccessibleName(text)
         return button
 
     def printMessage(self, title, text):
         QMessageBox.information(self, title, text)
+
+    def showTutorial(self):
+        self.dialog = tutorial.TutorialDialog()
+        self.dialog.exec()
+        
 

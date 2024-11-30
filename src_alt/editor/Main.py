@@ -21,6 +21,7 @@ from search import SearchMenuDialog
 import ui_customize
 import keybinds
 import speechToText
+import tutorial
 
 
 class MainWindow(QMainWindow):
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
         self.homeMenu.CreateProject.connect(self.projectMenu.createProject)
         self.homeMenu.OpenExistingProject.connect(self.projectMenu.openExistingProject)
         self.homeMenu.OpenPreferences.connect(self.showPreferencesMenu)
+        self.homeMenu.ShowTutorial.connect(self.showTutorial)
         self.projectMenu.CreateProject.connect(self.onCreateProject)
         self.projectMenu.OpenProject.connect(self.onOpenProject)
 
@@ -77,6 +79,7 @@ class MainWindow(QMainWindow):
         shortcutsManager.addShortcut("Ctrl+/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
         shortcutsManager.addShortcut("Ctrl+T","Start Transcription",speechToText.STT.recordCallback)
         shortcutsManager.addShortcut("Ctrl+F","Open Search Menu",self.showSearchMenu)
+        shortcutsManager.addShortcut("Ctrl+Y","Open Tutorial",self.showTutorial)
     
     def initMenuBar(self):
         self.fileMenu = self.menuBar().addMenu("&File")
@@ -250,6 +253,10 @@ class MainWindow(QMainWindow):
                     self.dialog.exec()
                 else:
                     QMessageBox.warning(self, "Warning", "Open scene first.")
+
+    def showTutorial(self):
+        self.dialog = tutorial.TutorialDialog()
+        self.dialog.exec()
                 
 class CompileThread(QThread):
     progress = Signal(int) 
