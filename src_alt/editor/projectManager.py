@@ -89,16 +89,20 @@ class ProjectManagerGUI(QWidget):
 
     def initUI(self):
         self.setWindowTitle('Project Manager')
+        self.setAccessibleName("Project Manager")
         layout = QVBoxLayout()
 
         self.projectList = QListWidget()
+        self.projectList.setAccessibleName("Projects")
         layout.addWidget(self.projectList)
 
         self.createButton = QPushButton('Create Project')
+        self.createButton.setAccessibleName("Create Project")
         self.createButton.clicked.connect(self.createProject)
         layout.addWidget(self.createButton)
 
         self.loadButton = QPushButton('Load Project')
+        self.loadButton.setAccessibleName("Load Project")
         self.loadButton.clicked.connect(self.loadProject)
         layout.addWidget(self.loadButton)
 

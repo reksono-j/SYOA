@@ -45,6 +45,7 @@ class SettingsMenu(QWidget):
         button = QPushButton(text)
         button.clicked.connect(signal.emit)  
         button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        button.setAccessibleName(text)
         return button
         
     def printMessage(self, title, text):

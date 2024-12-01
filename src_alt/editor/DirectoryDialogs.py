@@ -22,7 +22,7 @@ class ProjectFolderSelectDialog(QDialog):
         self.layout.addWidget(self.folderList)
 
         self.selectButton = QPushButton("Select")
-        self.selectButton.setAccesibleName("Select")
+        self.selectButton.setAccessibleName("Select")
         self.selectButton.clicked.connect(self.selectFolder)
         self.layout.addWidget(self.selectButton)
 

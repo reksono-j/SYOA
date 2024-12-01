@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 import json
 import os
+from styles import *
 
 class UICustomizeMenu(QGroupBox):
     def __init__(self, UICustomizeManager, parent):
@@ -23,7 +24,6 @@ class UICustomizeMenu(QGroupBox):
         
         #accessibility
         self.setAccessibleName("UI Settings Menu")
-        self.setAccessibleDescription("Menu for changing UI")
         self.accessibilityInterface = QAccessibleWidget(self, r=QAccessible.Grouping, name="UI Settings Menu")
 
     def initUI(self):
@@ -42,7 +42,6 @@ class UICustomizeMenu(QGroupBox):
 
         #inner form accessibility
         self.innerForm.setAccessibleName("UI Settings Menu")
-        self.innerForm.setAccessibleDescription("Contains UI settings controls")
         self.innerForm.accessibilityInterface = QAccessibleWidget(self.innerForm, r=QAccessible.List, name="UI Settings Menu Form")
 
 
@@ -50,34 +49,29 @@ class UICustomizeMenu(QGroupBox):
         #set typeface
         self.innerForm.fontFamilyComboBox = QFontComboBox(self)
         self.innerForm.fontFamilyComboBox.setAccessibleName("Font Family Setting")
-        self.innerForm.fontFamilyComboBox.setAccessibleDescription("Change font family here")
-        self.innerForm.fontFamilyComboBox.setCurrentFont(self.parent.font())
+        self.innerForm.fontFamilyComboBox.setCurrentFont(self.UICustomizeManager.settingsDict["Font Family"])
         #self.innerForm.fontFamilyComboBox.activated.connect(lambda: QAccessible.updateAccessibility(QAccessibleEvent(self.innerForm.accessibilityInterface, QAccessible.Alert)))
 
         #set font size
         self.innerForm.fontSizeSpinBox = QSpinBox(self)
         self.innerForm.fontSizeSpinBox.setAccessibleName("Font Size Setting")
-        self.innerForm.fontSizeSpinBox.setAccessibleDescription("Change font size here")
         self.innerForm.fontSizeSpinBox.setMinimum(12)
         self.innerForm.fontSizeSpinBox.setMaximum(72)
         self.innerForm.fontSizeSpinBox.setValue(int(self.UICustomizeManager.settingsDict["Font Size"]))
 
         #set font color
-        self.innerForm.fontColorComboBox = QComboBox(self)
-        self.innerForm.fontColorComboBox.setAccessibleName("Font Color Setting")
-        self.innerForm.fontColorComboBox.setAccessibleDescription("Change font color here")
-        self.innerForm.fontColorComboBox.setEditText(self.UICustomizeManager.settingsDict["Font Color"])
-        self.innerForm.fontColorComboBox.setEditable(False)
-        self.innerForm.fontColorComboBox.addItem("black")
-        self.innerForm.fontColorComboBox.addItem("white")
-        self.innerForm.fontColorComboBox.addItem("red")
-        self.innerForm.fontColorComboBox.addItem("blue")
-        self.innerForm.fontColorComboBox.setCurrentText(self.UICustomizeManager.settingsDict["Font Color"])
+        self.innerForm.themeColorComboBox = QComboBox(self)
+        self.innerForm.themeColorComboBox.setAccessibleName("Color Theme Setting")
+        self.innerForm.themeColorComboBox.setEditText(self.UICustomizeManager.settingsDict["Theme Color"])
+        self.innerForm.themeColorComboBox.setEditable(False)
+        self.innerForm.themeColorComboBox.addItem("Light")
+        self.innerForm.themeColorComboBox.addItem("Dark")
+        self.innerForm.themeColorComboBox.setCurrentText(self.UICustomizeManager.settingsDict["Theme Color"])
 
         #layout of form menu
         self.innerForm.layout.addRow(self.tr("Font Family:"), self.innerForm.fontFamilyComboBox)
         self.innerForm.layout.addRow(self.tr("Font Size:"), self.innerForm.fontSizeSpinBox)
-        self.innerForm.layout.addRow(self.tr("Font Color:"), self.innerForm.fontColorComboBox)
+        self.innerForm.layout.addRow(self.tr("Theme Color:"), self.innerForm.themeColorComboBox)
         self.innerForm.setLayout(self.innerForm.layout)
 
         #add form menu to group box
@@ -86,7 +80,6 @@ class UICustomizeMenu(QGroupBox):
         #create save settings button
         self.buttonSave = QPushButton("Save", self)
         self.buttonSave.setAccessibleName("Save Settings")
-        self.buttonSave.setAccessibleDescription("Save UI settings here")
         self.buttonSave.clicked.connect(lambda: self.updateDict())
 
         #add save button to group box
@@ -109,7 +102,7 @@ class UICustomizeMenu(QGroupBox):
     def updateDict(self):
         self.UICustomizeManager.settingsDict["Font Family"] = self.innerForm.fontFamilyComboBox.currentFont().family()
         self.UICustomizeManager.settingsDict["Font Size"] = str(self.innerForm.fontSizeSpinBox.value())
-        self.UICustomizeManager.settingsDict["Font Color"] = self.innerForm.fontColorComboBox.currentText()
+        self.UICustomizeManager.settingsDict["Theme Color"] = self.innerForm.themeColorComboBox.currentText()
         self.UICustomizeManager.updateSettings()
 
 class UICustomizeManager:
@@ -135,9 +128,15 @@ class UICustomizeManager:
             self.settingsDict[key] = (self.config['uiSettings'][key]) 
 
     def applySettings(self):
-        self.window.setStyleSheet("color: " + self.settingsDict["Font Color"] + ";" +
-                                  "font-size: " + self.settingsDict["Font Size"] + "pt;" +
-                                  "font-family: " + self.settingsDict["Font Family"])
+        theme = " * {\nfont-family: '" + self.settingsDict["Font Family"] + "', Arial, sans-serif; \nfont-size: " + self.settingsDict["Font Size"] + "pt;\n}"
+        if self.settingsDict['Theme Color'] == 'Dark':
+            theme += APP_STYLE_DARK
+        else:
+            theme += APP_STYLE_LIGHT #if/else as only two themes are available
+        self.window.setStyleSheet(theme)
+        QApplication.instance().setStyleSheet(theme)
+        #self.window.setStyleSheet("font-size: " + self.settingsDict["Font Size"] + "pt;" +
+        #                          "font-family: " + self.settingsDict["Font Family"])
 
     def updateSettings(self):
         self.applySettings()

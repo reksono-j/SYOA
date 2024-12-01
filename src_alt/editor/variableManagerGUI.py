@@ -14,12 +14,15 @@ class AddVariableDialog(QDialog):
         self.layout = QFormLayout(self)
         
         self.variableNameInput = QLineEdit(self)
+        self.variableNameInput.setAccessibleName("Name field")
         self.variableValueInput = QLineEdit(self)
+        self.variableValueInput.setAccessibleName("Value field")
         
         self.layout.addRow('Name:', self.variableNameInput)
         self.layout.addRow('Initial Value (Integer):', self.variableValueInput)
         
         self.addButton = QPushButton('Add', self)
+        self.addButton.setAccessibleName("Add")
         self.addButton.clicked.connect(self.accept)
         self.layout.addWidget(self.addButton)
 

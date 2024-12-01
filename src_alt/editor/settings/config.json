@@ -8,8 +8,8 @@
         "voice command": "Ctrl+V"
     },
     "uiSettings": {
-        "Font Family": "Segoe Script",
-        "Font Size": "16",
-        "Font Color": "white"
+        "Font Family": "Rockwell",
+        "Font Size": "15",
+        "Theme Color": "Dark"
     }
 }

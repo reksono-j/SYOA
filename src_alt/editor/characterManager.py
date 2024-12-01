@@ -220,9 +220,9 @@ class NameDialog(QDialog):
         self.nameInput.setAccessibleDescription("Letters only")
 
         okButton = QPushButton("OK")
-        self.okButton.setAccessibleName("Confirm button")
+        okButton.setAccessibleName("Confirm button")
         cancelButton = QPushButton("Cancel")
-        self.cancelButton.setAccessibleName("Cancel button")
+        cancelButton.setAccessibleName("Cancel button")
 
         okButton.clicked.connect(self.confirm)
         cancelButton.clicked.connect(self.reject)

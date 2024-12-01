@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal
 from styles import *
+import tutorial
 
 class HomeMenu(QWidget):
     CreateProject = Signal()
@@ -29,26 +30,32 @@ class HomeMenu(QWidget):
         self.openProjectButton = self.createButton("Open existing project", self.OpenExistingProject)
         self.tutorialButton = self.createButton("Tutorial", self.ShowTutorial)
         self.preferencesButton = self.createButton("Preferences", self.OpenPreferences)
-        self.faqButton = self.createButton("FAQ", self.ShowFaq)
+        #self.faqButton = self.createButton("FAQ", self.ShowFaq)
 
         self.optionsLayout.addWidget(self.startProjectButton)
         self.optionsLayout.addWidget(self.openProjectButton)
         self.optionsLayout.addWidget(self.tutorialButton)
         self.optionsLayout.addWidget(self.preferencesButton)
-        self.optionsLayout.addWidget(self.faqButton)
+        #self.optionsLayout.addWidget(self.faqButton)
 
         self.layout.addWidget(self.optionsFrame, alignment=Qt.AlignCenter)
 
-        self.ShowTutorial.connect(lambda: self.printMessage("Tutorial", "WIP: Tutorial under construction")) # TODO: add Tutorial
+        self.ShowTutorial.connect(lambda: self.showTutorial)
         self.OpenPreferences.connect(lambda: self.OpenPreferences)
-        self.ShowFaq.connect(lambda: self.printMessage("FAQ", "WIP: FAQ under construction")) # TODO: add FAQ
+        #self.ShowFaq.connect(lambda: self.printMessage("FAQ", "WIP: FAQ under construction")) # TODO: add FAQ
 
     def createButton(self, text, signal):
         button = QPushButton(text)
         button.clicked.connect(signal.emit)  
         button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        button.setAccessibleName(text)
         return button
 
     def printMessage(self, title, text):
         QMessageBox.information(self, title, text)
+
+    def showTutorial(self):
+        self.dialog = tutorial.TutorialDialog()
+        self.dialog.exec()
+        
 
