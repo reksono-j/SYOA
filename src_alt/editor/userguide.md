@@ -1,7 +1,7 @@
 # Speak Your Own Adventure User Guide
 
 ## Introduction
-Speak Your Own Adventure is a program designed for writing and playing interactive digital narratives, wherein user choices can influence the outcome of a story. SYOA is similar to programs such as Ren'Py, Clojure, and Ink, but aims to provide a more inclusive and accessible experience for low-vision or blind authors through features such as built-in speech-to-text transcription, text-to-speech story audio, and screen reader compatibility. 
+Speak Your Own Adventure is a program designed for writing and playing interactive digital narratives, wherein user choices can influence the outcome of a story. SYOA is similar to programs such as Ren'Py, Twine, and Ink, but aims to provide a more inclusive and accessible experience for low-vision or blind authors through features such as built-in speech-to-text transcription, text-to-speech story audio, and screen reader compatibility. 
 
 ## Starting a New Project
 To begin creating an SYOA story, click the "Start a new project" option from the Home screen. After choosing a project name, you will be taken to the project file menu, where you can see all the scenes within the opened project. SYOA projects are a collection of connected scenes (text files) that contain custom script.

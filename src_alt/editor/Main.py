@@ -47,12 +47,12 @@ class MainWindow(QMainWindow):
         self.centralWidget = QStackedWidget()
         self.setCentralWidget(self.centralWidget)
         self.homeMenu = HomeMenu()
-        self.settingsMenu = SettingsMenu()
+        #self.settingsMenu = SettingsMenu()
         self.currentFileMenu = None
         self.preferencesMenu = self.uiSettingsManager.menu
         
         self.centralWidget.addWidget(self.homeMenu)
-        self.centralWidget.addWidget(self.settingsMenu)
+        #self.centralWidget.addWidget(self.settingsMenu)
         self.centralWidget.addWidget(self.projectMenu)
         self.centralWidget.addWidget(self.preferencesMenu)
         
@@ -95,10 +95,10 @@ class MainWindow(QMainWindow):
         
         self.menusMenu = self.menuBar().addMenu("&Menus")
         self.openHomeAction = QAction("Home", self)
-        self.openSettingsAction = QAction("Settings", self)
+        #self.openSettingsAction = QAction("Settings", self)
         self.openPreferencesAction = QAction("Preferences", self)
         self.menusMenu.addAction(self.openHomeAction)
-        self.menusMenu.addAction(self.openSettingsAction)
+        #self.menusMenu.addAction(self.openSettingsAction)
         self.menusMenu.addAction(self.openPreferencesAction)
         
         
@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         self.startNewProjectAction.triggered.connect(self.projectMenu.createProject)
         self.openExistingProjectAction.triggered.connect(self.projectMenu.openExistingProject)
         self.openHomeAction.triggered.connect(self.showHomeMenu)
-        self.openSettingsAction.triggered.connect(self.showSettingsMenu)
+        #self.openSettingsAction.triggered.connect(self.showSettingsMenu)
         self.openPreferencesAction.triggered.connect(self.showPreferencesMenu)
         self.compileProjectAction.triggered.connect(self.compileProject)
         self.openVariableManager.triggered.connect(self.showVariableManager)
@@ -228,9 +228,9 @@ class MainWindow(QMainWindow):
         self.centralWidget.setCurrentWidget(self.homeMenu)
         self.updateMenuBar() 
 
-    def showSettingsMenu(self):
-        self.centralWidget.setCurrentWidget(self.settingsMenu)
-        self.updateMenuBar()
+    # def showSettingsMenu(self):
+    #     self.centralWidget.setCurrentWidget(self.settingsMenu)
+    #     self.updateMenuBar()
     
     def showPreferencesMenu(self):
         self.centralWidget.setCurrentWidget(self.preferencesMenu)
@@ -275,7 +275,6 @@ class CompileThread(QThread):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyleSheet(APP_STYLE)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
