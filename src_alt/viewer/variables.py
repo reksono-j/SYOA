@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton, QListWidget
 )
 from PySide6.QtCore import Qt
-from singleton import Singleton
+from src_alt.viewer.singleton import Singleton
 
 # TODO: Make this reset when opening a new project
 class ViewerVariableManager(metaclass=Singleton):

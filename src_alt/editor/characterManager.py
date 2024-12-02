@@ -216,9 +216,13 @@ class NameDialog(QDialog):
         self.layout = QVBoxLayout()
         self.nameInput = QLineEdit()
         self.nameInput.setPlaceholderText("Enter character name (Letters only)")
+        self.nameInput.setAccessibleName("Name input box")
+        self.nameInput.setAccessibleDescription("Letters only")
 
         okButton = QPushButton("OK")
+        okButton.setAccessibleName("Confirm button")
         cancelButton = QPushButton("Cancel")
+        cancelButton.setAccessibleName("Cancel button")
 
         okButton.clicked.connect(self.confirm)
         cancelButton.clicked.connect(self.reject)
@@ -288,19 +292,21 @@ class CharacterForm(QDialog):
         
     def addAliasWidgetRow(self, alias, displayName):
         aliasLabel = QLabel(f"Alias {len(self.aliasInputs) + 1}")
+        aliasLabel.setAccessibleName(f"Alias {len(self.aliasInputs) + 1}")
         
         aliasInput = QLineEdit()
         aliasInput.setText(alias)
-        # TODO Figure out how to retroactively update the accessible names when lineedit changes
+        aliasInput.setAccessibleName("Alias Field")
         aliasLabel.setBuddy(aliasInput)
         aliasSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         aliasInput.setSizePolicy(aliasSizePolicy)
         self.aliasInputs.append(aliasInput)
          
         nameLabel = QLabel(f"Display Name {len(self.nameInputs) + 1}")
+        nameLabel.setAccessibleName(f"{len(self.nameInputs) + 1}")
         nameInput = QLineEdit() # TODO: replace with drop down that shows the available models
         nameInput.setText(displayName)
-        # TODO: Accessible name
+        nameInput.setAccessibleName("Name Field")
         nameLabel.setBuddy(nameInput)
         nameSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         nameInput.setSizePolicy(nameSizePolicy)

@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
         if os.path.exists(os.path.join(self.parent_path, 'test.mp3')):
             os.remove(os.path.join(self.parent_path, 'test.mp3'))
         if os.path.exists(os.path.join(self.parent_path, 'test1.mp3')):
-            os.remove(os.path.join(self.parent_path, 'test1 .mp3'))
+            os.remove(os.path.join(self.parent_path, 'test1.mp3'))
         return super().tearDown()
     
 

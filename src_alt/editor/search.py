@@ -13,14 +13,17 @@ import os
 from ProjectMenu import *
 
 class SearchMenuDialog(QDialog):   
-    def __init__(self, storyPath=None, currFilePath=None, currTextEdit=None):
+    def __init__(self, storyPath=None, currFilePath=None, currProject=None, currProjectMenu=None):
         super().__init__()
         self.setMinimumSize(600, 800)
         #TODO: Error checking on path
         self.changeStoryFolder(storyPath)
         self.changeCurrFile(currFilePath)
 
-        self.currTextEdit = currTextEdit
+        self.currProject = currProject
+        self.currTextEdit = currProject.textEditWidget.textEdit
+        self.currProjectMenu = currProjectMenu
+        
 
         self.loadSceneLinks()
         self.initUI()
@@ -28,7 +31,7 @@ class SearchMenuDialog(QDialog):
 
     def initUI(self):
         self.setWindowTitle("Search Menu")
-        #TODO: accessibility tags
+        self.setAccessibleName("Search Menu")
         self.layout = QVBoxLayout()
         # unsure if outside will be dialog or separate menu, internals should remain same, maybe without QGroupBox wrapper 
         self.mainArea = QGroupBox(self)
@@ -41,9 +44,9 @@ class SearchMenuDialog(QDialog):
         self.searchBox.setTitle("Search")
         self.searchBox.layout = QHBoxLayout()
         self.searchBar = QLineEdit(self.searchBox)
-        self.searchBar.setAccessibleName("Search text box")
+        self.searchBar.setAccessibleName("Search field")
         self.searchButton = QPushButton("Search", self.searchBox)
-        self.searchButton.setAccessibleName("Search button")
+        self.searchButton.setAccessibleName("Search")
         #Connect to function that updates combo boxes based on search
 
 
@@ -58,9 +61,9 @@ class SearchMenuDialog(QDialog):
         self.inFileResultsBox.setTitle("Inside current file")
         self.inFileResultsBox.layout = QHBoxLayout()
         self.inFileResultsDropdown = QComboBox(self.inFileResultsBox)
-        self.inFileResultsDropdown.setAccessibleName("In opened files results dropdown")        
+        self.inFileResultsDropdown.setAccessibleName("In opened files results")        
         self.inFileResultsButton = QPushButton("Go", self.inFileResultsBox)
-        self.inFileResultsButton.setAccessibleName("Go to results button")
+        self.inFileResultsButton.setAccessibleName("Go to results")
         self.inFileResultsDropdown.setEditable(False)
 
         self.inFileResultsBox.layout.addWidget(self.inFileResultsDropdown)
@@ -72,9 +75,9 @@ class SearchMenuDialog(QDialog):
         self.linksResultsBox.setTitle("Links from current file")
         self.linksResultsBox.layout = QHBoxLayout()
         self.linksResultsDropdown = QComboBox(self.linksResultsBox)
-        self.linksResultsDropdown.setAccessibleName("Link names results dropdown")
+        self.linksResultsDropdown.setAccessibleName("Link names results")
         self.linksResultsButton = QPushButton("Go", self.linksResultsBox)
-        self.linksResultsButton.setAccessibleName("Go to results button")
+        self.linksResultsButton.setAccessibleName("Go to results")
         self.linksResultsDropdown.setEditable(False)
 
         self.linksResultsBox.layout.addWidget(self.linksResultsDropdown)
@@ -86,9 +89,9 @@ class SearchMenuDialog(QDialog):
         self.inLinksResultsBox.setTitle("Inside linked files")
         self.inLinksResultsBox.layout = QHBoxLayout()
         self.inLinksResultsDropdown = QComboBox(self.inLinksResultsBox)
-        self.inLinksResultsDropdown.setAccessibleName("In linked files results dropdown")
+        self.inLinksResultsDropdown.setAccessibleName("In linked files results")
         self.inLinksResultsButton = QPushButton("Go", self.inLinksResultsBox)
-        self.inLinksResultsButton.setAccessibleName("Go to results button")
+        self.inLinksResultsButton.setAccessibleName("Go to results")
         self.inLinksResultsDropdown.setEditable(False)
 
         self.inLinksResultsBox.layout.addWidget(self.inLinksResultsDropdown)
@@ -141,23 +144,56 @@ class SearchMenuDialog(QDialog):
         if (line != ""):
             lineNum = int(line[5:])
             self.close()
-            print ([self.currFile, lineNum])
+            print([self.currFile, lineNum])
+            self.currTextEdit.jumpToLine(lineNum)
             return [self.currFile, lineNum]
     
     def goToInLinked(self, result):
         if (result != ""):
             result = result.split(',')
             sceneName = result[0] + ".txt"
-            lineNum = result[1][6:]
+            lineNum = int(result[1][6:])
             self.close()
             print([sceneName, lineNum])
+            tab = self.currProjectMenu.tabsWidget.getTabIndex(sceneName)
+            if tab is None: #tab is not opened
+                targetPath = Path(self.storyDirectory, sceneName)
+                self.currProject = self.currProjectMenu.openNewTab(self.storyDirectory)
+                self.currProject.openFile(targetPath)
+
+                tab = self.currProjectMenu.tabsWidget.getTabIndex(sceneName)
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            else:
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currProject = self.currProjectMenu.tabsWidget.tabContents.currentWidget()
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            self.currTextEdit.jumpToLine(lineNum)
             return [sceneName, lineNum]
     
     def goToLink(self, link):
         if (link != ""):
             self.close()
             print(link + "txt")
-            return link + ".txt"     
+            link = link + ".txt"
+            tab = self.currProjectMenu.tabsWidget.getTabIndex(link)
+            if tab is None: #tab is not opened
+                targetPath = Path(self.storyDirectory, link)
+                self.currProject = self.currProjectMenu.openNewTab(self.storyDirectory)
+                self.currProject.openFile(targetPath)
+
+                tab = self.currProjectMenu.tabsWidget.getTabIndex(link)
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            else:
+                self.currProjectMenu.tabsWidget.tabContents.setCurrentIndex(tab)
+                self.currProjectMenu.tabsWidget.tabBar.setCurrentIndex(tab)
+                self.currProject = self.currProjectMenu.tabsWidget.tabContents.currentWidget()
+                self.currTextEdit = self.currProject.textEditWidget.textEdit
+            return link 
         
 
     def changeStoryFolder(self, path):

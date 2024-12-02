@@ -12,14 +12,17 @@ class ProjectFolderSelectDialog(QDialog):
     def __init__(self, baseDirectory):
         super().__init__()
         self.setWindowTitle("Select a Folder")
+        self.setAccessibleName("Folder Selection")
         self.setModal(True)
 
         self.layout = QVBoxLayout(self)
 
         self.folderList = QListWidget()
+        self.folderList.setAccessibleName("Folder List")
         self.layout.addWidget(self.folderList)
 
         self.selectButton = QPushButton("Select")
+        self.selectButton.setAccessibleName("Select")
         self.selectButton.clicked.connect(self.selectFolder)
         self.layout.addWidget(self.selectButton)
 
@@ -101,24 +104,30 @@ class PickFilepathDialog(QDialog):
 
         self.fileNameInput = QLineEdit(self)
         self.fileNameInput.setPlaceholderText("Enter filename")
+        self.fileNameInput.setAccessibleName("Filename Field")
         self.layout.addWidget(QLabel("Filename:"))
         self.layout.addWidget(self.fileNameInput)
 
         self.directoryButton = QPushButton("Select Directory", self)
+        self.directoryButton.setAccessibleName("Select Directory")
         self.layout.addWidget(self.directoryButton)
 
         self.selectedDirectoryLabel = QLabel("No directory selected", self)
         self.selectedDirectoryLabel.setFocusPolicy(Qt.StrongFocus)
+        self.selectedDirectoryLabel.setAccessibleName(self.selectedDirectoryLabel.text())
         self.layout.addWidget(self.selectedDirectoryLabel)
         
         self.startingSceneButton = QPushButton("Select Starting Scene", self)
+        self.startingSceneButton.setAccessibleName("Select Starting Scene")
         self.layout.addWidget(self.startingSceneButton)
         
         self.startingSceneLabel = QLabel("No starting scene selected", self)
+        self.startingSceneLabel.setAccessibleName(self.startingSceneLabel.text())
         self.startingSceneLabel.setFocusPolicy(Qt.StrongFocus)
         self.layout.addWidget(self.startingSceneLabel)
         
         self.okButton = QPushButton("OK", self)
+        self.okButton.setAccessibleName("Confirm")
         self.layout.addWidget(self.okButton)
 
         self.directoryButton.clicked.connect(self.openDirectoryDialog)
@@ -137,12 +146,14 @@ class PickFilepathDialog(QDialog):
         if scene:
             scene = os.path.splitext(os.path.basename(scene[0]))[0]
             self.startingSceneLabel.setText(f"Starting Scene: {scene}")
+            self.startingSceneLabel.setAccessibleName(self.startingSceneLabel.text())
             self.startingScene = scene
 
     def openDirectoryDialog(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Directory")
         if directory:
             self.selectedDirectoryLabel.setText(f"Selected Directory: {directory}")
+            self.selectedDirectoryLabel.setAccessibleName(self.selectedDirectoryLabel.text())
             self.selectedDirectory = directory
     
     def getFilePath(self):

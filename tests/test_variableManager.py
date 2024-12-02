@@ -24,8 +24,8 @@ class Test(unittest.TestCase):
         workingDir = os.path.dirname(os.path.abspath(__file__))
         parent_path = os.path.dirname(workingDir)
         self.projectM = ProjectManager(parent_path)
-        self.projectM.createProject("testProject")
-        self.testProjectDir = os.path.join(parent_path, "testProject")
+        self.projectM.createProject("variableManagerProject")
+        self.testProjectDir = os.path.join(parent_path, "variableManagerProject")
         self.varM = variableManager.EditorVariableManager()
         
         return super().setUp()
@@ -74,3 +74,28 @@ class Test(unittest.TestCase):
 
         self.varM.loadVariables()
         self.assertDictEqual(variables, self.varM.Variables)
+    
+    def test_deleteVariable(self):
+        self.varM.setVariable('var', 1)
+        self.varM.setVariable('var1', 2)
+        self.varM.setVariable('var2', 3)
+        self.varM.deleteVariable('var1')
+
+        variablesPath = os.path.join(self.testProjectDir,"variables.json")
+        with open(variablesPath, 'r') as file:
+            varDict = json.load(file) 
+
+        self.assertDictEqual(varDict, {'var':1, 'var2':3})
+
+    def test_get(self):
+        self.varM.setVariable('var', 1)
+        self.varM.setVariable('var1', 2)
+        self.varM.setVariable('var2', 3)
+
+        get1 = self.varM.get('asda')
+        get2 = self.varM.get('VAR2')
+
+        self.assertEqual(get1, None)
+        self.assertEqual(get2, 3)
+
+

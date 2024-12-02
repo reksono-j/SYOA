@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sys
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
@@ -77,7 +79,7 @@ class Window(QMainWindow):
       shortcutsManager = keybinds.ShortcutsManager(self)
       shortcutsManager.addShortcut("Ctrl+Q","Quit",self.close)
       shortcutsManager.addShortcut("Ctrl+/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
-      shortcutsManager.addShortcut("Ctrl+O","Open IDE",self.button.click)
+      #shortcutsManager.addShortcut("Ctrl+O","Open IDE",self.button.click)
       shortcutsManager.addShortcut("Ctrl+P","Open Hand Held Mode",self.button1.click)
       shortcutsManager.addShortcut("Ctrl+T","Start Transcription",speechToText.STT.recordCallback)
       shortcutsManager.addShortcut("Ctrl+V","Voice Command", voiceCommand.VCManager.VCCallback)
@@ -91,14 +93,10 @@ class Window(QMainWindow):
    def UiComponents(self):
       # add widgets associated with each push button to central stacked widget
       self.menusWidget.addWidget(self.handholdManager.menu)
-      self.menusWidget.addWidget(self.ideManager.menu)
+      #self.menusWidget.addWidget(self.ideManager.menu)
       self.menusWidget.addWidget(self.uiSettingsManager.menu)
 
-      # creating a push button
-      self.button = QPushButton("IDE")
 
-      # adding action to a button
-      self.button.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.ideManager.menu))
       
       # creating a push button
       self.button1 = QPushButton("Hand Hold")
@@ -112,8 +110,7 @@ class Window(QMainWindow):
       self.buttonUISettings.clicked.connect(lambda: self.menusWidget.setCurrentWidget(self.uiSettingsManager.menu))
       #self.buttonUISettings.clicked.connect(lambda: QAccessible.updateAccessibility(QAccessibleEvent(self, QAccessible.ObjectShow)))
 
-      # adding defined buttons to buttons widget
-      self.buttonsWidget.layout.addWidget(self.button)
+
       self.buttonsWidget.layout.addWidget(self.button1)
       self.buttonsWidget.layout.addWidget(self.buttonUISettings)
 

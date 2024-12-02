@@ -7,10 +7,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer, Signal, QCoreApplication
 from PySide6.QtGui import QFont, QPalette, QColor, QPainter, QPixmap
-from loader import Loader
-from audioManager import AudioManager
-from variables import ViewerVariableManager
-from files import FileManager
+from src_alt.viewer.loader import Loader
+from src_alt.viewer.audioManager import AudioManager
+from src_alt.viewer.variables import ViewerVariableManager
+from src_alt.viewer.files import FileManager
 
 class DialogueLog(QWidget):
     def __init__(self):

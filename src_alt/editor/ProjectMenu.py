@@ -52,6 +52,7 @@ class ProjectMenu(QWidget):
         self.tabsWidget.addTab(tabTitle, projectFileMenu)
         
         self.setupFocusOrder()
+        return projectFileMenu
 
 
     def updateFileLists(self):
@@ -74,6 +75,7 @@ class ProjectFileMenu(QMainWindow):
     def __init__(self, folderPath):
         super().__init__()
         self.setWindowTitle("Project File Menu")
+        self.setAccessibleName("Project File Menu")
 
         self.stackedWidget = QStackedWidget()
         self.setCentralWidget(self.stackedWidget)
@@ -115,10 +117,12 @@ class FileListWidget(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.fileListWidget = QListWidget()
+        self.fileListWidget.setAccessibleName("File List")
 
         self.populateFileList()
 
         self.createFileButton = QPushButton("Create New Scene")
+        self.createFileButton.setAccessibleName("Create New Scene")
         self.createFileButton.clicked.connect(self.createNewFile)
 
         self.layout.addWidget(self.fileListWidget)
@@ -170,8 +174,10 @@ class TextEditWidget(QWidget):
         self.layout.addWidget(self.textEdit)
 
         self.saveButton = QPushButton("Save Scene")
+        self.saveButton.setAccessibleName("Save Scene")
         self.saveButton.clicked.connect(self.saveFile)
         self.closeButton = QPushButton("Close File")
+        self.closeButton.setAccessibleName("Close File")
         self.closeButton.clicked.connect(self.closeFile)
 
         self.layout.addWidget(self.saveButton)
