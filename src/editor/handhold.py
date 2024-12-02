@@ -24,22 +24,26 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.saver = False
         self.saver2 = False
         self.button33 = QPushButton("Reset")
-
+        self.button33.setAccessibleName("Reset Button")
+        self.button33.setAccessibleDescription("Click this button to reset the hand held mode.")
         self.groupBox.layout.addWidget(self.button33)
         self.button33.clicked.connect(lambda: self.res(self.button33))
 
         self.button = QPushButton("Save")
-
+        self.button.setAccessibleName("Save Button")
+        self.button.setAccessibleDescription("Click this button to save the hand held mode.")
         self.groupBox.layout.addWidget(self.button)
         self.button.clicked.connect(lambda: self.save(self.button))
 
         self.button12 = QPushButton("Add")
-
+        self.button12.setAccessibleName("Add Button")
+        self.button12.setAccessibleDescription("Click this button to add the next item of the scene below the previous one.")
         self.groupBox.layout.addWidget(self.button12)
         self.button12.clicked.connect(lambda: self.add(self.button12))
 
         self.button3 = QPushButton("Save")
-
+        self.button3.setAccessibleName("Save Button")
+        self.button3.setAccessibleDescription("Click this button to save the hand held mode.")
         self.groupBox.layout.addWidget(self.button3)
         self.button3.clicked.connect(lambda: self.save(self.button3))
 
@@ -47,6 +51,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         self.groupBox.layout.addWidget(self.button34)
         self.button34.clicked.connect(lambda: self.res(self.button34))
+        self.button34.setAccessibleName("Reset Button")
+        self.button34.setAccessibleDescription("Click this button to reset the hand held mode.")
         self.groupBox.setLayout(self.groupBox.layout)
 
     def res(self,button):
@@ -57,27 +63,32 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.saver = False
         self.saver2 = False
         self.button33 = QPushButton("Reset")
-
+        self.button33.setAccessibleName("Reset Button")
+        self.button33.setAccessibleDescription("Click this button to reset the hand held mode.")
         self.groupBox.layout.addWidget(self.button33)
         self.button33.clicked.connect(lambda: self.res(self.button33))
 
         self.button = QPushButton("Save")
-
+        self.button.setAccessibleName("Save Button")
+        self.button.setAccessibleDescription("Click this button to save the hand held mode (code is automatically copied to your clipboard).")
         self.groupBox.layout.addWidget(self.button)
         self.button.clicked.connect(lambda: self.save(self.button))
 
         self.button12 = QPushButton("Add")
-
+        self.button12.setAccessibleName("Add Button")
+        self.button12.setAccessibleDescription("Click this button to add the next item of the scene below the previous one.")
         self.groupBox.layout.addWidget(self.button12)
         self.button12.clicked.connect(lambda: self.add(self.button12))
 
         self.button3 = QPushButton("Save")
-
+        self.button3.setAccessibleName("Save Button")
+        self.button3.setAccessibleDescription("Click this button to save the hand held mode (code is automatically copied to your clipboard).")
         self.groupBox.layout.addWidget(self.button3)
         self.button3.clicked.connect(lambda: self.save(self.button3))
 
         self.button34 = QPushButton("Reset")
-
+        self.button34.setAccessibleName("Reset Button")
+        self.button34.setAccessibleDescription("Click this button to reset the hand held mode.")
         self.groupBox.layout.addWidget(self.button34)
         self.button34.clicked.connect(lambda: self.res(self.button34))
         self.groupBox.setLayout(self.groupBox.layout)
@@ -105,7 +116,7 @@ class HandHoldMenu(QtWidgets.QScrollArea):
                     sett = self.groupBox.layout.itemAt(i+3).widget().toPlainText()
                     if sett == "+":
                         sett = "ADD"
-                    if sett == "-":
+                    elif sett == "-":
                         sett = "SUB"
                     else:
                         sett = "SET"
@@ -116,11 +127,11 @@ class HandHoldMenu(QtWidgets.QScrollArea):
                     sett = self.groupBox.layout.itemAt(i+3).widget().toPlainText()
                     if sett == ">":
                         sett = "MORE"
-                    if sett == "<":
+                    elif sett == "<":
                         sett = "LESS"
-                    if sett == "<=":
+                    elif sett == "<=":
                         sett = "LTE"
-                    if sett == ">=":
+                    elif sett == ">=":
                         sett = "MTE"
                     else:
                         sett = "EQ"
@@ -188,23 +199,19 @@ class HandHoldMenu(QtWidgets.QScrollArea):
             self.groupBox.layout.insertWidget(index + 1, tbx)
     def add(self, button):
 
-        #DO NOT DELETE THIS IS HOW TO READ TEXTEDIT
-        #print(self.tbx.toPlainText())
-        # DO NOT DELETE THIS IS HOW TO READ LINEEDIT
-        # print(self.tbx.text())
-
-
         # Create a new button
         new_button = QPushButton("Dialogue")
 
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button)
-
+        new_button.setAccessibleName("Dialogue Button")
+        new_button.setAccessibleDescription("Click this button to add dialogue to the scene.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.talking(new_button))
         new_button = QPushButton("End of Scene Branches")
-
+        new_button.setAccessibleName("End of Scene Branches Button")
+        new_button.setAccessibleDescription("Click this button to add end of scene branches to the scene.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button)+1
 
@@ -212,7 +219,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.eee(new_button))
         new_button = QPushButton("In-Scene Choices")
-
+        new_button.setAccessibleName("In-Scene Choices Button")
+        new_button.setAccessibleDescription("Click this button to add in-scene choices to the scene.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button)+2
 
@@ -220,7 +228,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.splf(new_button, 1))
         new_button = QPushButton("Conditional")
-
+        new_button.setAccessibleName("Conditional Button")
+        new_button.setAccessibleDescription("Click this button to add conditions (if-else statement) to the scene.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button)+3
 
@@ -230,7 +239,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         new_button.clicked.connect(lambda: self.con2(new_button))
 
         new_button = QPushButton("Variable")
-
+        new_button.setAccessibleName("Variable Button")
+        new_button.setAccessibleDescription("Click this button to add a variable to the scene.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 4
 
@@ -253,7 +263,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, label)
 
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Variable Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the name of the variable.")
         # Find the index of the clicked button in the layout
         index = index + 1
 
@@ -268,7 +279,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, label)
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Operator Textbox")
+        tbx.setAccessibleDescription("Write \"-\", \"+\", or \"=\" to add the operator of the variable.")
         # Find the index of the clicked button in the layout
         index = index + 1
 
@@ -283,7 +295,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, label)
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Variable/Integer Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the name of the variable/integer the previous variable is changing by.")
         # Find the index of the clicked button in the layout
         index = index + 1
 
@@ -291,7 +304,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, tbx)
 
         new_button = QPushButton("DELETE VARIABLE")
-
+        new_button.setAccessibleName("Delete Variable Button")
+        new_button.setAccessibleDescription("Click this button to delete the variable above from the scene.")
         # Find the index of the clicked button in the layout
         index = index + 1
         new_button.clicked.connect(lambda: self.DD2(new_button))
@@ -301,11 +315,10 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         # Find the index of the clicked button in the layout
         index = index + 1
-
+        new_button.setAccessibleName("Add Button")
+        new_button.setAccessibleDescription("Click this button to add the next item of the scene below the previous one.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
-        '''self.groupBox.layout.removeWidget(button)
-        button.deleteLater()'''
         for i in range(5):
             item = self.groupBox.layout.takeAt(deln - 4)
             if item.widget():
@@ -328,42 +341,13 @@ class HandHoldMenu(QtWidgets.QScrollArea):
             item = self.groupBox.layout.takeAt(deln - 4)
             if item.widget():
                 item.widget().deleteLater()
-        '''label = QtWidgets.QLabel('Split ' + str(self.num))
-
-        # Find the index of the clicked button in the layout
-        index = self.groupBox.layout.indexOf(button)
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index, label)
-        label = QtWidgets.QLabel('Name of Split:')
-
-        # Find the index of the clicked button in the layout
-        index = self.groupBox.layout.indexOf(button)
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index, label)
-        tbx = QtWidgets.QTextEdit(self)
-
-        # Find the index of the clicked button in the layout
-        index = self.groupBox.layout.indexOf(button)
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index, tbx)
-
-        new_button = QPushButton("Add to Split " + str(self.num))
-
-        # Find the index of the clicked button in the layout
-        index = self.groupBox.layout.indexOf(button)
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index, new_button)
-        new_button.clicked.connect(lambda: self.add(new_button))'''
 
         new_button = QPushButton("DELETE IN-SCENE CHOICES")
 
         # Find the index of the clicked button in the layout
         index = index + 3
-
+        new_button.setAccessibleName("Delete In-scene choices Button")
+        new_button.setAccessibleDescription("Click this button to delete the in-scene choices above.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.dss(new_button, deln))
@@ -380,7 +364,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         # Find the index of the clicked button in the layout
         index = index + 1
-
+        new_button.setAccessibleName("Add Button")
+        new_button.setAccessibleDescription("Click this button to add the next item of the scene below the previous one.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.add(new_button))
@@ -404,7 +389,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, label)
 
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Speaker Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the name of the speaker of the dialogue.")
         # Find the index of the clicked button in the layout
         index = index + 1
 
@@ -419,14 +405,16 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, label)
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Dialogue Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the dialogue.")
         # Find the index of the clicked button in the layout
         index = index + 1
 
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, tbx)
         new_button = QPushButton("DELETE DIALOGUE")
-
+        new_button.setAccessibleName("Delete Dialogue Button")
+        new_button.setAccessibleDescription("Click this button to delete the dialogue above.")
         # Find the index of the clicked button in the layout
         index = index + 1
         new_button.clicked.connect(lambda: self.DD(new_button))
@@ -436,11 +424,10 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         # Find the index of the clicked button in the layout
         index = index + 1
-
+        new_button.setAccessibleName("Add Button")
+        new_button.setAccessibleDescription("Click this button to add the next item of the scene below the previous one.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
-        '''self.groupBox.layout.removeWidget(button)
-        button.deleteLater()'''
         for i in range(5):
             item = self.groupBox.layout.takeAt(deln - 4)
             if item.widget():
@@ -448,64 +435,6 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         new_button.clicked.connect(lambda: self.add(new_button))
         self.groupBox.setLayout(self.groupBox.layout)
 
-        '''index = self.groupBox.layout.indexOf(button)
-        deln = index
-
-
-        label = QtWidgets.QLabel('DIALOGUE:')
-
-        index = self.groupBox.layout.indexOf(button)
-
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index - 4, label)
-
-        label = QtWidgets.QLabel('Name of the speaker:')
-        index = self.groupBox.layout.indexOf(button)
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index - 4, label)
-
-        tbx =  QtWidgets.QTextEdit(self)
-
-        # Find the index of the clicked button in the layout
-        index = self.groupBox.layout.indexOf(button)
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index - 4, tbx)
-
-        label = QtWidgets.QLabel('What is the dialogue?')
-
-        index = self.groupBox.layout.indexOf(button)
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index - 4, label)
-        tbx =  QtWidgets.QTextEdit(self)
-
-        index = self.groupBox.layout.indexOf(button)
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index - 4, tbx)
-        new_button = QPushButton("DELETE DIALOGUE")
-
-        index = self.groupBox.layout.indexOf(button)
-        new_button.clicked.connect(lambda: self.DD(new_button))
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index - 4, new_button)
-        new_button = QPushButton("Add")
-
-        # Find the index of the clicked button in the layout
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index - 3, new_button)
-        new_button.clicked.connect(lambda: self.add(new_button))
-
-
-        self.groupBox.layout.removeWidget(button)
-        button.deleteLater()
-        for i in range(5):
-            item = self.groupBox.layout.takeAt(index-2)
-            if item.widget():
-                item.widget().deleteLater()
-        self.groupBox.setLayout(self.groupBox.layout)'''
 
     def OOO(self):
 
@@ -513,9 +442,6 @@ class HandHoldMenu(QtWidgets.QScrollArea):
             widget = self.groupBox.layout.itemAt(i).widget()
             if isinstance(widget, QLabel):
                 print(widget.text())
-                '''if widget.text() == "Name of the speaker:":
-                    print(self.groupBox.layout.itemAt(i+1).widget().toPlainText())
-                    print(self.groupBox.layout.itemAt(i + 3).widget().toPlainText())'''
             if isinstance(widget, QLineEdit):
                 print(widget.text())
             if isinstance(widget, QTextEdit):
@@ -561,7 +487,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 5
-
+        new_button.setAccessibleName("Delete Branches Button")
+        new_button.setAccessibleDescription("Click this button to delete all branches above.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.delc(new_button,index))
@@ -617,7 +544,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, label)
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Branch Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the name of the branch.")
         # Find the index of the clicked button in the layout
         index = index + 1
 
@@ -625,7 +553,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, tbx)
         n = n + 1
         new_button = QPushButton("Add another event")
-
+        new_button.setAccessibleName("Add Button")
+        new_button.setAccessibleDescription("Click this button to add the next branch below the previous one.")
         # Find the index of the clicked button in the layout
         index = index + 1
 
@@ -645,7 +574,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         # Create a new button
         new_button = QPushButton("Dialogue")
-
+        new_button.setAccessibleName("Dialogue Button")
+        new_button.setAccessibleDescription("Click this button to add dialogue below the previous item.")
         # Find the index of the clicked button in the layout
         index = index - 2
 
@@ -653,7 +583,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index, new_button)
         new_button.clicked.connect(lambda: self.talking(new_button))
         new_button = QPushButton("End of Scene Branches")
-
+        new_button.setAccessibleName("End of Scene Branches Button")
+        new_button.setAccessibleDescription("Click this button to add end of scene branches below the previous item.")
         # Find the index of the clicked button in the layout
         index = index+1
 
@@ -661,7 +592,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index, new_button)
         new_button.clicked.connect(lambda: self.eee(new_button))
         new_button = QPushButton("In-Scene Choices")
-
+        new_button.setAccessibleName("In-Scene Choices Button")
+        new_button.setAccessibleDescription("Click this button to add in-scene choices below the previous item.")
         # Find the index of the clicked button in the layout
         index = index+1
 
@@ -669,7 +601,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index, new_button)
         new_button.clicked.connect(lambda: self.splf(new_button, 1))
         new_button = QPushButton("Conditional")
-
+        new_button.setAccessibleName("Conditional Button")
+        new_button.setAccessibleDescription("Click this button to add a conditional below the previous item.")
         # Find the index of the clicked button in the layout
         index = index+1
 
@@ -679,30 +612,14 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         new_button.clicked.connect(lambda: self.con2(new_button))
 
         new_button = QPushButton("Variable")
-
+        new_button.setAccessibleName("Variable Button")
+        new_button.setAccessibleDescription("Click this button to add a variable below the previous item.")
         # Find the index of the clicked button in the layout
         index = index +1
 
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index, new_button)
         new_button.clicked.connect(lambda: self.var(new_button))
-        '''new_button = QPushButton("Add to Split " + str(num))
-
-        # Find the index of the clicked button in the layout
-        index = index + 1
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index + 1, new_button)
-        new_button.clicked.connect(lambda: self.add2(new_button))
-
-        new_button = QPushButton("DELETE SPLIT " + str(num))
-
-        # Find the index of the clicked button in the layout
-        index = index + 1
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index + 1, new_button)
-        new_button.clicked.connect(lambda: self.ds(new_button, num))'''
 
 
     def con2(self, button):
@@ -731,7 +648,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, label)
 
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Variable Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the variable name of the if condition.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 3
 
@@ -747,7 +665,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, label)
 
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Condition Textbox")
+        tbx.setAccessibleDescription('Write "=", ">", "<", ">=", or "<=".')
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 5
 
@@ -763,7 +682,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, label)
 
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Variable/integer Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the second variable name/integer of the if condition.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 7
 
@@ -774,7 +694,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 8
-
+        new_button1.setAccessibleName("Add Button")
+        new_button1.setAccessibleDescription("Click this button to add the next item of the if statement below the previous one.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button1)
         new_button1.clicked.connect(lambda: self.add(new_button1))
@@ -801,7 +722,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 11
-
+        new_button2.setAccessibleName("Add Button")
+        new_button2.setAccessibleDescription("Click this button to add the next item of the else statement below the previous one.")
         # Insert the new button after the clicked button
         self.groupBox.layout.insertWidget(index + 1, new_button2)
         new_button2.clicked.connect(lambda: self.add(new_button2))
@@ -815,7 +737,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, label)
 
         new_button = QPushButton("DELETE CONDITIONAL")
-
+        new_button.setAccessibleName("Delete Conditional Button")
+        new_button.setAccessibleDescription("Click this button to delete the conditional above.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 13
 
@@ -824,7 +747,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         new_button.clicked.connect(lambda: self.dcon(new_button, deln))
 
         new_button = QPushButton("Add")
-
+        new_button.setAccessibleName("Add Button")
+        new_button.setAccessibleDescription("Click this button to add the next item of the scene below the previous one.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 14
 
@@ -856,7 +780,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
 
 
         tbx = QtWidgets.QTextEdit(self)
-
+        tbx.setAccessibleName("Name of Choice Textbox")
+        tbx.setAccessibleDescription("Write to this textbox to add the choice name.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 2
 
@@ -864,7 +789,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, tbx)
 
         new_button = QPushButton("Add")
-
+        new_button.setAccessibleName("Add Button")
+        new_button.setAccessibleDescription("Click this button to add the next item of the choice below the previous one.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 3
 
@@ -873,7 +799,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         new_button.clicked.connect(lambda: self.add2(new_button, num))
 
         new_button = QPushButton("DELETE CHOICE " + str(num))
-
+        new_button.setAccessibleName("Delete Choice Button")
+        new_button.setAccessibleDescription("Click this button to delete the choice above.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 4
 
@@ -890,7 +817,8 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, label)
 
         new_button = QPushButton("Add another choice")
-
+        new_button.setAccessibleName("Add Button")
+        new_button.setAccessibleDescription("Click this button to add the choice below the previous one.")
         # Find the index of the clicked button in the layout
         index = self.groupBox.layout.indexOf(button) + 6
 
@@ -898,14 +826,6 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.groupBox.layout.insertWidget(index + 1, new_button)
         new_button.clicked.connect(lambda: self.addtbx(new_button, num + 1))
 
-        '''new_button = QPushButton("Add")
-
-        # Find the index of the clicked button in the layout
-        index = self.groupBox.layout.indexOf(button) + 5
-
-        # Insert the new button after the clicked button
-        self.groupBox.layout.insertWidget(index, new_button)
-        new_button.clicked.connect(lambda: self.add(new_button))'''
     def toggleUI(self):
         if (self.opened):
             self.close()
