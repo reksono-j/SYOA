@@ -16,6 +16,7 @@ class AudioManager(metaclass=Singleton):
             self.dialoguePlayer.setAudioOutput(self.dialogueOutput)
 
             self.soundEffectPlayers = []  # List to hold SFX media players
+            self.soundEffectOutputs = []
             self.tempFiles = {} 
 
             atexit.register(self.cleanupTempFiles)
@@ -69,14 +70,11 @@ class AudioManager(metaclass=Singleton):
         audioOutput = QAudioOutput()
         player.setAudioOutput(audioOutput)
         self.getAudioFile(audioPath, player, fromZip, zipPath)
-        player.play()
         self.soundEffectPlayers.append(player)
-        player.mediaStatusChanged.connect(lambda status: self.cleanupSoundEffect(player, status))
+        self.soundEffectOutputs.append(audioOutput)
+        player.play()
 
-    def cleanupSoundEffect(self, player, status):
-        if status == QMediaPlayer.EndOfMedia:
-            self.soundEffectPlayers.remove(player)
-            player.deleteLater()
+
 
     def cleanupTempFiles(self):
         if self.backgroundPlayer.mediaStatus() not in (QMediaPlayer.EndOfMedia, QMediaPlayer.NoMedia):
@@ -85,6 +83,8 @@ class AudioManager(metaclass=Singleton):
             self.dialoguePlayer.stop()
         self.backgroundPlayer.setSource(QUrl())
         self.dialoguePlayer.setSource(QUrl())
+        for output in self.dialogueOutput:
+            output.deleteLater()
         for player in self.soundEffectPlayers:
             player.stop()
             player.setSource(QUrl())

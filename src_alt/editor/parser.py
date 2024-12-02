@@ -1,6 +1,7 @@
-from pyparsing import Word, CaselessKeyword, Literal, Regex, Optional, one_of, alphanums, nums, printables
+from pyparsing import Word, CaselessKeyword, Literal, Regex, Optional, one_of, alphanums, nums, printables, Suppress, OneOrMore
 from enum import Enum
 from sceneStructure import *
+import re
 
 # Grammar 
 # Dialogue - Speaker:Sentence or Sentence -> string:string or string
@@ -91,12 +92,12 @@ def parseText(text: str):
   Branch      = CaselessKeyword('BRANCH') + Word(alphanums)('scene')
   Comparator  = one_of("LESS MORE EQ LTE MTE", caseless = True)
   Compare     = Value('var1') + Comparator('comparator') + Value('var2')
-  Choice      = CaselessKeyword("CHOICE") + Word(printables + ' ')('option')
+  Choice      = CaselessKeyword("CHOICE") + Word(printables + ' ', exclude_chars='\n')('option')
   If          = CaselessKeyword('IF') + Compare('comparison')
   Else        = CaselessKeyword('ELSE')
   End         = CaselessKeyword('END')
-  Sfx         = CaselessKeyword('SFX') + Word(alphanums)('name') + Optional(one_of("HIGH MED LOW", caseless=True)("volume"))
-  Bgm         = CaselessKeyword('BGM') + Word(alphanums)('name')
+  Sfx         = CaselessKeyword('SFX') + Optional(one_of("HIGH MED LOW", caseless=True)("volume")) + Regex('[a-zA-Z0-9_\-./ ]+')('name')
+  Bgm         = CaselessKeyword('BGM') + Optional(one_of("HIGH MED LOW", caseless=True)("volume")) + Regex('[a-zA-Z0-9_\-./ ]+')('name')
   Background  = CaselessKeyword('Background') + Word(alphanums)('name')
   
   def LabelElement(ElementType: Parsed):
@@ -110,10 +111,10 @@ def parseText(text: str):
               Else.setParseAction(LabelElement(Parsed.ELSE))     |
               Choice.setParseAction(LabelElement(Parsed.CHOICE)) |
               Branch.setParseAction(LabelElement(Parsed.BRANCH)) |
-              Dialogue.setParseAction(LabelElement(Parsed.DIALOGUE))|
               Sfx.setParseAction(LabelElement(Parsed.SFX))|
               Bgm.setParseAction(LabelElement(Parsed.BGM)) |
-              Background.setParseAction(LabelElement(Parsed.BG)))
+              Background.setParseAction(LabelElement(Parsed.BG)) |
+              Dialogue.setParseAction(LabelElement(Parsed.DIALOGUE)))
   
   parsedList = [x[0][0] for x in Element.scan_string(text)]
   return parsedList
@@ -125,10 +126,20 @@ def buildScene(parsedList):
       activeContext = contextStack[-1]
       match identifier:
         case Parsed.DIALOGUE:
+          dialogue = Dialogue()
           if 'speaker' in content:
-            activeContext.append(Dialogue(content['speaker'], content['text']))  
-          else:
-            activeContext.append(Dialogue('', content['text']))  
+            dialogue.speaker = content['speaker']
+            
+          text = content['text']
+          
+          # Regular expression to match 'audio=' or 'audio' followed by spaces and then '='
+          match = re.search(r'\baudio\s*=\s*(.+)', text)
+          if match:
+              dialogue.audio = match.group(1).strip() 
+              text = text[:match.start()].strip()
+          
+          dialogue.text = text
+          activeContext.append(dialogue)  
         case Parsed.MODIFY:
           operation = Operation[content['operation']] # converts string to enum
           mod = Modify(operation, content['variable'], content['amount'])
@@ -159,11 +170,17 @@ def buildScene(parsedList):
           activeContext.append(Branch(content['scene']))
           scene.links.append(content['scene'])
         case Parsed.SFX:
-          activeContext.append(Asset("sfx", content['name']))
+          if 'volume' in content:
+            activeContext.append(Asset("sfx", content['name'], content['volume']))
+          else:
+            activeContext.append(Asset("sfx", content['name']))
         case Parsed.BGM:
-          activeContext.append(Asset("bgm", content['name']))
+          if 'volume' in content:
+            activeContext.append(Asset("bgm", content['name'], content['volume']))
+          else:
+            activeContext.append(Asset("bgm", content['name']))
         case Parsed.BG:
-          activeContext.append(Asset("background", content['name'], content['volume']))
+          activeContext.append(Asset("bg", content['name']))
   return scene
   
 def readScript(script: str):

@@ -4,7 +4,6 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import ui_customize
 import handhold
-import ide
 import keybinds
 import speechToText
 
@@ -78,8 +77,7 @@ class Window(QMainWindow):
       shortcutsManager = keybinds.ShortcutsManager(self)
       shortcutsManager.addShortcut("Ctrl+Q","Quit",self.close)
       shortcutsManager.addShortcut("Ctrl+/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
-      shortcutsManager.addShortcut("Ctrl+O","Open IDE",self.button.click)
-      shortcutsManager.addShortcut("Ctrl+P","Open Hand Held Mode",self.button1.click)
+      shortcutsManager.addShortcut("Ctrl+P","Open Hand Held Mode",self.button1.click) # TODO
       shortcutsManager.addShortcut("Ctrl+T","Start Transcription",speechToText.STT.recordCallback)
 
       # setting previously defined layouts of central and buttons widget

@@ -112,6 +112,7 @@ class UICustomizeManager:
         self.importSettings()
         self.applySettings()
         self.menu = UICustomizeMenu(self, window)
+        self.appliedStyles = ""
 
     def menuToggle(self):
         self.menu.toggleUI()
@@ -128,15 +129,18 @@ class UICustomizeManager:
             self.settingsDict[key] = (self.config['uiSettings'][key]) 
 
     def applySettings(self):
-        theme = " * {\nfont-family: '" + self.settingsDict["Font Family"] + "', Arial, sans-serif; \nfont-size: " + self.settingsDict["Font Size"] + "pt;\n}"
+        self.theme = " * {\nfont-family: '" + self.settingsDict["Font Family"] + "', Arial, sans-serif; \nfont-size: " + self.settingsDict["Font Size"] + "pt;\n}"
         if self.settingsDict['Theme Color'] == 'Dark':
-            theme += APP_STYLE_DARK
+            self.theme += APP_STYLE_DARK
         else:
-            theme += APP_STYLE_LIGHT #if/else as only two themes are available
-        self.window.setStyleSheet(theme)
-        QApplication.instance().setStyleSheet(theme)
+            self.theme += APP_STYLE_LIGHT #if/else as only two themes are available
+        self.window.setStyleSheet(self.theme)
+        QApplication.instance().setStyleSheet(self.theme)
         #self.window.setStyleSheet("font-size: " + self.settingsDict["Font Size"] + "pt;" +
         #                          "font-family: " + self.settingsDict["Font Family"])
+        
+    def getStyleSheet(self):
+        return self.appliedStyles
 
     def updateSettings(self):
         self.applySettings()

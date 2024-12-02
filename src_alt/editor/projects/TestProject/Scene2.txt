@@ -1,3 +1,4 @@
+SFX inception.mp3
 Speaker2: Did it work?
 Speaker2: Did we make the jump?
 Speaker1: I don't know.
@@ -5,4 +6,6 @@ Speaker1: Is this the old scene or the new scene?
 Speaker2: I'm not sure.
 Speaker2: Let's just hope that we did.
 Speaker1: Alright.
+Speaker2: Actually, I'm going to activate a background.
+Background test
 BrAnch Scene3

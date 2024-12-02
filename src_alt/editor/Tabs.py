@@ -13,13 +13,13 @@ class TabsWidget(QWidget):
         self.tabBar.setObjectName("projectMenuTabBar")
         self.tabBar.setFocusPolicy(Qt.StrongFocus)
         self.tabBar.setMovable(True)
+        self.tabBar.currentChanged.connect(self.onTabChanged)
         
         # TabContents for the actual widgets
         self.tabContents = QStackedWidget()
         self.tabContents.setObjectName("projectMenuStack")
         self.tabContents.setContentsMargins(0, 0, 0, 0)  
         
-        self.tabBar.installEventFilter(self)
         self.focusedIndex = 0  
         self.layout.addWidget(self.tabBar)
         self.layout.addWidget(self.tabContents)
@@ -46,6 +46,10 @@ class TabsWidget(QWidget):
     def getTabWidget(self, index):
         return self.tabContents.widget(index) if index < self.tabContents.count() else None
     
+    def onTabChanged(self, index):
+        self.tabContents.setCurrentIndex(index)
+    
+    
     def getTabIndex(self, title):
         tabs = self.getAllTabs()
         index = 0
@@ -54,22 +58,6 @@ class TabsWidget(QWidget):
                 return index
             index += 1
         return None
-    
-    def eventFilter(self, obj, event):
-        if obj == self.tabBar:
-            if event.type() == QEvent.KeyPress:
-                if event.key() == Qt.Key_Left or event.key() == Qt.Key_Right:
-                    if event.key() == Qt.Key_Left:
-                        newIndex = (self.focusedIndex - 1) % self.tabBar.count()
-                    else:
-                        newIndex = (self.focusedIndex + 1) % self.tabBar.count()
-                    self.tabBar.setCurrentIndex(newIndex)
-                    self.focusedIndex = newIndex
-                elif event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-                    self.tabContents.setCurrentIndex(self.focusedIndex)
-            elif event.type() == QEvent.FocusOut:
-                self.tabBar.setCurrentIndex(self.tabContents.currentIndex())
-        return super().eventFilter(obj, event)
 
     def mousePressEvent(self, event):
         clickedTab = self.tabBar.tabAt(event.position().toPoint())

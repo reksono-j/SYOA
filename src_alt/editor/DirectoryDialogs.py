@@ -143,6 +143,7 @@ class PickFilepathDialog(QDialog):
     
     def openStartSceneDialog(self):
         scene = QFileDialog.getOpenFileName(self, "Select Starting Scene", self.projectPath)
+        scene.setNameFilter("Text Files (*.txt)")
         if scene:
             scene = os.path.splitext(os.path.basename(scene[0]))[0]
             self.startingSceneLabel.setText(f"Starting Scene: {scene}")

@@ -28,13 +28,13 @@ class HomeMenu(QWidget):
 
         self.startProjectButton = self.createButton("Start a new project", self.CreateProject)
         self.openProjectButton = self.createButton("Open existing project", self.OpenExistingProject)
-        self.tutorialButton = self.createButton("Tutorial", self.ShowTutorial)
+        #self.tutorialButton = self.createButton("Tutorial", self.ShowTutorial)
         self.preferencesButton = self.createButton("Preferences", self.OpenPreferences)
         #self.faqButton = self.createButton("FAQ", self.ShowFaq)
 
         self.optionsLayout.addWidget(self.startProjectButton)
         self.optionsLayout.addWidget(self.openProjectButton)
-        self.optionsLayout.addWidget(self.tutorialButton)
+        #self.optionsLayout.addWidget(self.tutorialButton)
         self.optionsLayout.addWidget(self.preferencesButton)
         #self.optionsLayout.addWidget(self.faqButton)
 
@@ -42,7 +42,7 @@ class HomeMenu(QWidget):
 
         self.ShowTutorial.connect(lambda: self.showTutorial)
         self.OpenPreferences.connect(lambda: self.OpenPreferences)
-        #self.ShowFaq.connect(lambda: self.printMessage("FAQ", "WIP: FAQ under construction")) # TODO: add FAQ
+        #self.ShowFaq.connect(lambda: self.printMessage("FAQ", "WIP: FAQ under construction")) # PQ: add FAQ
 
     def createButton(self, text, signal):
         button = QPushButton(text)
