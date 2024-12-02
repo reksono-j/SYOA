@@ -60,8 +60,8 @@ class BackgroundManager(metaclass=Singleton):
         raise FileNotFoundError(f"Background with the basename '{baseName}' not found.")
 
 class BackgroundManagerDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
 
         self.backgroundManager = BackgroundManager()
 

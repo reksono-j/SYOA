@@ -112,7 +112,6 @@ class UICustomizeManager:
         self.importSettings()
         self.applySettings()
         self.menu = UICustomizeMenu(self, window)
-        self.appliedStyles = ""
 
     def menuToggle(self):
         self.menu.toggleUI()
@@ -139,8 +138,8 @@ class UICustomizeManager:
         #self.window.setStyleSheet("font-size: " + self.settingsDict["Font Size"] + "pt;" +
         #                          "font-family: " + self.settingsDict["Font Family"])
         
-    def getStyleSheet(self):
-        return self.appliedStyles
+    def getTheme(self):
+        return self.theme
 
     def updateSettings(self):
         self.applySettings()

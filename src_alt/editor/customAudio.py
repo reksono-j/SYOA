@@ -202,8 +202,7 @@ class CustomAudio():
         return self._audioWidgetList
 
 class AudioManagerDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
 
         self.setWindowTitle("Audio Manager")
         self.setMinimumSize(400, 300)

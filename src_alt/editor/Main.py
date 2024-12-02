@@ -19,6 +19,7 @@ from customAudio import AudioManagerDialog
 from characterManager import CharacterManagerDialog
 from variableManagerGUI import VariableManagerDialog
 from backgroundManager import BackgroundManagerDialog
+from handhold import HandHoldManager
 from search import SearchMenuDialog
 from customAudio import CustomAudio
 from numberedTextEdit import NumberedTextEdit
@@ -46,6 +47,8 @@ class MainWindow(QMainWindow):
         
         self.uiSettingsManager = ui_customize.UICustomizeManager(self)
         self.uiSettingsManager.applySettings()
+        
+        self.handholdManager = HandHoldManager()
         
         # Main Layout
         self.centralWidget = QStackedWidget()
@@ -119,14 +122,17 @@ class MainWindow(QMainWindow):
         self.openCharacterManager = QAction("Characters", self)
         self.openVariableManager = QAction("Variables", self)
         self.openBackgroundManager = QAction("Background", self)
-        self.openAudioManager.setShortcut(QKeySequence("alt+j"))     # Shortcut: Audio Manager
-        self.openCharacterManager.setShortcut(QKeySequence("alt+l")) # Shortcut: Character Manager
-        self.openVariableManager.setShortcut(QKeySequence("alt+k"))  # Shortcut: Variable Manager
+        self.openHandholdManager = QAction("Handhold Assistant", self)
+        self.openAudioManager.setShortcut(QKeySequence("alt+j"))       # Shortcut: Audio Manager
+        self.openCharacterManager.setShortcut(QKeySequence("alt+l")  ) # Shortcut: Character Manager
+        self.openVariableManager.setShortcut(QKeySequence("alt+k"))    # Shortcut: Variable Manager
         self.openBackgroundManager.setShortcut(QKeySequence("alt+;"))  # Shortcut: Background Manager
+        self.openHandholdManager.setShortcut(QKeySequence("alt+h"))    # Shortcut: Handhold Manager
         self.optionsMenu.addAction(self.openAudioManager)
         self.optionsMenu.addAction(self.openCharacterManager)
         self.optionsMenu.addAction(self.openVariableManager)
         self.optionsMenu.addAction(self.openBackgroundManager)
+        self.optionsMenu.addAction(self.openHandholdManager)
         
         # Connect actions to their slots
         self.openFileAction.triggered.connect(self.openFile)
@@ -140,6 +146,7 @@ class MainWindow(QMainWindow):
         self.openCharacterManager.triggered.connect(self.showCharacterManager)
         self.openVariableManager.triggered.connect(self.showVariableManager)
         self.openBackgroundManager.triggered.connect(self.showBackgroundManager)
+        self.openHandholdManager.triggered.connect(self.showHandholdManager)
         
     def updateMenuBar(self):
         self.fileMenu.clear()
@@ -233,27 +240,27 @@ class MainWindow(QMainWindow):
         self.updateFileMenu(projectName)
     
     def showVariableManager(self):
-        self.showManagerDialog(VariableManagerDialog())
+        self.showManagerDialog(VariableManagerDialog)
     
     def showCharacterManager(self):
-        self.showManagerDialog(CharacterManagerDialog())
+        self.showManagerDialog(CharacterManagerDialog)
             
     def showAudioManager(self):
-        self.showManagerDialog(AudioManagerDialog(self))
+        self.showManagerDialog(AudioManagerDialog)
     
     def showBackgroundManager(self):
-        self.showManagerDialog(BackgroundManagerDialog(self))
+        self.showManagerDialog(BackgroundManagerDialog)
     
     def showManagerDialog(self, _dialog):
         if self.projectOpened:
-            dialog = _dialog
-            dialog.setStyleSheet(APP_STYLE)
-            styles = self.uiSettingsManager.getStyleSheet()
-            if styles:
-                dialog.setStyleSheet(styles)
+            dialog = _dialog()
+            dialog.setStyleSheet(self.uiSettingsManager.getTheme())
             dialog.exec()
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")
+    
+    def showHandholdManager(self):
+        self.handholdManager.menuToggle()
         
     def showFileMenu(self):
         if self.currentFileMenu:

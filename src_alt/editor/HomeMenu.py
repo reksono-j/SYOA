@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QMessageBox,QFrame, QSizePolicy,
-    QVBoxLayout, QPushButton 
+    QVBoxLayout, QPushButton, QApplication 
 )
 from PySide6.QtCore import Qt, Signal
 from styles import *
@@ -12,6 +12,7 @@ class HomeMenu(QWidget):
     ShowTutorial = Signal()
     OpenPreferences = Signal()
     ShowFaq = Signal()
+    CloseApplication = Signal()
 
     def __init__(self):
         super().__init__()
@@ -31,17 +32,23 @@ class HomeMenu(QWidget):
         #self.tutorialButton = self.createButton("Tutorial", self.ShowTutorial)
         self.preferencesButton = self.createButton("Preferences", self.OpenPreferences)
         #self.faqButton = self.createButton("FAQ", self.ShowFaq)
-
+        self.quitButton = QPushButton("Close")
+        self.quitButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.quitButton.setAccessibleName("Close")
+        self.quitButton.clicked.connect(QApplication.instance().quit)
+        
         self.optionsLayout.addWidget(self.startProjectButton)
         self.optionsLayout.addWidget(self.openProjectButton)
         #self.optionsLayout.addWidget(self.tutorialButton)
         self.optionsLayout.addWidget(self.preferencesButton)
         #self.optionsLayout.addWidget(self.faqButton)
+        self.optionsLayout.addWidget(self.quitButton)
 
         self.layout.addWidget(self.optionsFrame, alignment=Qt.AlignCenter)
 
-        self.ShowTutorial.connect(lambda: self.showTutorial)
+        #self.ShowTutorial.connect(lambda: self.showTutorial)
         self.OpenPreferences.connect(lambda: self.OpenPreferences)
+        self.CloseApplication.connect(lambda: self.closeApp)
         #self.ShowFaq.connect(lambda: self.printMessage("FAQ", "WIP: FAQ under construction")) # PQ: add FAQ
 
     def createButton(self, text, signal):
@@ -57,5 +64,7 @@ class HomeMenu(QWidget):
     def showTutorial(self):
         self.dialog = tutorial.TutorialDialog()
         self.dialog.exec()
-        
+    
+    def closeApp(self):
+        QApplication.instance().quit
 
