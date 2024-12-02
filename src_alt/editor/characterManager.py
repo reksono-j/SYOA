@@ -3,46 +3,46 @@ import json
 from PySide6.QtWidgets import (
     QApplication, QDialog, QGridLayout, QLabel, QLineEdit, 
     QPushButton, QSizePolicy, QWidget, QVBoxLayout, 
-    QHBoxLayout, QMessageBox, QScrollArea
+    QHBoxLayout, QMessageBox, QScrollArea, QComboBox
 )
 from singleton import Singleton
 from projectManager import ProjectManager
+from textToSpeech import VOICE
 
 # Character class with aliases management
 class Character:
-    def __init__(self, name):
-        self.name = name
-        self.aliases = {name: None}  # Character's name is the default alias
-
-    # TODO: Add Voice model aption
+    def __init__(self, charName):
+        self.name = charName
+        self.aliases = {}
+        self.aliases[charName] = {'name': None, 'voice': None}  # Character's name is the default alias
     
-    def addAlias(self, alias, displayName=None):
+    def addAlias(self, alias, displayName=None, displayVoice = VOICE.male1):
         if alias not in self.aliases:
-            self.aliases[alias] = displayName  # Store display name or None
+            self.aliases[alias] = {"name":displayName, "voice":displayVoice}  # Store display name or None
 
     def removeAlias(self, alias):
         if alias in self.aliases and alias != self.name:  # Can't remove the character's name
             del self.aliases[alias]
 
-    def updateAlias(self, alias, newDisplayName):
+    def updateAlias(self, alias, newDisplayName = None, newDisplayVoice = None):
         if alias in self.aliases:
-            self.aliases[alias] = newDisplayName
+            tempAlias = self.aliases[alias]
+            self.aliases[alias] = {"name":newDisplayName if newDisplayName is not None else tempAlias['name'], 
+                                   "voice":newDisplayVoice if newDisplayVoice is not None else tempAlias['voice']}
 
     def renameCharacter(self, newName):
         if newName != self.name:
             self.aliases[newName] = self.aliases.pop(self.name) 
             self.name = newName
 
-    # TODO
     def getDisplayName(self, alias):
-        return alias if self.aliases[alias] is None else self.aliases[alias]
+        return alias if self.aliases[alias] is None else self.aliases[alias]['name']
 
     def getData(self, alias):
-        if alias in self.aliases: # TODO: Replace str "" with {}
-            return "" if self.aliases[alias] is None else self.aliases[alias] 
+        if alias in self.aliases:
+            return {} if self.aliases[alias] is None else self.aliases[alias] 
         else:
-            return ""
-        
+            return {}
     
     def getName(self):
         return self.name
@@ -108,8 +108,8 @@ class CharacterManager(metaclass=Singleton):
                 characterData = json.load(f)
                 for name, aliases in characterData.items():
                     character = Character(name)
-                    for alias, displayName in aliases.items():
-                        character.addAlias(alias, displayName)
+                    for alias, data in aliases.items():
+                        character.addAlias(alias, data['name'], data['voice'])
                     self.addCharacter(character)
 
 # CharacterManagerDialog for adding, editing, and listing characters
@@ -241,6 +241,9 @@ class NameDialog(QDialog):
         if not name.isalpha() or not name:
             QMessageBox.warning(self, "Invalid name", "Please enter a valid name. Only letters allowed.")
             return
+        if name == "BGM" or name == "SFX":
+            QMessageBox.warning(self, "Invalid name", "BGM and SFX are reserved names. Use something else.")
+            return
         self.accept()
 
     def getName(self):
@@ -275,6 +278,7 @@ class CharacterForm(QDialog):
 
         self.aliasInputs = []
         self.nameInputs = []
+        self.voiceInputs = []
         
         self.layout.setColumnStretch(0, 1)           
         self.layout.setColumnStretch(1, 3)
@@ -282,15 +286,13 @@ class CharacterForm(QDialog):
 
         self.rowCount = len(character.getAliases())
         
-        # Adds rows to enter aliases and repositions confirm and add buttons
-        # TODO: Make this so that it can construct pre-filled rows
         self.loadAliasData(character.getAliases())
 
     def addAlias(self):
-        self.addAliasWidgetRow("", "")
+        self.addAliasWidgetRow("", "", "")
         self.repositionButtons()
         
-    def addAliasWidgetRow(self, alias, displayName):
+    def addAliasWidgetRow(self, alias, displayName, displayVoice):
         aliasLabel = QLabel(f"Alias {len(self.aliasInputs) + 1}")
         aliasLabel.setAccessibleName(f"Alias {len(self.aliasInputs) + 1}")
         
@@ -301,22 +303,32 @@ class CharacterForm(QDialog):
         aliasSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         aliasInput.setSizePolicy(aliasSizePolicy)
         self.aliasInputs.append(aliasInput)
-         
-        nameLabel = QLabel(f"Display Name {len(self.nameInputs) + 1}")
+        
+        nameLabel = QLabel(f"Display name {len(self.nameInputs) + 1}")
         nameLabel.setAccessibleName(f"{len(self.nameInputs) + 1}")
-        nameInput = QLineEdit() # TODO: replace with drop down that shows the available models
+        nameInput = QLineEdit()
         nameInput.setText(displayName)
-        nameInput.setAccessibleName("Name Field")
         nameLabel.setBuddy(nameInput)
         nameSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         nameInput.setSizePolicy(nameSizePolicy)
         self.nameInputs.append(nameInput)
+         
+        voiceLabel = QLabel(f"Display voice {len(self.voiceInputs) + 1}")
+        voiceInput = QComboBox()
+        voiceInput.addItems([model.name for model in VOICE])
+        voiceInput.setCurrentText(displayVoice)
+        voiceLabel.setBuddy(voiceInput)
+        voiceSizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        voiceInput.setSizePolicy(voiceSizePolicy)
+        self.voiceInputs.append(voiceInput)
         
-        self.layout.addWidget(aliasLabel, self.rowCount, 0)
-        self.layout.addWidget(aliasInput, self.rowCount + 1, 0)
-        self.layout.addWidget(nameLabel, self.rowCount, 1)
-        self.layout.addWidget(nameInput, self.rowCount + 1, 1, 1 , 2)
-
+        self.layout.addWidget(aliasLabel, self.rowCount, 0) 
+        self.layout.addWidget(nameLabel, self.rowCount, 1)  
+        self.layout.addWidget(voiceLabel, self.rowCount, 2)
+        self.layout.addWidget(aliasInput, self.rowCount + 1, 0) 
+        self.layout.addWidget(nameInput, self.rowCount + 1, 1)  
+        self.layout.addWidget(voiceInput, self.rowCount + 1, 2) 
+        
         self.rowCount += 2
     
     def repositionButtons(self):
@@ -325,8 +337,8 @@ class CharacterForm(QDialog):
     
     def loadAliasData(self, aliases):
         if aliases:
-            for alias, name in aliases.items():
-                self.addAliasWidgetRow(alias, name)
+            for alias, data in aliases.items():
+                self.addAliasWidgetRow(alias, data['name'], data['voice'])
         else:
             self.addAlias()
           
@@ -335,7 +347,7 @@ class CharacterForm(QDialog):
     def confirmCharacter(self):
         character = Character(self.speakerName.text())
         for i in range(len(self.aliasInputs)):
-            character.addAlias(self.aliasInputs[i].text(), self.nameInputs[i].text())
+            character.addAlias(self.aliasInputs[i].text(), self.nameInputs[i].text(), self.voiceInputs[i].currentText())
         self.character = character
         self.accept()
     

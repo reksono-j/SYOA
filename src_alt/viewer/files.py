@@ -3,13 +3,14 @@ from src_alt.viewer.singleton import Singleton
 from src_alt.viewer.loader import Loader
 from pathlib import Path
 import platform
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget,
     QListWidget, QPushButton, QMessageBox, QDialog,
     QLabel, QLineEdit, QScrollArea, QHBoxLayout, QSpacerItem,
     QSizePolicy
 )
-
+from enum import Enum
 
 class FileManager(metaclass=Singleton):
     def __init__(self):
@@ -75,24 +76,57 @@ class FileManager(metaclass=Singleton):
         
     def getFilepath(self):
         return self.dataFolder
+
+# PQ: I wrote the save system so that if we want to add quick saves, it should be easy to do.
+class SaveType(Enum):
+    MANUAL = 1
+    QUICK  = 2
+    AUTO   = 3
+
+class SaveManager():
+    def __init__(self):
+        self.fileManager = FileManager()
+        
+    def saveGame(self, saveType: SaveType, name: str, data: dict, slotNumber: int = 0):
+        timestamp = time.time()
+        existingFilePath = self.getExistingFilePath(saveType, slotNumber)
+        saveFileName = f"slot{slotNumber}_{saveType.name}_{int(timestamp)}_{name}.save"
+        try:
+            self.fileManager.createSaveFile(saveFileName, data)
+        except Exception as e:
+            raise e
+        if existingFilePath:
+            os.remove(existingFilePath)
+            
+    
+    def getExistingFilePath(self, saveType: SaveType, slotNumber: int = 0):
+        saveFolder = Path(self.fileManager.getSaveFolderPath())
+        for file in saveFolder.iterdir():
+            if file.is_file():
+                if file.name.startswith(f"slot{slotNumber}_{saveType.name}"):
+                    savePath = file
+                    return savePath
+        return ""
+    
+    def loadGame(self, name: str):
+        path = self.fileManager.getSaveFolderPath()/name
+        return self.fileManager.readSaveFile(path)
     
 
-
 class SaveManagerGUI(QWidget):
-    def __init__(self):
+    def __init__(self, saveMode: bool, callback):
         super().__init__()
-        self.fileManager = FileManager()
-        if self.fileManager._loader.projectLoaded:
-            self.saveDir = self.fileManager.getSaveFolderPath()
-            self.createSaveDirectories()
+        self.saveManager = SaveManager()
+        self.saveMode = saveMode
+        if saveMode:
+            self.getSaveDataCallback = callback
         else:
-            self.close()
-
+            self.loadSaveFileCallback = callback
+        
         self.layout = QVBoxLayout(self)
-                
         self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)
-        
+
         # The scroll area will be where the saves exist
         self.slotContainer = QWidget()
         self.slotLayout = QVBoxLayout(self.slotContainer)
@@ -102,94 +136,99 @@ class SaveManagerGUI(QWidget):
         self.slotContainer.setLayout(self.slotLayout)
         self.scrollArea.setWidget(self.slotContainer)
         self.layout.addWidget(self.scrollArea)
-
-    def populateSlates(self): # TODO
-        for i in range(16): 
-            slotWidget = QWidget()
-            slotLayoutRow = QHBoxLayout(slotWidget)
-            slotLabel = QLabel(f"Slot {i+1} - Empty")  # TODO: Load
-            slotLabel.setStyleSheet("color: white; font-size: 16px;")
-            slotLayoutRow.addWidget(slotLabel)
-
-            slotLayoutRow.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))
-            self.slotLayout.addWidget(slotWidget)
     
-    def createSaveDirectories(self):
-        if not os.path.exists(self.saveDir):
-            os.mkdir(self.saveDir, parents=True)
-        self.manualDir = os.path.join(self.saveDir, "manual")
-        self.autosaveDir = os.path.join(self.saveDir, "autosave")
-        self.quicksaveDir = os.path.join(self.saveDir, "quicksave")
-        os.makedirs(self.manualDir, exist_ok=True)
-        os.makedirs(self.autosaveDir, exist_ok=True)
-        os.makedirs(self.quicksaveDir, exist_ok=True)
+    def populateSlots(self):
+        while self.slotLayout.count():
+            item = self.slotLayout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+            
+        saveDir = self.saveManager.fileManager.getSaveFolderPath()
+        saveFiles = os.listdir(str(saveDir))
+        self.metadataArray = [dict() for _ in range(18)]  # Auto Save: 0, Manual Saves: 1-16, Quick Save: 17
 
-    def addSave(self, saveType, name):
-        timestamp = time.time()
-        saveId = uuid.uuid4().hex
-        saveFileName = f"{saveType}_{int(timestamp)}_{saveId}_{name}.save"
-        timestamp = time.strftime("%B %d, %Y, %I:%M %p", time.localtime(timestamp)) 
-        saveMetadata = {
-            "saveType": saveType,
-            "timestamp": timestamp,
-            "name": name,
-            "saveId": saveId
-        }
+        for saveFile in saveFiles:
+            metadata = self.parseFileName(saveFile)
+            if metadata:
+                match metadata['saveType']:
+                    case 'MANUAL':
+                        self.metadataArray[metadata['slotNumber'] + 1] = metadata
+                    case 'AUTO':
+                        self.metadataArray[0] = metadata
+                    case 'QUICK':
+                        self.metadataArray[17] = metadata
 
-        metadataFile = os.path.join(self.saveDir, f"{saveFileName}.json")
-        with open(metadataFile, 'w') as f:
-            json.dump(saveMetadata, f)
+        for i in range(17):
+            if not (self.saveMode and i == 0):
+                slotWidget = QWidget()
+                slotWidget.setFocusPolicy(Qt.StrongFocus) 
+                slotLayoutRow = QHBoxLayout(slotWidget)
 
-        self.saveList.addItem(f"{saveType.capitalize()} Save: {name} at {timestamp}")
-
-    def loadSave(self):
-        selectedItem = self.saveList.currentItem()
-        if selectedItem:
-            saveName = selectedItem.text().split(":")[1].strip()
-            saveFileName = self.getSaveFileNameByName(saveName)
-
-            if saveFileName:
-                savePath = os.path.join(self.saveDir, f"{saveFileName}.save")
-                if os.path.exists(savePath):
-                    # TODO: Save loading
-                    #self.fileManager.readSaveFile
-                    QMessageBox.information(self, "Load Save", f"Loaded save from: {savePath}")
+                metadata = self.metadataArray[i]
+                if metadata:
+                    if i == 0:
+                        slotName = f"Autosave: ({metadata['readableTimestamp']})"
+                    else:
+                        slotName = f"Slot {i}: {metadata['name']} ({metadata['readableTimestamp']})"
                 else:
-                    QMessageBox.warning(self, "Load Save", "Save file not found!")
-            else:
-                QMessageBox.warning(self, "Load Save", "Save name not found.")
+                    slotName = f"Slot {i}: Empty" if i > 0 else "Autosave: Empty"
+                slotLabel = QLabel(slotName)
+                slotLabel.setStyleSheet("color: white; font-size: 16px;")
+                slotLayoutRow.addWidget(slotLabel)
+                slotLayoutRow.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))
+                
+                # Assign interaction based on saveMode
+                slotWidget.mousePressEvent = lambda _, i=i: self.onSlotSelected(i)
+                slotWidget.keyPressEvent = lambda e, i=i: self.onSlotKeyPress(e, i)
+                self.slotLayout.addWidget(slotWidget)
+    
+    def parseFileName(self, fileName):
+        try:
+            slot, saveType, timestamp, name = fileName.split('_')
+            return {
+                "slotNumber": int(slot[4:]),
+                "saveType": saveType,
+                "readableTimestamp": time.strftime(
+                    "%B %d, %Y, %I:%M %p", time.localtime(int(timestamp))
+                ),
+                "timestamp": timestamp,
+                "name": name.rsplit('.', 1)[0],
+                "filename": fileName
+            }
+        except ValueError:  # TODO: Handle invalid file name formats
+            return None  
+
+    def onSlotSelected(self, slotIndex):
+        if self.saveMode:
+            saveData = self.getSaveDataCallback()
+            self.openSaveDialog(slotIndex, saveData)
+            self.populateSlots()
         else:
-            QMessageBox.warning(self, "Load Save", "No save selected!")
-
-    def getSaveFileNameByName(self, name):
-        for root, dirs, files in os.walk(self.saveDir):
-            for file in files:
-                if name in file:
-                    return file.replace('.save', '')
-        return None
-
-    def deleteSave(self):
-        selectedItem = self.saveList.currentItem()
-        if selectedItem:
-            saveName = selectedItem.text().split(":")[1].strip()
-            saveFileName = self.getSaveFileNameByName(saveName)
-
-            if saveFileName:
-                savePath = os.path.join(self.saveDir, f"{saveFileName}.save")
-                metadataPath = os.path.join(self.saveDir, f"{saveFileName}.json")
-
-                if os.path.exists(savePath):
-                    os.remove(savePath)
-                    os.remove(metadataPath)
-                    self.saveList.takeItem(self.saveList.row(selectedItem))
-                    QMessageBox.information(self, "Delete Save", "Save deleted successfully!")
-                else:
-                    QMessageBox.warning(self, "Delete Save", "Save file not found!")
+            metadata = self.metadataArray[slotIndex]
+            if metadata:
+                self.loadSaveFileCallback(self.saveManager.loadGame(metadata["filename"]))
             else:
-                QMessageBox.warning(self, "Delete Save", "Save name not found.")
-        else:
-            QMessageBox.warning(self, "Delete Save", "No save selected!")
+                QMessageBox.information(self, "Load Error", "No save data exists for this slot.")
 
+    def onSlotKeyPress(self, event, slotIndex):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.onSlotSelected(slotIndex)
+
+    def openSaveDialog(self, slotNumber, data):
+        dialog = SaveCreationDialog()
+        if dialog.exec():
+            saveName = dialog.saveNameInput.text().strip()
+            self.saveManager.saveGame(
+                SaveType.MANUAL, saveName, data, slotNumber
+            )
+            self.populateSlots()
+            QMessageBox.information(self, "Save Created", f"Save '{saveName}' created.")
+
+    # I want the UI to refresh every time you open the GUI
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.populateSlots()
 
 
 class SaveCreationDialog(QDialog):
@@ -221,8 +260,6 @@ class SaveCreationDialog(QDialog):
         if not re.match(r'^[A-Za-z0-9_]+$', saveName):
             QMessageBox.warning(self, "Save Error", "Save name can only contain letters, numbers, and underscores.")
             return
-        
-        # TODO: Make the save file
         QMessageBox.information(self, "Save Created", f"Save '{saveName}' created.")
         self.accept()
 

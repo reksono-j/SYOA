@@ -3,18 +3,106 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QApplication, QTextEdit, QMainWindow, QPushButton, 
     QWidget, QVBoxLayout, QDialog, QStackedWidget, QLabel,
-    QScrollArea, QHBoxLayout, QSpacerItem, QSizePolicy
+    QScrollArea
 )
 from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer, Signal, QCoreApplication
 from PySide6.QtGui import QFont, QPalette, QColor, QPainter, QPixmap
 from src_alt.viewer.loader import Loader
 from src_alt.viewer.audioManager import AudioManager
 from src_alt.viewer.variables import ViewerVariableManager
-from src_alt.viewer.files import FileManager
+from src_alt.viewer.backgroundManager import BackgroundManager
+from src_alt.viewer.files import FileManager, SaveManagerGUI, SaveManager
 
 class DialogueLog(QWidget):
-    def __init__(self):
+    def __init__(self, getHistoryCallback):
         super().__init__()
+        self.getHistoryCallback = getHistoryCallback
+        self.initUI()
+        self.setStyleSheet("""
+            QWidget#dialogueLog {
+                border-radius: 10px;
+                background-color: #333;
+                border: 1px solid #3498db;
+            }
+            QWidget::hover#dialogueLog {
+                border: 5px solid #3498db;
+            }
+            #dialogueLog QTextEdit {
+                border: none;
+                border-radius: 5px;
+                background-color: #3498db;
+                color: white;
+            }
+            #dialogueLog QTextEdit::Focus {
+                background-color: #009999;
+            }
+        """)
+
+    def initUI(self):
+        self.scrollArea = QScrollArea(self)
+        self.scrollAreaWidget = QWidget()
+        self.scrollLayout = QVBoxLayout(self.scrollAreaWidget)
+        self.scrollLayout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.scrollLayout.setSpacing(15)
+        self.scrollAreaWidget.setLayout(self.scrollLayout)
+        self.scrollArea.verticalScrollBar().rangeChanged.connect(self.scrollToBottom)
+        
+        self.scrollArea.setWidget(self.scrollAreaWidget)
+        self.scrollArea.setWidgetResizable(True)
+        self.setCentralWidget(self.scrollArea)
+
+        log = self.getHistoryCallback()
+        for i in range(log):
+            textToDisplay = ""
+            if (i % 2 == 0):
+              textToDisplay = f"This is dynamic text {i + 1}. This is a test to see if the dynamic resizing works. I'm going to give this some extra text."
+            else:
+              textToDisplay = f"This is dynamic text {i + 1}. ."
+            self.createContainer(textToDisplay, self.scrollLayout)
+
+        # Scroll to the bottom initially
+        self.scrollToBottom()
+
+    def createContainer(self, textToDisplay, scrollLayout):
+        container = QWidget(self)
+        container.setObjectName("dialogueLog")
+        layout = QVBoxLayout(container)
+
+        textBox = QTextEdit(container)
+        textBox.setReadOnly(True)
+        textBox.setStyleSheet("padding:10px;")
+        font = QFont("Arial", 24, QFont.Weight.Bold)
+        textBox.setCurrentFont(font)
+        textBox.document().setDefaultFont(font)
+        textBox.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        textBox.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        textBox.setText(textToDisplay)
+
+        layout.addWidget(textBox)
+
+        scrollLayout.addWidget(container)
+        self.adjustSizeToContent(container, textBox, textToDisplay)
+
+    def adjustSizeToContent(self, container, textBox, textToDisplay):
+        document = textBox.document().clone()
+        document.setPlainText(textToDisplay)
+
+        maxWidth = self.width() * 0.75
+        document.setTextWidth(maxWidth)
+        contentSize = document.size()
+        frameWidth = textBox.frameWidth()
+        extraHeightPadding = 0
+        totalPadding = frameWidth * 2 + extraHeightPadding
+
+        newWidth = contentSize.width() + totalPadding
+        newHeight = contentSize.height() + totalPadding
+
+        textBox.setFixedSize(newWidth, newHeight)
+        container.setFixedSize(newWidth + 20, newHeight + 20)
+
+    def scrollToBottom(self):
+        self.scrollArea.verticalScrollBar().setValue(self.scrollArea.verticalScrollBar().maximum())
+        
 
 
 
@@ -39,9 +127,9 @@ class SceneViewMenuOverlay(QWidget):
             background-color: #2471a3;
         }
     """
-    def __init__(self):
+    def __init__(self, getSaveDataCallback, loadSaveFileCallback):
         super().__init__()
-
+        
         self.setAttribute(Qt.WA_TranslucentBackground)  
         self.setWindowFlags(Qt.FramelessWindowHint) 
         
@@ -54,8 +142,8 @@ class SceneViewMenuOverlay(QWidget):
         self.layout.addWidget(self.menuStack)
 
         self.pauseMenu = self.createPauseMenu()
-        self.saveMenu = self.createSaveLoadMenu(isSaveMenu=True)
-        self.loadMenu = self.createSaveLoadMenu(isSaveMenu=False)
+        self.saveMenu = SaveManagerGUI(True, getSaveDataCallback)
+        self.loadMenu = SaveManagerGUI(False, loadSaveFileCallback)
         self.settingsMenu = self.createSettingsMenu()
 
         self.menuStack.addWidget(self.pauseMenu)
@@ -64,7 +152,10 @@ class SceneViewMenuOverlay(QWidget):
         self.menuStack.addWidget(self.settingsMenu)
 
         self.menuStack.setCurrentWidget(self.pauseMenu)
-        
+    
+    def emitLoadSignal(self, filepath: str):
+        self.loadFile.emit(filepath)
+    
     def createPauseMenu(self):
         menu = QWidget()
         layout = QVBoxLayout(menu)
@@ -90,52 +181,6 @@ class SceneViewMenuOverlay(QWidget):
 
         return menu
 
-    def createSaveLoadMenu(self, isSaveMenu):
-        menu = QWidget()
-        layout = QVBoxLayout(menu)
-        layout.setContentsMargins(10, 10, 10, 10)
-
-        title = QLabel("Save Menu" if isSaveMenu else "Load Menu")
-        title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("font-size: 20px; color: white; padding: 10px;")
-        layout.addWidget(title)
-
-        layout.setSpacing(20) 
-        scrollArea = QScrollArea()
-        scrollArea.setStyleSheet("""
-            border-radius: 15px;
-            background-color: #333;
-            border: 1px solid #3498db;
-        """)
-        scrollArea.setWidgetResizable(True)
-        
-        # The scroll area will be where the saves are laid out
-        slotContainer = QWidget()
-        slotLayout = QVBoxLayout(slotContainer)
-
-        for i in range(10):  
-            slotWidget = QWidget()
-            slotWidget.setStyleSheet("border: 1px solid #3498db;")
-            slotLayoutRow = QHBoxLayout(slotWidget)
-            slotLabel = QLabel(f"Slot {i+1} - Empty")  # TODO: Actually load saves
-            slotLabel.setStyleSheet("color: white; font-size: 16px;")
-            slotLayoutRow.addWidget(slotLabel)
-            slotLayoutRow.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))
-            
-            slotLayout.addWidget(slotWidget)
-
-        slotContainer.setLayout(slotLayout)
-        scrollArea.setWidget(slotContainer)
-        layout.addWidget(scrollArea)
-
-        backButton = QPushButton("Back")
-        backButton.setStyleSheet(self.BUTTON_STYLE)
-        backButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.pauseMenu))
-        layout.addWidget(backButton)
-        menu.setLayout(layout)
-        
-        return menu 
-      
     def createSettingsMenu(self):
         menu = QWidget()
         layout = QVBoxLayout(menu)
@@ -152,36 +197,7 @@ class SceneViewMenuOverlay(QWidget):
 
         return menu
 
-class SceneViewBackground(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.background = QPixmap()
-        
-    def setBackground(self, filepath):
-        if os.path.exists(filepath):
-            self.background = QPixmap(filepath)
-            if self.background.isNull():
-                print(f"Failed to load image: {filepath}")
-            self.update() 
-        else:
-            print(f"Image file not found: {filepath}")
-        
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        if not self.background.isNull():
-            aspectRatio = self.background.height() / self.background.width()
-            newWidth = self.width() + 30
-            newHeight = int(newWidth * aspectRatio)
 
-            scaledPixmap = self.background.scaled(newWidth, newHeight, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-
-            painter.drawPixmap((self.width() - scaledPixmap.width()) // 2 - 15, 
-                               (self.height() - scaledPixmap.height()) // 2 - 15, 
-                               scaledPixmap)
-    
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.update()
         
 class SceneView(QMainWindow):
     def __init__(self, filePath, freshStart):
@@ -191,11 +207,11 @@ class SceneView(QMainWindow):
                 
         self.audio = AudioManager()
         
-        self.background = SceneViewBackground()
-        self.background.setBackground('grid.jpg')
+        self.backgroundManager = BackgroundManager()
+        self.background = self.backgroundManager.getBackground()
         self.setCentralWidget(self.background)
         self.background.setGeometry(self.rect())
-        #self.background.show()
+        self.backgroundPath = ""
         
         self.dialogueHistory = []
         self.nextEntry = {}
@@ -224,6 +240,7 @@ class SceneView(QMainWindow):
         self.textBox.setReadOnly(True)
         font = QFont("Arial", 24, QFont.Weight.Bold) 
         self.textBox.setCurrentFont(font)
+        self.textBox.document().setDefaultFont(font)
         self.textBox.setStyleSheet("padding: 15px; border: none; background-color: #3498db; color: white;")
         self.textBox.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.textBox.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -258,17 +275,17 @@ class SceneView(QMainWindow):
         self.updateContainerGeometry()
         self.container.setGeometry(100, 100, self.minWidth, self.minHeight)
 
-        self.menuOverlay = SceneViewMenuOverlay()
-        self.menuOverlay.setParent(self)
-        self.menuOverlay.hide()
-        self.menuOverlay.closeMenu.connect(self.toggleMenuOverlay)    
-        
         self.loader = Loader()
         self.loader.setProject(filePath)
         self.loader.loadPackage()
 
         self.vm = ViewerVariableManager()
         self.files = FileManager()
+        
+        self.menuOverlay = SceneViewMenuOverlay(self.saveGame, self.loadGame)
+        self.menuOverlay.setParent(self)
+        self.menuOverlay.hide()
+        self.menuOverlay.closeMenu.connect(self.toggleMenuOverlay)    
         
         if freshStart:
             self.loadScene(self.loader.getStartScene())
@@ -320,17 +337,20 @@ class SceneView(QMainWindow):
                     eval(element['action'])
                     self.advanceScript()
                 case "sfx":
-                    self.playCurrentElementAudio(self)
+                    self.playCurrentElementAudio()
                     self.advanceScript()
                 case "bgm":
-                    self.playCurrentElementAudio(self)
+                    self.playCurrentElementAudio()
                     self.advanceScript()
                 case "branch":
                     self.loadScene(element['next'])
-                case "background": # TODO
-                    pass 
+                case "bg":
+                    self.backgroundManager.setBackgroundFile(element['path'], self.loader.getPackagePath())
+                    self.backgroundPath = element['path']
+                    self.background.show()
                 case _:
                     print(element)
+                    self.advanceScript()
         else:
             self.textBox.setText("The End")
             self.nextButton.setText("Close")
@@ -341,13 +361,12 @@ class SceneView(QMainWindow):
     def playCurrentElementAudio(self):
         if self.currentLineIndex < len(self.script):
             element = self.script[self.currentLineIndex]
-            if 'audio' in element:
-                if element['type'] == 'dialogue':
-                    self.audio.playDialogue(element['audio'], True, self.loader.getPackagePath())
-                if element['type'] == 'sfx':
-                    self.audio.playSoundEffect(element['audio'], True, self.loader.getPackagePath())
-                if element['type'] == 'bgm':
-                    self.audio.playBackgroundMusic(element['audio'], True, self.loader.getPackagePath())
+            if element['type'] == 'dialogue':
+                self.audio.playDialogue(element['audio'], True, self.loader.getPackagePath())
+            if element['type'] == 'sfx':
+                self.audio.playSoundEffect(element['path'], True, self.loader.getPackagePath())
+            if element['type'] == 'bgm':
+                self.audio.playBackgroundMusic(element['path'], True, True, self.loader.getPackagePath())
     
     def loadScene(self, sceneName):
         self.sceneData = self.loader.readSceneToDict(sceneName)
@@ -360,20 +379,19 @@ class SceneView(QMainWindow):
         
     def advanceScript(self):
         self.currentLineIndex += 1
-        self.UpdateDialogueHistory()
+        self.updateDialogueHistory()
         self.next()
 
-    def UpdateDialogueHistory(self):
+    def updateDialogueHistory(self):
         if bool(self.nextEntry):
             self.dialogueHistory.append(self.nextEntry.copy())
             if len(self.dialogueHistory) > 25:
                 self.dialogueHistory.pop(0)
             self.nextEntry.clear()
-        
-    # prospective log of all previously played lines
-    # def updateLog(self):
-    #    self.lineLog.append([self.currentScene, self.currentLineIndex])
-
+    
+    def getDialogueHistory(self):
+        return self.dialogueHistory
+    
     def onNextButtonClicked(self):
         if (self.running and self.script[self.currentLineIndex]['type'] != 'choice'):
             self.advanceScript()
@@ -406,13 +424,12 @@ class SceneView(QMainWindow):
         savefile['choiceLog'] = self.choiceLog
         savefile['conditionalsLog'] = self.conditionalsLog
         savefile['dialogueHistory'] = self.dialogueHistory
-        filename = time.strftime("save_%Y_%m_%d_%H_%M_%S")
-        self.files.createSaveFile(filename, savefile)
+        savefile['backgroundPath'] = self.backgroundPath
+        return savefile
     
     def loadGame(self, filepath: str):
         self.container.hide()
         self.nextButton.hide()
-        
         
         savedata = self.files.readSaveFile(filepath)
         self.vm.loadFromDict(savedata['variables'])
@@ -422,6 +439,7 @@ class SceneView(QMainWindow):
         self.choiceLog = savedata['choiceLog']
         self.conditionalsLog = savedata['conditionalsLog']
         self.dialogueHistory = savedata['dialogueHistory']
+        self.backgroundPath = savedata['backgroundPath']
         targetIndex = savedata['currentLineIndex']
         
         choiceLog = self.choiceLog.copy()   
@@ -470,6 +488,7 @@ class SceneView(QMainWindow):
                     pass
             self.currentLineIndex += 1
         
+        self.backgroundManager.setBackgroundFile(self.backgroundPath, self.loader.getPackagePath())
         self.adjustSizeToContent()
         self.running = True
         self.container.show()
@@ -552,7 +571,7 @@ class SceneView(QMainWindow):
         if self.textToDisplay:
             document = document.clone()
             document.setPlainText(self.textToDisplay)
-        
+            
         maxWidth = self.width() * 0.5
         document.setTextWidth(maxWidth)
 
@@ -573,7 +592,6 @@ class SceneView(QMainWindow):
             int(newWidth),
             int(totalHeight)
         )
-        
         self.animation.setStartValue(startGeometry)
         self.animation.setEndValue(endGeometry)
         self.animation.start()

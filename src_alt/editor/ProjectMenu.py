@@ -230,13 +230,7 @@ class TextEditWidget(QWidget):
 
     def onTextChanged(self):
         self.isModified = True
+        
+    def getCurrentFile(self):
+        return self.currentFile
 
-if __name__ == "__main__":
-    app = QApplication([])
-
-    folderPath = "PracticeArea/MainWindow/projects/OtherProject"
-    window = ProjectTabsWidget(folderPath)
-    window.resize(600, 400)
-    window.show()
-
-    app.exec()

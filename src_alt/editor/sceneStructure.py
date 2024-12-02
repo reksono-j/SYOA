@@ -17,14 +17,16 @@ class Element:
     pass
 
 class Dialogue(Element):
-    speaker: str
-    text: str
+    speaker: str = ""
+    text: str    = ""
+    audio: str   = ""
     
-    def __init__(self, _speaker, _text):
+    def __init__(self, _speaker="", _text="", _audio=""):
         self.speaker  = _speaker
         self.text = _text
+        self.audio = _audio
     def __repr__(self):
-        return 'Dialogue(%s, %s)' % (self.speaker, self.text)
+        return 'Dialogue(%s, %s, %s)' % (self.speaker, self.text, self.audio)
     
 
 class Modify(Element):

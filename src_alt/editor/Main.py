@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QStackedWidget, QStatusBar, 
     QDialog, QMessageBox, QProgressDialog
 )
-from PySide6.QtGui import QAccessibleValueChangeEvent, QAction, QAccessible
+from PySide6.QtGui import QAccessibleValueChangeEvent, QAction, QAccessible, QKeySequence, QAccessibleEvent
 from projectManager import ProjectManager, ProjectManagerGUI
 from HomeMenu import HomeMenu
 from SettingsMenu import SettingsMenu
@@ -15,9 +15,14 @@ from DirectoryDialogs import OpenFileDialog, PickFilepathDialog
 from styles import *
 from ProjectMenu import ProjectMenu, ProjectFileMenu
 from packager import StoryPackager
-from variableManagerGUI import VariableManagerDialog
+from customAudio import AudioManagerDialog
 from characterManager import CharacterManagerDialog
+from variableManagerGUI import VariableManagerDialog
+from backgroundManager import BackgroundManagerDialog
+from handhold import HandHoldManager
 from search import SearchMenuDialog
+from customAudio import CustomAudio
+from numberedTextEdit import NumberedTextEdit
 import ui_customize
 import keybinds
 import speechToText
@@ -42,6 +47,8 @@ class MainWindow(QMainWindow):
         
         self.uiSettingsManager = ui_customize.UICustomizeManager(self)
         self.uiSettingsManager.applySettings()
+        
+        self.handholdManager = HandHoldManager()
         
         # Main Layout
         self.centralWidget = QStackedWidget()
@@ -79,6 +86,14 @@ class MainWindow(QMainWindow):
         shortcutsManager.addShortcut("Ctrl+/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
         shortcutsManager.addShortcut("Ctrl+T","Start Transcription",speechToText.STT.recordCallback)
         shortcutsManager.addShortcut("Ctrl+F","Open Search Menu",self.showSearchMenu)
+        shortcutsManager.addShortcut("Alt+C", "Type CHOICE", lambda: self.insertTextIntoIDE("CHOICE "))
+        shortcutsManager.addShortcut("Alt+B", "Type BRANCH", lambda: self.insertTextIntoIDE("BRANCH "))
+        shortcutsManager.addShortcut("Alt+E", "Type END", lambda: self.insertTextIntoIDE("END "))
+        shortcutsManager.addShortcut("Alt+M", "Type MODIFY", lambda: self.insertTextIntoIDE("MODIFY "))
+        shortcutsManager.addShortcut("Alt+S", "Type SFX", lambda: self.insertTextIntoIDE("SFX "))
+        shortcutsManager.addShortcut("Alt+V", "Type BGM", lambda: self.insertTextIntoIDE("BGM "))
+        
+        
         shortcutsManager.addShortcut("Ctrl+Y","Open Tutorial",self.showTutorial)
     
     def initMenuBar(self):
@@ -103,10 +118,21 @@ class MainWindow(QMainWindow):
         
         
         self.optionsMenu = self.menuBar().addMenu("&Options")
-        self.openVariableManager = QAction("&Variables", self)
+        self.openAudioManager = QAction("Audio", self)
         self.openCharacterManager = QAction("Characters", self)
-        self.optionsMenu.addAction(self.openVariableManager)
+        self.openVariableManager = QAction("Variables", self)
+        self.openBackgroundManager = QAction("Background", self)
+        self.openHandholdManager = QAction("Handhold Assistant", self)
+        self.openAudioManager.setShortcut(QKeySequence("alt+j"))       # Shortcut: Audio Manager
+        self.openCharacterManager.setShortcut(QKeySequence("alt+l")  ) # Shortcut: Character Manager
+        self.openVariableManager.setShortcut(QKeySequence("alt+k"))    # Shortcut: Variable Manager
+        self.openBackgroundManager.setShortcut(QKeySequence("alt+;"))  # Shortcut: Background Manager
+        self.openHandholdManager.setShortcut(QKeySequence("alt+h"))    # Shortcut: Handhold Manager
+        self.optionsMenu.addAction(self.openAudioManager)
         self.optionsMenu.addAction(self.openCharacterManager)
+        self.optionsMenu.addAction(self.openVariableManager)
+        self.optionsMenu.addAction(self.openBackgroundManager)
+        self.optionsMenu.addAction(self.openHandholdManager)
         
         # Connect actions to their slots
         self.openFileAction.triggered.connect(self.openFile)
@@ -116,9 +142,12 @@ class MainWindow(QMainWindow):
         #self.openSettingsAction.triggered.connect(self.showSettingsMenu)
         self.openPreferencesAction.triggered.connect(self.showPreferencesMenu)
         self.compileProjectAction.triggered.connect(self.compileProject)
-        self.openVariableManager.triggered.connect(self.showVariableManager)
+        self.openAudioManager.triggered.connect(self.showAudioManager)
         self.openCharacterManager.triggered.connect(self.showCharacterManager)
-
+        self.openVariableManager.triggered.connect(self.showVariableManager)
+        self.openBackgroundManager.triggered.connect(self.showBackgroundManager)
+        self.openHandholdManager.triggered.connect(self.showHandholdManager)
+        
     def updateMenuBar(self):
         self.fileMenu.clear()
 
@@ -135,6 +164,9 @@ class MainWindow(QMainWindow):
             self.fileMenu.addAction(self.compileProjectAction)
     
     def compileProject(self):
+        if not self.projectOpened:
+            QMessageBox.warning(self, "Error", "No project is currently opened.")
+            return
         folderPath = os.path.join(self.projectsDirectory, self.projectManager.currentProject["name"])
         self.dialog = PickFilepathDialog(folderPath)
         if self.dialog.exec() == QDialog.Accepted:
@@ -166,10 +198,13 @@ class MainWindow(QMainWindow):
                         QMessageBox.information(self, "Success", f"Compilation complete. Saved to {filePath}")
                     else:
                         QMessageBox.warning(self, "Warning", "Compilation failed.")
+                        
+
                 
                 self.thread = CompileThread(compiler, filePath)
-                self.thread.progress.connect(announceProgress)
-                self.thread.result.connect(lambda success: handleCompilation(success))
+
+                self.thread.progressUpdated.connect(announceProgress)
+                self.thread.serializationComplete.connect(lambda success: handleCompilation(success))
                 self.thread.start()
 
                 self.progressDialog.canceled.connect(self.thread.terminate)
@@ -205,19 +240,28 @@ class MainWindow(QMainWindow):
         self.updateFileMenu(projectName)
     
     def showVariableManager(self):
+        self.showManagerDialog(VariableManagerDialog)
+    
+    def showCharacterManager(self):
+        self.showManagerDialog(CharacterManagerDialog)
+            
+    def showAudioManager(self):
+        self.showManagerDialog(AudioManagerDialog)
+    
+    def showBackgroundManager(self):
+        self.showManagerDialog(BackgroundManagerDialog)
+    
+    def showManagerDialog(self, _dialog):
         if self.projectOpened:
-            dialog = VariableManagerDialog()
+            dialog = _dialog()
+            dialog.setStyleSheet(self.uiSettingsManager.getTheme())
             dialog.exec()
         else:
             QMessageBox.warning(self, "Warning", "Open project first.")
     
-    def showCharacterManager(self):
-        if self.projectOpened:
-            dialog = CharacterManagerDialog()
-            dialog.exec()
-        else:
-            QMessageBox.warning(self, "Warning", "Open project first.")
-            
+    def showHandholdManager(self):
+        self.handholdManager.menuToggle()
+        
     def showFileMenu(self):
         if self.currentFileMenu:
             self.centralWidget.setCurrentWidget(self.currentFileMenu)
@@ -257,19 +301,35 @@ class MainWindow(QMainWindow):
     def showTutorial(self):
         self.dialog = tutorial.TutorialDialog()
         self.dialog.exec()
+    
+    def insertTextIntoIDE(self, text):
+        currentWidget = QApplication.focusWidget()
+        
+        if isinstance(currentWidget, NumberedTextEdit):
+            cursor = currentWidget.textCursor()
+            cursor.insertText(text)
+            
+            accessible_event = QAccessibleEvent(currentWidget, QAccessible.Event.TextInserted)
+            QAccessible.updateAccessibility(accessible_event)
                 
 class CompileThread(QThread):
-    progress = Signal(int) 
-    result = Signal(bool) 
+    progressUpdated = Signal(int)  
+    errorOccurred = Signal(str)   
+    serializationComplete = Signal(bool)  
 
-    def __init__(self, compiler, filePath):
-        super().__init__()
-        self.compiler = compiler
-        self.filePath = filePath
+    def __init__(self, packager: StoryPackager, filepath: str, parent=None):
+        super().__init__(parent)
+        self.packager = packager
+        self.filepath = filepath
 
     def run(self):
-        success = self.compiler.serializeScenes(self.filePath, self.progress.emit)
-        self.result.emit(success)
+        try:
+            success = self.packager.serializeScenes(self.filepath, progressCallback=self.progressUpdated.emit)  
+            self.serializationComplete.emit(success)
+        except Exception as e:
+            if e:
+                self.errorOccurred.emit(str(e))
+            print(e)
 
     
 

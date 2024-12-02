@@ -37,8 +37,6 @@ class ChoiceWidget(QWidget):
             button.setAccessibleName(f"Option {i + 1}: {choice['text']}")
             button.setFocusPolicy(Qt.StrongFocus)
             button.clicked.connect(lambda: self.onChoiceButtonClicked(choice['lines'], handleChoice))
-            #if buttonArray: # TODO: This was originally going to let you pre-emptively disable options
-            #    button.setActive(buttonArray[i])
             self.layout.addWidget(button)
             self.buttons.append(button)
 

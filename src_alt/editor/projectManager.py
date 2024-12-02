@@ -26,7 +26,6 @@ class ProjectManager(QObject):
             self.baseDirectory = baseDirectory
             if not os.path.exists(self.baseDirectory):
                 os.makedirs(self.baseDirectory)
-        
         self.projects = []
         self.currentProject = {}
         self.initialized = True
@@ -53,7 +52,7 @@ class ProjectManager(QObject):
         self.changedProject.emit()
         return metadata
 
-    def getCurrentFilePath(self):
+    def getCurrentFilePath(self) -> str:
         return os.path.join(self.baseDirectory, self.currentProject['name'])
     
     def setStartScene(self, sceneName):

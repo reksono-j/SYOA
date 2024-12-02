@@ -2,7 +2,6 @@
     "shortcutSettings": {
         "quit": "Ctrl+Q",
         "replace shortcuts menu": "Ctrl+/",
-        "open ide": "Ctrl+O",
         "open hand held mode": "Ctrl+P",
         "start transcription": "Ctrl+T",
         "voice command": "Ctrl+V"

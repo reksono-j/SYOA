@@ -1,6 +1,7 @@
 Speaker1 : Hello world
 CHOICE Hi there
 Speaker2: Hi there
+Speaker2 : *Clears throat* audio=guy_clearing_throat.mp3
 END
 Choice Pick up rock
 You picked up a rock
@@ -13,5 +14,6 @@ ELSE
 Speaker 1 looks at the ground, leans over, and picks up a rock.
 Speaker1 : Wow this is an awesome rock.
 Speaker2: Woah, you're right.
+Speaker1: *laughs* audio=Scene2/girl_laugh.mp3
 END
 Branch Scene2
