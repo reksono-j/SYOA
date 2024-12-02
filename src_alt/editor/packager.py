@@ -110,7 +110,7 @@ class StoryPackager:
             else:
                 if el.audio == '':
                     if 'voice' in speaker:
-                        dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
+                        dialogue = {"type":"dialogue", "speaker":speaker, "voice": speaker['voice'], "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
                     else:
                         dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
                 else:
@@ -242,7 +242,6 @@ class StoryPackager:
                     updateProgress()
                 
                 for asset in self.assets:
-                    print(asset)
                     if asset['path'] not in arcnames:
                         file.write(asset['absPath'] , arcname=asset['path']) 
                         arcnames.append(asset['path'])

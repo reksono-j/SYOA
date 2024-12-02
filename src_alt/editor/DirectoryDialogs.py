@@ -142,8 +142,7 @@ class PickFilepathDialog(QDialog):
         self.setTabOrder(self.okButton, self.fileNameInput)
     
     def openStartSceneDialog(self):
-        scene = QFileDialog.getOpenFileName(self, "Select Starting Scene", self.projectPath)
-        scene.setNameFilter("Text Files (*.txt)")
+        scene = QFileDialog.getOpenFileName(self, "Select Starting Scene", self.projectPath, filter="*.txt")
         if scene:
             scene = os.path.splitext(os.path.basename(scene[0]))[0]
             self.startingSceneLabel.setText(f"Starting Scene: {scene}")
