@@ -17,6 +17,7 @@ class AudioManager(metaclass=Singleton):
 
             self.soundEffectPlayers = []  # List to hold SFX media players
             self.soundEffectOutputs = []
+            self.sfxVolume = .5
             self.tempFiles = {} 
 
             atexit.register(self.cleanupTempFiles)
@@ -72,12 +73,14 @@ class AudioManager(metaclass=Singleton):
         self.getAudioFile(audioPath, player, fromZip, zipPath)
         self.soundEffectPlayers.append(player)
         self.soundEffectOutputs.append(audioOutput)
+        for output in self.soundEffectOutputs:
+            output.setVolume(self.sfxVolume)
         player.play()
 
     def changeVolumes(self, settingsDict):
         self.backgroundOutput.setVolume(int(settingsDict['bgm'])/100.0)
         self.dialogueOutput.setVolume(int(settingsDict['tts'])/100.0)
-        #self.soundEffectPlayer.setVolume(int(settingsDict['settings']['sfx']))
+        self.sfxVolume =  int(settingsDict['sfx'])/100.0
 
 
     def cleanupTempFiles(self):
