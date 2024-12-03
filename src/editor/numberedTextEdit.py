@@ -1,10 +1,114 @@
 import sys
 from PySide6.QtWidgets import QApplication, QPlainTextEdit, QWidget, QMessageBox, QTextEdit
-from PySide6.QtGui import QPainter, QColor, QFont, QTextFormat
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QPainter, QColor, QFont, QTextFormat, QAccessible, QAccessibleInterface, QAccessibleTextInterface, QAccessibleEvent, QTextCursor
+from PySide6.QtGui import *
+from PySide6.QtCore import Qt, Signal, QPoint
 
 # TODO: Connect all of the color options to the preferences
 
+class PlainTextBlockAccessible(QAccessibleInterface):
+    def __init__(self, block):
+        super().__init__()
+        self.block = block
+
+    def object(self):
+        return self.block
+
+    def role(self):
+        return QAccessible.Paragraph  # Each block is considered a paragraph
+
+    def text(self, t):
+        if t == QAccessible.Name:
+            return self.block.text()  # Returns the text of the block (line)
+        return ""
+
+    def isValid(self):
+        return self.block.isValid()
+    
+class PlainTextEditAccessible(QAccessibleInterface, QAccessibleTextInterface):
+    def __init__(self, plainTextEdit):
+        super().__init__()
+        self.plainTextEdit = plainTextEdit
+
+    def object(self):
+        return self.plainTextEdit
+
+    def role(self):
+        return QAccessible.Role.EditableText
+
+    def text(self, t):
+        if t == QAccessible.Name:
+            cursor = self.plainTextEdit.textCursor()
+
+            cursor.select(cursor.SelectionType.LineUnderCursor)
+            line_text = cursor.selectedText().strip()
+            block = cursor.block()
+
+            line_number = block.blockNumber() + 1
+
+            return f"Line {line_number}: {line_text}"
+
+        return ""
+
+    def rect(self):
+        # Provide the bounding rectangle of the widget
+        return self.plainTextEdit.geometry()
+
+    def characterCount(self):
+        return len(self.plainTextEdit.toPlainText())
+
+    def textAtOffset(self, offset, boundaryType):
+        cursor = self.plainTextEdit.textCursor()
+        cursor.movePosition(cursor.Start)
+        cursor.movePosition(cursor.NextCharacter, cursor.KeepAnchor, offset)
+        return cursor.selectedText()
+
+    def offsetAtPoint(self, x, y):
+        cursor = self.plainTextEdit.cursorForPosition(QPoint(x, y))
+        return cursor.position()
+
+    def setSelection(self, startOffset, endOffset):
+        cursor = self.plainTextEdit.textCursor()
+        cursor.setPosition(startOffset)
+        cursor.setPosition(endOffset, cursor.KeepAnchor)
+        self.plainTextEdit.setTextCursor(cursor)
+
+    def selection(self):
+        cursor = self.plainTextEdit.textCursor()
+        return cursor.selectionStart(), cursor.selectionEnd()
+
+    def isValid(self):
+        return self.plainTextEdit is not None and self.plainTextEdit.isVisible()
+    
+    def parent(self):
+        parent_widget = self.plainTextEdit.parentWidget()
+        if parent_widget:
+            return QAccessible.queryAccessibleInterface(parent_widget)
+        return None
+
+    def childCount(self):
+        document = self.plainTextEdit.document()
+        return document.blockCount() 
+
+    def child(self, index):
+        document = self.plainTextEdit.document()
+        block = document.findBlockByNumber(index)
+        if block.isValid():
+            return PlainTextBlockAccessible(block)
+        return None
+    
+    def state(self):
+        state = QAccessible.State() 
+        
+        if self.plainTextEdit.hasFocus():
+            state.focused = True
+        
+        if not self.plainTextEdit.isEnabled():
+            state.disabled = True
+        
+        return state
+
+    
 class LineNumberArea(QWidget):
     def __init__(self, editor):
         super().__init__(editor)
@@ -36,20 +140,26 @@ class LineNumberArea(QWidget):
 class NumberedTextEdit(QPlainTextEdit):
     def __init__(self):
         super().__init__()
+        # QAccessible.installFactory(self.createAccessible)
         self.lineNumberArea = LineNumberArea(self)
         self.lineNumberArea.setFixedWidth(self.lineNumberArea.minWidth)
         
         self.verticalScrollBar().valueChanged.connect(self.updateLineNumbers)
         self.cursorPositionChanged.connect(self.highlightCurrentLine)
+        self.cursorPositionChanged.connect(self.onCursorMoved)
         self.highlightCurrentLine()
         
-        self.fontSize = 12  # TODO: Connect to font size preferences
-        self.setFont(QFont("Courier", self.fontSize))  # TODO: connect the font to the font preferences
+        self.fontSize = self.font().pointSize()
+        self.setFont(self.font())
         self.updateLineNumbers()
+        
+        self.previousBlockNumber = None
+        
 
+    
     def lineNumberAreaWidth(self):
         return self.lineNumberArea.width()
-
+    
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.lineNumberArea.setGeometry(0, 0, self.lineNumberArea.width(), self.height())
@@ -70,7 +180,7 @@ class NumberedTextEdit(QPlainTextEdit):
             if line.isVisible():
                 lineY = int(self.blockBoundingGeometry(line).translated(self.contentOffset()).top())
                 lineNumber = str(i + 1)
-                numX = int(numberAreaWidth - fontMetrics.width(lineNumber) / 2)
+                numX = int(numberAreaWidth - fontMetrics.horizontalAdvance(lineNumber) / 2)
                 if (i == currentLine):
                     # I'm writing it this way to avoid setting the pen on every line
                     painter.setPen(QColor(0, 120, 250)) 
@@ -91,17 +201,31 @@ class NumberedTextEdit(QPlainTextEdit):
             extraSelections.append(selection)
         self.setExtraSelections(extraSelections)
         self.updateLineNumbers()
+    
+    def onCursorMoved(self):
+        cursor = self.textCursor()
+        currentBlockNumber = cursor.blockNumber()
+        if currentBlockNumber != self.previousBlockNumber:
+            self.previousBlockNumber = currentBlockNumber
+            self.triggerAccessibilityUpdate()
+    
+    def triggerAccessibilityUpdate(self):
+        event = QAccessibleEvent(self, QAccessible.Event.Focus)
+        QAccessible.updateAccessibility(event)
         
     def updateLineNumbers(self):
         self.lineNumberArea.update()
 
     def keyPressEvent(self, event):
-        super().keyPressEvent(event)
+        if event.key() == Qt.Key_Escape:
+            self.clearFocus()
+        else:
+            super().keyPressEvent(event)
         self.updateLineNumbers()  # Update line numbers when typing
 
     def changeFontSize(self, newSize):
         self.fontSize = newSize
-        self.setFont(QFont("Courier", self.fontSize)) # TODO: connect the font to the font preferences
+        self.setFont(self.font())
         self.updateLineNumbers()
 
     def jumpToLine(self, line_number):
