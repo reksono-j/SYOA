@@ -121,7 +121,7 @@ class ProjectManagerGUI(QWidget):
                 self.refreshProjectList()
                 self.CreateProject.emit(projectName)
                 QMessageBox.information(self, "Success", f"Project '{projectName}' created successfully.")
-            except FileExistsError as e:
+            except Exception as e:
                 QMessageBox.critical(self, "Error", str(e))
 
     def loadProject(self):

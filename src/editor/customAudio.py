@@ -77,7 +77,6 @@ class CustomAudioWidget(QWidget):
             dirPath = os.path.dirname(self.filePath)
             newFilePath = os.path.join(dirPath, newName+".mp3")
             try:
-                print(newFilePath)
                 os.rename(self.filePath, newFilePath)
                 self.listWidget.populateList()
             except FileNotFoundError:

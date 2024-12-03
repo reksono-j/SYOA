@@ -11,7 +11,7 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtCore import QUrl, QTimer
 import json
 import os
-from styles import *
+from src.viewer.styles import *
 
 class UICustomizeDialog(QDialog):
     def __init__(self):
