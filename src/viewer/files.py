@@ -101,6 +101,8 @@ class SaveManager():
     
     def getExistingFilePath(self, saveType: SaveType, slotNumber: int = 0):
         saveFolder = Path(self.fileManager.getSaveFolderPath())
+        if not saveFolder.exists():
+            saveFolder.mkdir()
         for file in saveFolder.iterdir():
             if file.is_file():
                 if file.name.startswith(f"slot{slotNumber}_{saveType.name}"):
@@ -114,16 +116,36 @@ class SaveManager():
     
 
 class SaveManagerGUI(QWidget):
-    def __init__(self, saveMode: bool, callback):
-        super().__init__()
+    def __init__(self, saveMode: bool, callback, menuToggleCallback, parent=None):
+        super().__init__(parent)
         self.saveManager = SaveManager()
         self.saveMode = saveMode
         if saveMode:
             self.getSaveDataCallback = callback
         else:
             self.loadSaveFileCallback = callback
+        self.toggleMenu = menuToggleCallback
         
         self.layout = QVBoxLayout(self)
+        
+        self.backButton = QPushButton("Back")
+        self.backButton.setStyleSheet("""
+        QPushButton {
+            background-color: #3498db;
+            color: #FFFFFF;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        QPushButton:hover {
+            background-color: #474747;
+        }
+        QPushButton:pressed {
+            background-color: #757575;
+        }""")
+        self.backButton.clicked.connect(self.parent().switchToPauseMenu)
+        self.layout.addWidget(self.backButton)
+        
         self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)
 
@@ -136,7 +158,8 @@ class SaveManagerGUI(QWidget):
         self.slotContainer.setLayout(self.slotLayout)
         self.scrollArea.setWidget(self.slotContainer)
         self.layout.addWidget(self.scrollArea)
-    
+
+        
     def populateSlots(self):
         while self.slotLayout.count():
             item = self.slotLayout.takeAt(0)
@@ -148,7 +171,7 @@ class SaveManagerGUI(QWidget):
         saveFiles = None
         if (os.path.exists(saveDir)):
             saveFiles = os.listdir(str(saveDir))
-        self.metadataArray = [dict() for _ in range(18)]  # Auto Save: 0, Manual Saves: 1-16, Quick Save: 17
+        self.metadataArray = [dict() for _ in range(18)] 
         
         if saveFiles is not None:
             for saveFile in saveFiles:
@@ -156,35 +179,48 @@ class SaveManagerGUI(QWidget):
                 if metadata:
                     match metadata['saveType']:
                         case 'MANUAL':
-                            self.metadataArray[metadata['slotNumber'] + 1] = metadata
-                        case 'AUTO':
-                            self.metadataArray[0] = metadata
-                        case 'QUICK':
-                            self.metadataArray[17] = metadata
+                            self.metadataArray[metadata['slotNumber']] = metadata
+                        # case 'AUTO':
+                        #     self.metadataArray[0] = metadata
+                        # case 'QUICK':
+                        #     self.metadataArray[17] = metadata
 
-        for i in range(17):
-            if not (self.saveMode and i == 0):
-                slotWidget = QWidget()
-                slotWidget.setFocusPolicy(Qt.StrongFocus) 
-                slotLayoutRow = QHBoxLayout(slotWidget)
+        for i in range(18):
+            slotWidget = QWidget()
+            slotWidget.setStyleSheet("""
+            QWidget {
+                background-color: #444;
+                border: 2px solid #3498db;
+                margin: 5px;
+                padding: 10px;
+                border-radius: 8px;
+            }
+            QWidget:hover {
+                background-color: #555;
+                border: 2px solid #2980b9;
+            }
+            QWidget:focus {
+                background-color: #555;
+                border: 2px solid #1f618d;
+            }
+            """)
+            slotWidget.setFocusPolicy(Qt.StrongFocus) 
+            slotLayoutRow = QHBoxLayout(slotWidget)
 
-                metadata = self.metadataArray[i]
-                if metadata:
-                    if i == 0:
-                        slotName = f"Autosave: ({metadata['readableTimestamp']})"
-                    else:
-                        slotName = f"Slot {i}: {metadata['name']} ({metadata['readableTimestamp']})"
-                else:
-                    slotName = f"Slot {i}: Empty" if i > 0 else "Autosave: Empty"
-                slotLabel = QLabel(slotName)
-                slotLabel.setStyleSheet("color: white; font-size: 16px;")
-                slotLayoutRow.addWidget(slotLabel)
-                slotLayoutRow.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))
-                
-                # Assign interaction based on saveMode
-                slotWidget.mousePressEvent = lambda _, i=i: self.onSlotSelected(i)
-                slotWidget.keyPressEvent = lambda e, i=i: self.onSlotKeyPress(e, i)
-                self.slotLayout.addWidget(slotWidget)
+            metadata = self.metadataArray[i]
+            if metadata:
+                slotName = f"Slot {i}: {metadata['name']} ({metadata['readableTimestamp']})"
+            else:
+                slotName = f"Slot {i}: Empty"
+            slotLabel = QLabel(slotName)
+            slotLabel.setStyleSheet("color: white; font-size: 16px;")
+            slotLayoutRow.addWidget(slotLabel)
+            slotLayoutRow.addSpacerItem(QSpacerItem(20, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))
+            
+            # Assign interaction based on saveMode
+            slotWidget.mousePressEvent = lambda _, i=i: self.onSlotSelected(i)
+            slotWidget.keyPressEvent = lambda e, i=i: self.onSlotKeyPress(e, i)
+            self.slotLayout.addWidget(slotWidget)
     
     def parseFileName(self, fileName):
         try:
@@ -210,9 +246,14 @@ class SaveManagerGUI(QWidget):
         else:
             metadata = self.metadataArray[slotIndex]
             if metadata:
-                self.loadSaveFileCallback(self.saveManager.loadGame(metadata["filename"]))
+                self.loadSaveFileCallback(self.saveManager.getExistingFilePath(SaveType.MANUAL, slotIndex))
+                self.toggleMenu()
             else:
-                QMessageBox.information(self, "Load Error", "No save data exists for this slot.")
+                QMessageBox.information(
+                    None, 
+                    "Load Error", 
+                    "No save data exists for this slot."
+                )
 
     def onSlotKeyPress(self, event, slotIndex):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -226,7 +267,6 @@ class SaveManagerGUI(QWidget):
                 SaveType.MANUAL, saveName, data, slotNumber
             )
             self.populateSlots()
-            QMessageBox.information(self, "Save Created", f"Save '{saveName}' created.")
 
     # I want the UI to refresh every time you open the GUI
     def showEvent(self, event):

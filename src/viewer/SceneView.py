@@ -7,8 +7,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QRect, QPropertyAnimation, QEasingCurve, Qt, QTimer, Signal, QCoreApplication
 from PySide6.QtGui import QFont, QPalette, QColor, QPainter, QPixmap
-
-print("\n".join(sys.path))
 from src.viewer.loader import Loader
 from src.viewer.audioManager import AudioManager
 from src.viewer.variables import ViewerVariableManager
@@ -106,9 +104,6 @@ class DialogueLog(QWidget):
     def scrollToBottom(self):
         self.scrollArea.verticalScrollBar().setValue(self.scrollArea.verticalScrollBar().maximum())
         
-
-
-
 class SceneViewMenuOverlay(QWidget):
     closeMenu = Signal()
     
@@ -130,8 +125,8 @@ class SceneViewMenuOverlay(QWidget):
             background-color: #2471a3;
         }
     """
-    def __init__(self, getSaveDataCallback, loadSaveFileCallback):
-        super().__init__()
+    def __init__(self, getSaveDataCallback, loadSaveFileCallback, parent=None):
+        super().__init__(parent)
         
         self.setAttribute(Qt.WA_TranslucentBackground)  
         self.setWindowFlags(Qt.FramelessWindowHint) 
@@ -145,8 +140,8 @@ class SceneViewMenuOverlay(QWidget):
         self.layout.addWidget(self.menuStack)
 
         self.pauseMenu = self.createPauseMenu()
-        self.saveMenu = SaveManagerGUI(True, getSaveDataCallback)
-        self.loadMenu = SaveManagerGUI(False, loadSaveFileCallback)
+        self.saveMenu = SaveManagerGUI(True, getSaveDataCallback, self.parent().toggleMenuOverlay, self)
+        self.loadMenu = SaveManagerGUI(False, loadSaveFileCallback, self.parent().toggleMenuOverlay, self)
         self.settingsMenu = self.createSettingsMenu()
 
         self.menuStack.addWidget(self.pauseMenu)
@@ -158,6 +153,7 @@ class SceneViewMenuOverlay(QWidget):
     
     def emitLoadSignal(self, filepath: str):
         self.loadFile.emit(filepath)
+    
     
     def createPauseMenu(self):
         menu = QWidget()
@@ -201,6 +197,8 @@ class SceneViewMenuOverlay(QWidget):
         # return menu
         return UICustomizeDialog()
 
+    def switchToPauseMenu(self):
+        self.menuStack.setCurrentWidget(self.pauseMenu)
         
 class SceneView(QMainWindow):
     def __init__(self, filePath, freshStart):
@@ -218,6 +216,7 @@ class SceneView(QMainWindow):
         
         self.dialogueHistory = []
         self.nextEntry = {}
+        self.currentBGM = ""
         
         self.minWidth = 200
         self.minHeight = 100
@@ -285,7 +284,7 @@ class SceneView(QMainWindow):
         self.vm = ViewerVariableManager()
         self.files = FileManager()
         
-        self.menuOverlay = SceneViewMenuOverlay(self.saveGame, self.loadGame)
+        self.menuOverlay = SceneViewMenuOverlay(self.saveGame, self.loadGame, self)
         self.menuOverlay.setParent(self)
         self.menuOverlay.hide()
         self.menuOverlay.closeMenu.connect(self.toggleMenuOverlay)    
@@ -300,14 +299,14 @@ class SceneView(QMainWindow):
     # SCENE PLAYER 
     
     def next(self):
-        if self.currentLineIndex < len(self.script):
+        if self.currentLineIndex < len(self.script):  
             self.showingNext = True
             element = self.script[self.currentLineIndex]
             match element['type']:
                 case "dialogue":
                     self.nextEntry['type'] = 'dialogue'
                     if element["speaker"]:
-                        text = f'{element['speaker']}: "{element['text']}"'
+                        text = f"{element['speaker']}: {element['text']}"
                         self.setTextLetterByLetter(text)
                         self.nextEntry['speaker'] = element['speaker']
                         self.nextEntry['text'] = text
@@ -324,18 +323,27 @@ class SceneView(QMainWindow):
                     self.textBox.setFocus()
                 case "choice":
                     self.nextEntry['type'] = 'choice'
+                    # for i, choice in enumerate(element['choices']):
+                    #     self.addButtonToTextBoxArea(
+                    #         f"Option {i + 1}: {choice['text']}",
+                    #         lambda index=i, cur=self.currentLineIndex: self.handleNewLines(cur, index)
+                    #     )
+                        
                     for i, choice in enumerate(element['choices']):
-                        self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element, choice['index']))
+                        def makeHandler(index, curIndex):
+                            return lambda: self.handleNewLines(curIndex, index)
+                        handler = makeHandler(i, self.currentLineIndex)
+                        self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", handler)
+                    
                     self.nextButton.hide()
                     self.showingNext = False
                 case "conditional":
                     if eval(element["comparison"]):
-                       self.handleNewLines(element["ifLines"], element)
-                       self.conditionalsLog.append(1)
+                        self.conditionalsLog.append(1)
+                        self.handleNewLines(self.currentLineIndex)
                     else:
-                       self.handleNewLines(element["elseLines"], element)
-                       self.conditionalsLog.append(0)
-                    self.handleNewLines(element["ifLines"], element)
+                        self.conditionalsLog.append(0)
+                        self.handleNewLines(self.currentLineIndex)
                 case "modify":
                     eval(element['action'])
                     self.advanceScript()
@@ -351,6 +359,7 @@ class SceneView(QMainWindow):
                     self.backgroundManager.setBackgroundFile(element['path'], self.loader.getPackagePath())
                     self.backgroundPath = element['path']
                     self.background.show()
+                    self.advanceScript()
                 case _:
                     print(element)
                     self.advanceScript()
@@ -372,6 +381,7 @@ class SceneView(QMainWindow):
             if element['type'] == 'sfx':
                 self.audio.playSoundEffect(element['path'], True, self.loader.getPackagePath())
             if element['type'] == 'bgm':
+                self.currentBGM = element['path']
                 self.audio.playBackgroundMusic(element['path'], True, True, self.loader.getPackagePath())
     
     def loadScene(self, sceneName):
@@ -385,8 +395,8 @@ class SceneView(QMainWindow):
         
     def advanceScript(self):
         self.currentLineIndex += 1
-        self.updateDialogueHistory()
         self.next()
+        self.updateDialogueHistory()
 
     def updateDialogueHistory(self):
         if bool(self.nextEntry):
@@ -402,22 +412,30 @@ class SceneView(QMainWindow):
         if (self.running and self.script[self.currentLineIndex]['type'] != 'choice'):
             self.advanceScript()
 
-    def handleNewLines(self, lines, element, choiceIndex:int=-1, loading: bool= False):
+    def handleNewLines(self, currentLineIndex, choiceIndex:int=-1, loading: bool= False):
+        element = self.script[currentLineIndex]
         if 'text' in element:
             self.nextEntry['text'] = element['text']
+        if element['type'] == 'choice':
+            lines = element['choices'][choiceIndex]['lines']
+        elif element['type'] == 'conditional':
+            if eval(element["comparison"]):
+                lines = element['ifLines']
+            else:
+                lines = element['elseLines']
         for button in self.container.findChildren(QPushButton):
             if button is not self.nextButton:
                 self.showinNext = True
                 self.nextButton.show()
                 self.clearButtons()
                 break
-        for line in lines:
-            self.script.insert(self.currentLineIndex + 1, line)
+        for i in range(len(lines)-1,-1,-1):
+            self.script.insert(self.currentLineIndex + 1, lines[i])
         if not loading:
             if choiceIndex != -1:
                 self.choiceLog.append(choiceIndex)
             self.advanceScript()
-
+    
     # Saves
     
     def saveGame(self):
@@ -431,14 +449,18 @@ class SceneView(QMainWindow):
         savefile['conditionalsLog'] = self.conditionalsLog
         savefile['dialogueHistory'] = self.dialogueHistory
         savefile['backgroundPath'] = self.backgroundPath
+        savefile['currentBGM'] = self.currentBGM
         return savefile
     
     def loadGame(self, filepath: str):
         self.container.hide()
+        self.background.hide()
         self.nextButton.hide()
         
+        self.audio.stopBackgroundMusic()
         savedata = self.files.readSaveFile(filepath)
-        self.vm.loadFromDict(savedata['variables'])
+        if 'variables' in savedata:
+            self.vm.loadFromDict(savedata['variables'])
         self.currentScene = savedata['currentScene']
         self.sceneData = self.loader.readSceneToDict(self.currentScene)
         self.script = self.sceneData['lines']        
@@ -446,20 +468,21 @@ class SceneView(QMainWindow):
         self.conditionalsLog = savedata['conditionalsLog']
         self.dialogueHistory = savedata['dialogueHistory']
         self.backgroundPath = savedata['backgroundPath']
+        self.currentBGM = savedata['currentBGM']
         targetIndex = savedata['currentLineIndex']
         
         choiceLog = self.choiceLog.copy()   
         conditionalsLog = self.conditionalsLog.copy()
         
         self.currentLineIndex = 0
-        while self.currentLineIndex < targetIndex:
+        while self.currentLineIndex <= targetIndex:
             self.showingNext = True
             element = self.script[self.currentLineIndex]
             match element['type']:
                 case "dialogue":
                     self.nextEntry['type'] = 'dialogue'
                     if element["speaker"]:
-                        text = f'{element['speaker']}: "{element['text']}"'
+                        text = f"{element['speaker']}: {element['text']}"
                         self.textBox.setText(text)
                         self.nextEntry['speaker'] = element['speaker']
                         self.nextEntry['text'] = text
@@ -476,14 +499,18 @@ class SceneView(QMainWindow):
                     self.nextEntry['type'] = 'choice'
                     if not choiceLog:
                         for i, choice in enumerate(element['choices']):
-                            self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", lambda: self.handleNewLines(choice['lines'], element, choice['index']))
+                            self.addButtonToTextBoxArea(
+                                f"Option {i + 1}: {choice['text']}",
+                                lambda index=i, cur=self.currentLineIndex: self.handleNewLines(cur, index, loading=True)
+                            )
                         self.nextButton.hide()
                         self.showingNext = False
                     else:
-                        for choice in element['choices']:
-                            if choice['index'] == choiceLog[0]:
-                                self.handleNewLines(choice['lines'], element, choice['index'],loading=True)
+                        for i, choice in enumerate(element['choices']):
+                            if i == choiceLog[0]:
+                                self.handleNewLines(self.currentLineIndex, i,loading=True)
                                 choiceLog.pop(0)
+                                break
                 case "conditional":
                     if conditionalsLog[0] == 1:
                        self.handleNewLines(element["ifLines"], element, loading=True)
@@ -493,8 +520,13 @@ class SceneView(QMainWindow):
                 case _:
                     pass
             self.currentLineIndex += 1
-        
-        self.backgroundManager.setBackgroundFile(self.backgroundPath, self.loader.getPackagePath())
+            
+        self.currentLineIndex -= 1
+        if self.backgroundPath:
+            self.backgroundManager.setBackgroundFile(self.backgroundPath, self.loader.getPackagePath())
+            self.background.show()
+        if self.currentBGM:
+            self.audio.playBackgroundMusic(self.currentBGM, True, True, self.loader.getPackagePath())
         self.adjustSizeToContent()
         self.running = True
         self.container.show()
@@ -517,6 +549,7 @@ class SceneView(QMainWindow):
             if self.showingNext:
                 self.nextButton.hide()
             self.menuOverlay.raise_()
+            self.menuOverlay.switchToPauseMenu()
             self.menuOverlay.move(self.rect().center() - self.menuOverlay.rect().center())
             self.menuOverlay.setFocus()
             self.menuOverlay.show()
@@ -568,9 +601,6 @@ class SceneView(QMainWindow):
     
     def onButtonDeleted(self):
         self.adjustSizeToContent()
-        
-    def exampleButtonAction(self):
-        print("Button clicked!")
 
     def adjustSizeToContent(self):
         document = self.textBox.document()
@@ -632,5 +662,9 @@ class SceneView(QMainWindow):
             self.saveGame()
         else:
             super().keyPressEvent(event)
-
-
+    
+    def closeEvent(self, event):
+        self.audio.cleanupTempFiles()
+        super().closeEvent(event)
+    
+    

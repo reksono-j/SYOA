@@ -109,7 +109,9 @@ class HandHoldMenu(QtWidgets.QScrollArea):
                     final_string = final_string + "CHOICE " + self.groupBox.layout.itemAt(
                         i + 1).widget().toPlainText() + "\n"
                 if widget.text()[:7] == "Branch ":
+                    final_string = final_string + "CHOICE " + self.groupBox.layout.itemAt(i+1).widget().toPlainText() + "\n"
                     final_string = final_string + "BRANCH " + self.groupBox.layout.itemAt(i+1).widget().toPlainText() + "\n"
+                    final_string = final_string + "END" + "\n"
                 if widget.text() == "Name of the variable:":
                     var1 = self.groupBox.layout.itemAt(i+1).widget().toPlainText()
                     sett = self.groupBox.layout.itemAt(i+3).widget().toPlainText()

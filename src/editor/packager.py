@@ -103,14 +103,12 @@ class StoryPackager:
             self.counter += 1
             dialogue = {}
             speaker = self._checkCharacter(el.speaker)
-            if 'name' in speaker:
-                speaker = speaker['name']
             if not any(char.isalnum() for char in el.text):
                 dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": el.audio} 
             else:
                 if el.audio == '':
                     if 'voice' in speaker:
-                        dialogue = {"type":"dialogue", "speaker":speaker, "voice": speaker['voice'], "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
+                        dialogue = {"type":"dialogue", "speaker":speaker['name'], "voice": speaker['voice'], "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
                     else:
                         dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": f"audio/{sceneTitle}/{self.counter}.wav"}
                 else:
@@ -118,8 +116,13 @@ class StoryPackager:
                     parentFolder = os.path.basename(os.path.dirname(audio)) 
                     fileName = os.path.basename(audio) 
                     archivePath = f"audio/{parentFolder}/{fileName}"
-                    dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": archivePath, "path": audio}
-            self.SoundData.append(dialogue)
+                    if 'name' in speaker:
+                        dialogue = {"type":"dialogue", "speaker":speaker['name'], "text":el.text, "audio": archivePath, "path": audio}
+                    else:
+                        dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": archivePath, "path": audio}
+            self.SoundData.append(dialogue.copy())
+            if "path" in dialogue:                
+                dialogue.pop('path')
             return dialogue
         if type(el) == Modify:
             action = ""
@@ -226,12 +229,10 @@ class StoryPackager:
                         if line['audio'] not in arcnames:
                             if "path" in line:
                                 file.write(line['path'] , arcname=line['audio']) 
-                                
                             else:
                                 if line['audio'] != "":
-                                    speaker = line['speaker']
-                                    if 'voice' in speaker:
-                                        TTS.setSpeaker(VOICE[speaker['voice']])
+                                    if 'voice' in line:
+                                        TTS.setSpeaker(VOICE[line['voice']])
                                     else:
                                         TTS.setSpeaker(VOICE.female1)
                                     audioBuffer = TTS.convertToAudio(line["text"])
