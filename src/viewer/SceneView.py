@@ -330,7 +330,7 @@ class SceneView(QMainWindow):
                         
                     for i, choice in enumerate(element['choices']):
                         def makeHandler(index, curIndex):
-                            return lambda: (print(f"Handling curIndex={curIndex}, index={index}"), self.handleNewLines(curIndex, index))[1]
+                            return lambda: self.handleNewLines(curIndex, index)
                         handler = makeHandler(i, self.currentLineIndex)
                         self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", handler)
                     
@@ -540,6 +540,7 @@ class SceneView(QMainWindow):
             if self.showingNext:
                 self.nextButton.hide()
             self.menuOverlay.raise_()
+            self.menuOverlay.switchToPauseMenu()
             self.menuOverlay.move(self.rect().center() - self.menuOverlay.rect().center())
             self.menuOverlay.setFocus()
             self.menuOverlay.show()
