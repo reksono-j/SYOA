@@ -22,6 +22,7 @@ class StoryPackager:
         self.characterManager = CharacterManager()
         self.backgroundManager = BackgroundManager()
         self.projectManager = ProjectManager()
+        self.rawVars = ""
         
     def _checkVariable(self, variable: str, intPossible = True):
         if variable.isidentifier():

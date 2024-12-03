@@ -439,12 +439,12 @@ APP_STYLE_LIGHT = """
     }
     QTabBar {
         background-color: #FFFFFF; 
-        color: #000000;
+        color: #FFFFFF;
         font-weight: bold;
     }
     QTabBar::tab {
         background-color: #757575; 
-        color: #000000;
+        color: #FFFFFF;
         padding: 10px;
         border: 2px solid transparent; 
         border-radius: 6px;
@@ -604,7 +604,7 @@ APP_STYLE_LIGHT = """
 
     #projectMenuTabBar QTabBar::tab {
         background-color: #757575; 
-        color: #000000;
+        color: #FFFFFF;
         padding: 10px;
         border: 2px solid transparent; 
         border-radius: 6px;
