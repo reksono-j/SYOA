@@ -305,7 +305,7 @@ class SceneView(QMainWindow):
                 case "dialogue":
                     self.nextEntry['type'] = 'dialogue'
                     if element["speaker"]:
-                        text = f'{element['speaker']}: "{element['text']}"'
+                        text = f"{element['speaker']}: {element['text']}"
                         self.setTextLetterByLetter(text)
                         self.nextEntry['speaker'] = element['speaker']
                         self.nextEntry['text'] = text
@@ -322,11 +322,18 @@ class SceneView(QMainWindow):
                     self.textBox.setFocus()
                 case "choice":
                     self.nextEntry['type'] = 'choice'
+                    # for i, choice in enumerate(element['choices']):
+                    #     self.addButtonToTextBoxArea(
+                    #         f"Option {i + 1}: {choice['text']}",
+                    #         lambda index=i, cur=self.currentLineIndex: self.handleNewLines(cur, index)
+                    #     )
+                        
                     for i, choice in enumerate(element['choices']):
-                        self.addButtonToTextBoxArea(
-                            f"Option {i + 1}: {choice['text']}",
-                            lambda index=i, cur=self.currentLineIndex: self.handleNewLines(cur, index)
-                        )
+                        def makeHandler(index, curIndex):
+                            return lambda: (print(f"Handling curIndex={curIndex}, index={index}"), self.handleNewLines(curIndex, index))[1]
+                        handler = makeHandler(i, self.currentLineIndex)
+                        self.addButtonToTextBoxArea(f"Option {i + 1}: {choice['text']}", handler)
+                    
                     self.nextButton.hide()
                     self.showingNext = False
                 case "conditional":
@@ -469,7 +476,7 @@ class SceneView(QMainWindow):
                 case "dialogue":
                     self.nextEntry['type'] = 'dialogue'
                     if element["speaker"]:
-                        text = f'{element['speaker']}: {element['text']}'
+                        text = f"{element['speaker']}: {element['text']}"
                         self.textBox.setText(text)
                         self.nextEntry['speaker'] = element['speaker']
                         self.nextEntry['text'] = text
