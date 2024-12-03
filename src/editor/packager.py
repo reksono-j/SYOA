@@ -120,7 +120,7 @@ class StoryPackager:
                         dialogue = {"type":"dialogue", "speaker":speaker['name'], "text":el.text, "audio": archivePath, "path": audio}
                     else:
                         dialogue = {"type":"dialogue", "speaker":speaker, "text":el.text, "audio": archivePath, "path": audio}
-            self.SoundData.append(dialogue)
+            self.SoundData.append(dialogue.copy())
             if "path" in dialogue:                
                 dialogue.pop('path')
             return dialogue
@@ -229,7 +229,6 @@ class StoryPackager:
                         if line['audio'] not in arcnames:
                             if "path" in line:
                                 file.write(line['path'] , arcname=line['audio']) 
-                                
                             else:
                                 if line['audio'] != "":
                                     if 'voice' in line:

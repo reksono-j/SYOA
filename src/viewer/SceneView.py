@@ -216,6 +216,7 @@ class SceneView(QMainWindow):
         
         self.dialogueHistory = []
         self.nextEntry = {}
+        self.currentBGM = ""
         
         self.minWidth = 200
         self.minHeight = 100
@@ -380,6 +381,7 @@ class SceneView(QMainWindow):
             if element['type'] == 'sfx':
                 self.audio.playSoundEffect(element['path'], True, self.loader.getPackagePath())
             if element['type'] == 'bgm':
+                self.currentBGM = element['path']
                 self.audio.playBackgroundMusic(element['path'], True, True, self.loader.getPackagePath())
     
     def loadScene(self, sceneName):
@@ -447,12 +449,14 @@ class SceneView(QMainWindow):
         savefile['conditionalsLog'] = self.conditionalsLog
         savefile['dialogueHistory'] = self.dialogueHistory
         savefile['backgroundPath'] = self.backgroundPath
+        savefile['currentBGM'] = self.currentBGM
         return savefile
     
     def loadGame(self, filepath: str):
         self.container.hide()
         self.nextButton.hide()
         
+        self.audio.stopBackgroundMusic()
         savedata = self.files.readSaveFile(filepath)
         if 'variables' in savedata:
             self.vm.loadFromDict(savedata['variables'])
@@ -463,6 +467,7 @@ class SceneView(QMainWindow):
         self.conditionalsLog = savedata['conditionalsLog']
         self.dialogueHistory = savedata['dialogueHistory']
         self.backgroundPath = savedata['backgroundPath']
+        self.currentBGM = savedata['currentBGM']
         targetIndex = savedata['currentLineIndex']
         
         choiceLog = self.choiceLog.copy()   
@@ -518,6 +523,8 @@ class SceneView(QMainWindow):
         self.currentLineIndex -= 1
         if self.backgroundPath:
             self.backgroundManager.setBackgroundFile(self.backgroundPath, self.loader.getPackagePath())
+        if self.currentBGM:
+            self.audio.playBackgroundMusic(self.currentBGM, True, True, self.loader.getPackagePath())
         self.adjustSizeToContent()
         self.running = True
         self.container.show()
