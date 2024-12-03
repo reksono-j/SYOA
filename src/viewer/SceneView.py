@@ -454,6 +454,7 @@ class SceneView(QMainWindow):
     
     def loadGame(self, filepath: str):
         self.container.hide()
+        self.background.hide()
         self.nextButton.hide()
         
         self.audio.stopBackgroundMusic()
@@ -523,6 +524,7 @@ class SceneView(QMainWindow):
         self.currentLineIndex -= 1
         if self.backgroundPath:
             self.backgroundManager.setBackgroundFile(self.backgroundPath, self.loader.getPackagePath())
+            self.background.show()
         if self.currentBGM:
             self.audio.playBackgroundMusic(self.currentBGM, True, True, self.loader.getPackagePath())
         self.adjustSizeToContent()
