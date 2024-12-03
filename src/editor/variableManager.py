@@ -24,6 +24,13 @@ class EditorVariableManager(metaclass=Singleton):
             self.saveVariables()  
             return True
         return False
+    
+    def renameVariable(self, name, newName):
+        if self.isValidName(name):
+            self.Variables[newName.lower()] = self.Variables.pop(name)
+            self.saveVariables()  
+            return True
+        return False
 
     def get(self, name):
         if name.lower() in self.Variables:

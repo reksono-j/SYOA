@@ -140,7 +140,7 @@ class EditorVariableManagerGUI(QWidget):
         if ok and newValueText:
             try:
                 newValue = int(newValueText)
-                if self.vm.changeVariable(name, newValue):
+                if self.vm.setVariable(name, newValue):
                     self.lastEditedVariable = name  
                     self.listVariables()
                 else:

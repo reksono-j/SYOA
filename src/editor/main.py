@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setGeometry(100, 100, 800, 600) 
         self.setFixedSize(1280, 720)
+        self.setWindowTitle("Speak Your Own Adventure")
         scriptDirectory = os.path.dirname(os.path.abspath(__file__))
         self.projectsDirectory = os.path.join(scriptDirectory, 'projects')  
         if not os.path.exists(self.projectsDirectory):
