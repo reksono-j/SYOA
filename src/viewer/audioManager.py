@@ -87,7 +87,7 @@ class AudioManager(metaclass=Singleton):
             self.dialoguePlayer.stop()
         self.backgroundPlayer.setSource(QUrl())
         self.dialoguePlayer.setSource(QUrl())
-        for output in self.dialogueOutput:
+        for output in self.soundEffectOutputs:
             output.deleteLater()
         for player in self.soundEffectPlayers:
             player.stop()
