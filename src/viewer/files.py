@@ -101,6 +101,8 @@ class SaveManager():
     
     def getExistingFilePath(self, saveType: SaveType, slotNumber: int = 0):
         saveFolder = Path(self.fileManager.getSaveFolderPath())
+        if not saveFolder.exists():
+            saveFolder.mkdir()
         for file in saveFolder.iterdir():
             if file.is_file():
                 if file.name.startswith(f"slot{slotNumber}_{saveType.name}"):
