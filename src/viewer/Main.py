@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from src.viewer.SceneView import SceneView
 from src.viewer.files import FileManager
+from options import *
 
 class MainMenu(QMainWindow):
     def __init__(self):
@@ -98,7 +99,8 @@ class MainMenu(QMainWindow):
             self.updateButtonStyles()
 
     def showOptions(self):
-        self.showMessage("Options menu (not implemented)")
+        optionsMenu = UICustomizeDialog()
+        optionsMenu.exec()
 
     def quitApp(self):
         self.close()

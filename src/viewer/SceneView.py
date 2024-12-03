@@ -14,6 +14,7 @@ from src.viewer.audioManager import AudioManager
 from src.viewer.variables import ViewerVariableManager
 from src.viewer.backgroundManager import BackgroundManager
 from src.viewer.files import FileManager, SaveManagerGUI, SaveManager
+from options import UICustomizeDialog
 
 class DialogueLog(QWidget):
     def __init__(self, getHistoryCallback):
@@ -151,7 +152,7 @@ class SceneViewMenuOverlay(QWidget):
         self.menuStack.addWidget(self.pauseMenu)
         self.menuStack.addWidget(self.saveMenu)
         self.menuStack.addWidget(self.loadMenu)
-        self.menuStack.addWidget(self.settingsMenu)
+        #self.menuStack.addWidget(self.settingsMenu)
 
         self.menuStack.setCurrentWidget(self.pauseMenu)
     
@@ -178,27 +179,27 @@ class SceneViewMenuOverlay(QWidget):
         resumeButton.clicked.connect(self.closeMenu.emit) 
         saveButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.saveMenu))
         loadButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.loadMenu))
-        settingsButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.settingsMenu))
+        settingsButton.clicked.connect(lambda: self.settingsMenu.exec())
         quitButton.clicked.connect(QCoreApplication.quit)
 
         return menu
 
     def createSettingsMenu(self):
-        menu = QWidget()
-        layout = QVBoxLayout(menu)
-        layout.setAlignment(Qt.AlignCenter)
+        # menu = QWidget()
+        # layout = QVBoxLayout(menu)
+        # layout.setAlignment(Qt.AlignCenter)
 
-        warningLabel = QLabel("OUT OF ORDER")
-        warningLabel.setStyleSheet("font-size: 32px; color: white;")
-        layout.addWidget(warningLabel)
+        # warningLabel = QLabel("OUT OF ORDER")
+        # warningLabel.setStyleSheet("font-size: 32px; color: white;")
+        # layout.addWidget(warningLabel)
 
-        backButton = QPushButton("Back")
-        backButton.setStyleSheet(self.BUTTON_STYLE)
-        backButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.pauseMenu))
-        layout.addWidget(backButton)
+        # backButton = QPushButton("Back")
+        # backButton.setStyleSheet(self.BUTTON_STYLE)
+        # backButton.clicked.connect(lambda: self.menuStack.setCurrentWidget(self.pauseMenu))
+        # layout.addWidget(backButton)
 
-        return menu
-
+        # return menu
+        return UICustomizeDialog()
 
         
 class SceneView(QMainWindow):
@@ -361,6 +362,9 @@ class SceneView(QMainWindow):
         self.adjustSizeToContent()
 
     def playCurrentElementAudio(self):
+        self.settings = UICustomizeDialog()
+        volumes = self.settings.importVolumeDict()
+        self.audio.changeVolumes(volumes)
         if self.currentLineIndex < len(self.script):
             element = self.script[self.currentLineIndex]
             if element['type'] == 'dialogue':
