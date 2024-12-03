@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 import json
 import os
-from styles import *
+from src.editor.styles import *
 
 class UICustomizeMenu(QGroupBox):
     def __init__(self, UICustomizeManager, parent):

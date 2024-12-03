@@ -1,5 +1,11 @@
 import sys
 import os
+
+script_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(script_dir, "..", ".."))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -11,8 +17,8 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 from PySide6.QtCore import Qt
-from SceneView import SceneView
-from files import FileManager
+from src.viewer.SceneView import SceneView
+from src.viewer.files import FileManager
 
 class MainMenu(QMainWindow):
     def __init__(self):

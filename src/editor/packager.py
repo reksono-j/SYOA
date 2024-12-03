@@ -1,14 +1,13 @@
-from sceneStructure import *
+from src.editor.sceneStructure import *
 from pathlib import Path
-from parser import readScript
+from src.editor.parser import readScript
 from zipfile import ZipFile
-from variableManager import EditorVariableManager
-from characterManager import CharacterManager
-from backgroundManager import BackgroundManager
-from projectManager import ProjectManager
-import io, os
-import json
-from textToSpeech import TTS, VOICE
+from src.editor.variableManager import EditorVariableManager
+from src.editor.characterManager import CharacterManager
+from src.editor.backgroundManager import BackgroundManager
+from src.editor.projectManager import ProjectManager
+import io, os, json
+from src.editor.textToSpeech import TTS, VOICE
 
 
 class StoryPackager:

@@ -8,25 +8,31 @@ from PySide6.QtWidgets import (
     QDialog, QMessageBox, QProgressDialog
 )
 from PySide6.QtGui import QAccessibleValueChangeEvent, QAction, QAccessible, QKeySequence, QAccessibleEvent
-from projectManager import ProjectManager, ProjectManagerGUI
-from HomeMenu import HomeMenu
-from SettingsMenu import SettingsMenu
-from DirectoryDialogs import OpenFileDialog, PickFilepathDialog
-from styles import *
-from ProjectMenu import ProjectMenu, ProjectFileMenu
-from packager import StoryPackager
-from customAudio import AudioManagerDialog
-from characterManager import CharacterManagerDialog
-from variableManagerGUI import VariableManagerDialog
-from backgroundManager import BackgroundManagerDialog
-from handhold import HandHoldManager
-from search import SearchMenuDialog
-from customAudio import CustomAudio
-from numberedTextEdit import NumberedTextEdit
-import ui_customize
-import keybinds
-import speechToText
-import tutorial
+
+script_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(script_dir, "..", ".."))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from src.editor.projectManager import ProjectManager, ProjectManagerGUI
+from src.editor.HomeMenu import HomeMenu
+from src.editor.SettingsMenu import SettingsMenu
+from src.editor.DirectoryDialogs import OpenFileDialog, PickFilepathDialog
+from src.editor.styles import *
+from src.editor.ProjectMenu import ProjectMenu, ProjectFileMenu
+from src.editor.packager import StoryPackager
+from src.editor.customAudio import AudioManagerDialog
+from src.editor.characterManager import CharacterManagerDialog
+from src.editor.variableManagerGUI import VariableManagerDialog
+from src.editor.backgroundManager import BackgroundManagerDialog
+from src.editor.handhold import HandHoldManager
+from src.editor.search import SearchMenuDialog
+from src.editor.customAudio import CustomAudio
+from src.editor.numberedTextEdit import NumberedTextEdit
+from src.editor.ui_customize import *
+from src.editor.keybinds import *
+from src.editor.speechToText import *
+from src.editor.tutorial import *
 
 
 class MainWindow(QMainWindow):
@@ -45,7 +51,7 @@ class MainWindow(QMainWindow):
         
         self.projectOpened = False
         
-        self.uiSettingsManager = ui_customize.UICustomizeManager(self)
+        self.uiSettingsManager = UICustomizeManager(self)
         self.uiSettingsManager.applySettings()
         
         self.handholdManager = HandHoldManager()
@@ -81,10 +87,10 @@ class MainWindow(QMainWindow):
         self.initShortcuts()
         
     def initShortcuts(self):
-        shortcutsManager = keybinds.ShortcutsManager(self)
+        shortcutsManager = ShortcutsManager(self)
         shortcutsManager.addShortcut("Ctrl+Q","Quit",self.close)
         shortcutsManager.addShortcut("Ctrl+/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
-        shortcutsManager.addShortcut("Ctrl+T","Start Transcription",speechToText.STT.recordCallback)
+        shortcutsManager.addShortcut("Ctrl+T","Start Transcription", STT.recordCallback)
         shortcutsManager.addShortcut("Ctrl+F","Open Search Menu",self.showSearchMenu)
         shortcutsManager.addShortcut("Alt+C", "Type CHOICE", lambda: self.insertTextIntoIDE("CHOICE "))
         shortcutsManager.addShortcut("Alt+B", "Type BRANCH", lambda: self.insertTextIntoIDE("BRANCH "))
@@ -299,7 +305,7 @@ class MainWindow(QMainWindow):
                     QMessageBox.warning(self, "Warning", "Open scene first.")
 
     def showTutorial(self):
-        self.dialog = tutorial.TutorialDialog()
+        self.dialog = TutorialDialog()
         self.dialog.exec()
     
     def insertTextIntoIDE(self, text):

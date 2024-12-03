@@ -96,8 +96,8 @@ def parseText(text: str):
   If          = CaselessKeyword('IF') + Compare('comparison')
   Else        = CaselessKeyword('ELSE')
   End         = CaselessKeyword('END')
-  Sfx         = CaselessKeyword('SFX') + Optional(one_of("HIGH MED LOW", caseless=True)("volume")) + Regex('[a-zA-Z0-9_-./\ ]+')('name')
-  Bgm         = CaselessKeyword('BGM') + Optional(one_of("HIGH MED LOW", caseless=True)("volume")) + Regex('[a-zA-Z0-9_-./\ ]+')('name')
+  Sfx         = CaselessKeyword('SFX') + Optional(one_of("HIGH MED LOW", caseless=True)("volume")) + Regex(r'[a-zA-Z0-9_\-./ ]+')('name')
+  Bgm         = CaselessKeyword('BGM') + Optional(one_of("HIGH MED LOW", caseless=True)("volume")) + Regex(r'[a-zA-Z0-9_\-./ ]+')('name')
   Background  = CaselessKeyword('Background') + Word(alphanums)('name')
   
   def LabelElement(ElementType: Parsed):

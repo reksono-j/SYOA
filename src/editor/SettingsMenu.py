@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QSpacerItem, QSizePolicy, QGridLayout,
 )
 from PySide6.QtCore import Signal
-from styles import *
+from src.editor.styles import *
 
 class SettingsMenu(QWidget):
     changeThemeSignal = Signal()

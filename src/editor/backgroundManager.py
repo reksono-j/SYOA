@@ -4,8 +4,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
-from singleton import Singleton
-from projectManager import ProjectManager
+from src.editor.singleton import Singleton
+from src.editor.projectManager import ProjectManager
 
 class BackgroundManager(metaclass=Singleton):
     def __init__(self):

@@ -1,13 +1,13 @@
-import speechToText
-import keybinds
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QTextEdit
-from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QKeyEvent, QKeySequence
+from src.editor.speechToText import *
+from src.editor.keybinds import *
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Qt, QEvent
+from PySide6.QtGui import QKeyEvent, QKeySequence
 
 
 class VCManager():
-    STT = speechToText.STT
-    shortcutsManager = keybinds.ShortcutsManager.getInstance()
+    STT = STT
+    shortcutsManager = ShortcutsManager.getInstance()
     mainWindow = shortcutsManager.window
 
     @staticmethod

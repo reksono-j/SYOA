@@ -17,9 +17,8 @@ from PySide6.QtWidgets import (
     QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QPlainTextEdit
 )
 from PySide6.QtGui import Qt
-from audioPlayer import AudioPlayer
-import sys
-import os
+from src.editor.audioPlayer import AudioPlayer
+import sys, os
 
 
 

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt, Signal
-from src_alt.editor.variableManager import EditorVariableManager
+from src.editor.variableManager import EditorVariableManager
 
 class AddVariableDialog(QDialog):
     def __init__(self, parent=None):

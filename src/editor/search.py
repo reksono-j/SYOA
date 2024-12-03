@@ -6,11 +6,9 @@ from PySide6.QtWidgets import (
     QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
     QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QHBoxLayout, QWidget, QLayout
 )
-import parser
+from src.editor.parser import *
 from pathlib import Path
-import io
-import os
-from ProjectMenu import *
+from src.editor.ProjectMenu import *
 
 class SearchMenuDialog(QDialog):   
     def __init__(self, storyPath=None, currFilePath=None, currProject=None, currProjectMenu=None):
@@ -209,7 +207,7 @@ class SearchMenuDialog(QDialog):
     def loadSceneLinks(self):
         with open(self.currFilePath, 'r') as file:
             self.currFileScript = file.read()
-            self.parsedCurr = parser.readScript(self.currFileScript)
+            self.parsedCurr = readScript(self.currFileScript)
             self.sceneLinks = self.parsedCurr.links
 
     #converts current file into dict of line num/line string pairs

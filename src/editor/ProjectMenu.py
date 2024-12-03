@@ -4,8 +4,8 @@ from PySide6.QtWidgets import (
     QListWidgetItem, QPushButton, QInputDialog, QMessageBox, QStackedWidget,
 )
 from PySide6.QtCore import Signal, Qt
-from numberedTextEdit import NumberedTextEdit
-from Tabs import TabsWidget
+from src.editor.numberedTextEdit import NumberedTextEdit
+from src.editor.Tabs import TabsWidget
 
 class ProjectMenu(QWidget):
     def __init__(self, folderPath):

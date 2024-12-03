@@ -3,8 +3,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout, QPushButton, QApplication 
 )
 from PySide6.QtCore import Qt, Signal
-from styles import *
-import tutorial
+from src.editor.styles import *
+from src.editor.tutorial import *
 
 class HomeMenu(QWidget):
     CreateProject = Signal()
@@ -62,7 +62,7 @@ class HomeMenu(QWidget):
         QMessageBox.information(self, title, text)
 
     def showTutorial(self):
-        self.dialog = tutorial.TutorialDialog()
+        self.dialog = TutorialDialog()
         self.dialog.exec()
     
     def closeApp(self):

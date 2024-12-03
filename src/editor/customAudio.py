@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QListWidget, QListWidgetItem, QInputDialog, QSizePolicy
 )
 from PySide6.QtCore import Qt, QUrl
-from projectManager import ProjectManager
+from src.editor.projectManager import ProjectManager
 import sys, shutil, os
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 

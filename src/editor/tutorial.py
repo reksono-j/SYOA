@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 from pathlib import Path
 import io
 import os
-from ProjectMenu import *
+from src.editor.ProjectMenu import *
 
 class TutorialDialog(QDialog):   
     def __init__(self):
