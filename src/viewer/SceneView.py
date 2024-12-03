@@ -469,7 +469,7 @@ class SceneView(QMainWindow):
                 case "dialogue":
                     self.nextEntry['type'] = 'dialogue'
                     if element["speaker"]:
-                        text = f'{element['speaker']}: "{element['text']}"'
+                        text = f'{element['speaker']}: {element['text']}'
                         self.textBox.setText(text)
                         self.nextEntry['speaker'] = element['speaker']
                         self.nextEntry['text'] = text
