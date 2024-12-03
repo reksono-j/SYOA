@@ -126,9 +126,16 @@ class UICustomizeManager:
             self.settingsDict[key] = (self.config['uiSettings'][key]) 
 
     def applySettings(self):
-        self.window.setStyleSheet("color: " + self.settingsDict["Font Color"] + ";" +
-                                  "font-size: " + self.settingsDict["Font Size"] + "pt;" +
-                                  "font-family: " + self.settingsDict["Font Family"])
+        self.theme = " * {\nfont-family: '" + self.settingsDict["Font Family"] + "', Arial, sans-serif; \nfont-size: " + self.settingsDict["Font Size"] + "pt;\n}"
+        if self.settingsDict['Theme Color'] == 'Dark':
+            self.theme += APP_STYLE_DARK
+        else:
+            self.theme += APP_STYLE_LIGHT #if/else as only two themes are available
+        self.window.setStyleSheet(self.theme)
+        QApplication.instance().setStyleSheet(self.theme)
+        
+    def getTheme(self):
+        return self.theme
 
     def updateSettings(self):
         self.applySettings()

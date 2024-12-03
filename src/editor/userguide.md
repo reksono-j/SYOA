@@ -133,4 +133,4 @@ Elements of the SYOA editor can be tweaked for better readability, visual clarit
 .syoa files can be played via the SYOA player. 
 When played, a SYOA file will run sequentially through each line, starting at the first line of the selected starting scene until and ```END``` is reached at the final line of a scene.
 Dialogue can be progressed through by left-clicking on the player screen or using the spacebar. Choices are also selected via mouse click.
-The associated text-to-speech audio created for each line of dialogue can be played by pressing the ```C``` key by default. 
+The associated text-to-speech audio created for each line of dialogue can be played by pressing the ```X``` key by default. 

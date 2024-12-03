@@ -145,19 +145,22 @@ class SaveManagerGUI(QWidget):
                 widget.deleteLater()
             
         saveDir = self.saveManager.fileManager.getSaveFolderPath()
-        saveFiles = os.listdir(str(saveDir))
+        saveFiles = None
+        if (os.path.exists(saveDir)):
+            saveFiles = os.listdir(str(saveDir))
         self.metadataArray = [dict() for _ in range(18)]  # Auto Save: 0, Manual Saves: 1-16, Quick Save: 17
-
-        for saveFile in saveFiles:
-            metadata = self.parseFileName(saveFile)
-            if metadata:
-                match metadata['saveType']:
-                    case 'MANUAL':
-                        self.metadataArray[metadata['slotNumber'] + 1] = metadata
-                    case 'AUTO':
-                        self.metadataArray[0] = metadata
-                    case 'QUICK':
-                        self.metadataArray[17] = metadata
+        
+        if saveFiles is not None:
+            for saveFile in saveFiles:
+                metadata = self.parseFileName(saveFile)
+                if metadata:
+                    match metadata['saveType']:
+                        case 'MANUAL':
+                            self.metadataArray[metadata['slotNumber'] + 1] = metadata
+                        case 'AUTO':
+                            self.metadataArray[0] = metadata
+                        case 'QUICK':
+                            self.metadataArray[17] = metadata
 
         for i in range(17):
             if not (self.saveMode and i == 0):

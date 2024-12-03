@@ -74,6 +74,10 @@ class AudioManager(metaclass=Singleton):
         self.soundEffectOutputs.append(audioOutput)
         player.play()
 
+    def changeVolumes(self, settingsDict):
+        self.backgroundOutput.setVolume(int(settingsDict['bgm'])/100.0)
+        self.dialogueOutput.setVolume(int(settingsDict['tts'])/100.0)
+        #self.soundEffectPlayer.setVolume(int(settingsDict['settings']['sfx']))
 
 
     def cleanupTempFiles(self):
