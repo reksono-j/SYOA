@@ -1,0 +1,15 @@
+{
+    "shortcutSettings": {
+        "Quit": "Ctrl+Q",
+        "Replace Shortcuts Menu": "Ctrl+/",
+        "Open IDE": "Ctrl+O",
+        "Open Hand Held Mode": "Ctrl+P",
+        "Start Transcription": "Ctrl+T",
+        "Voice Command": "Ctrl+N"
+    },
+    "uiSettings": {
+        "Font Family": "Segoe UI",
+        "Font Size": "12",
+        "Font Color": "blue"
+    }
+}

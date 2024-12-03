@@ -14,7 +14,7 @@ from PySide6.QtGui import QShortcut, QKeySequence
 from PySide6.QtWidgets import (
     QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
     QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox,
-    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit
+    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QPlainTextEdit
 )
 from PySide6.QtGui import Qt
 from audioPlayer import AudioPlayer
@@ -145,7 +145,7 @@ class STT():
     def recordCallback():
         focused_widget = QApplication.focusWidget() # gets the focused widget, which should be the textbox
 
-        if isinstance(focused_widget, QTextEdit) or isinstance(focused_widget, QLineEdit):
+        if isinstance(focused_widget, QTextEdit) or isinstance(focused_widget, QLineEdit) or isinstance(focused_widget, QPlainTextEdit):
             STT._textboxWidget = focused_widget
         
         if STT.currentlyRecording:
@@ -157,6 +157,8 @@ class STT():
             STT._textboxWidget.append(STT.getLatestTranscription())
         if(not STT.currentlyRecording) and isinstance(STT._textboxWidget, QLineEdit):
             STT._textboxWidget.setText(STT.getLatestTranscription())
+        if(not STT.currentlyRecording) and isinstance(STT._textboxWidget, QPlainTextEdit):
+            STT._textboxWidget.appendPlainText(STT.getLatestTranscription())
 
     @staticmethod
     def showOverlay():

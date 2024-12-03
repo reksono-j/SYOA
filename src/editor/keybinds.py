@@ -29,6 +29,8 @@ class ShortcutsMenu(QDialog):
 
         self.button = None # to reference the button that was clicked
 
+        self.labelButtonPairs = []
+
         # establish accessibility interface for menu
         #self.setAccessibleName("Shortcuts Menu")
         self.setAccessibleDescription("Change shortcut keybinds here")
@@ -44,6 +46,7 @@ class ShortcutsMenu(QDialog):
             button.thisShortcut = shortcutsManager.shortcutDict[key]
             button.clicked.connect(lambda _,b=button: self.initiateReplacingKeys(b))
             self.layout.addRow(label, button)
+            self.labelButtonPairs.append([label,button])
 
             # accessibility
             #button.setAccessibleName(shortcutsManager.shortcutDict[key].name)
@@ -143,9 +146,9 @@ class ShortcutsManager:
 
     def openShortcutsMenu(self):
         # Open the options menu
-        self.menu = ShortcutsMenu(self, self.window)
+        menu = ShortcutsMenu(self, self.window)
         #QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogStart))
-        self.menu.exec_()  # This will block execution until the dialog is closed
+        menu.exec_()  # This will block execution until the dialog is closed
         #QAccessible.updateAccessibility(QAccessibleEvent(menu.accessibilityInterface, QAccessible.DialogEnd))
     
     def saveShortcuts(self):

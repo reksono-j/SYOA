@@ -1,0 +1,12 @@
+{
+    "Deckard": {
+        "Deckard": {
+            "speed": "1.0",
+            "pitch": "1.0"
+        },
+        "Rick": {
+            "speed": "1.0",
+            "pitch": "1.1"
+        }
+    }
+}

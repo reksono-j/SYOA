@@ -15,7 +15,7 @@ import sys
 import json
 import shutil
 
-
+from src_alt.editor.textToSpeech import VOICE
 from src_alt.editor.characterManager import Character, CharacterManager
 from src_alt.editor.projectManager import ProjectManager
 
@@ -49,19 +49,19 @@ class Test(unittest.TestCase):
         c1 = Character("Don")
 
         self.assertEqual(c1.getName(), 'Don')
-        self.assertDictEqual(c1.getAliases(), {'Don':None})
+        self.assertDictEqual(c1.getAliases(), {'Don':{'name': None, 'voice': None}})
 
         c1.addAlias('Don1')
-        self.assertDictEqual(c1.getAliases(), {'Don':None, 'Don1':None})
+        self.assertDictEqual(c1.getAliases(), {'Don':{'name': None, 'voice': None}, 'Don1':{'name': None, 'voice': VOICE.male1}})
 
         c1.removeAlias('Don')
-        self.assertDictEqual(c1.getAliases(), {'Don':None, 'Don1':None})
+        self.assertDictEqual(c1.getAliases(), {'Don':{'name': None, 'voice': None}, 'Don1':{'name': None, 'voice': VOICE.male1}})
         c1.removeAlias('Don1')
-        self.assertDictEqual(c1.getAliases(), {'Don':None})
+        self.assertDictEqual(c1.getAliases(), {'Don':{'name': None, 'voice': None}})
 
         c1.renameCharacter("newDon")
         self.assertEqual(c1.getName(), 'newDon')
-        self.assertDictEqual(c1.getAliases(), {'newDon':None})
+        self.assertDictEqual(c1.getAliases(), {'newDon': {'name': None, 'voice': None}})
     
     def test_saveCharacters(self):
         c1 = Character("Don")
@@ -72,10 +72,10 @@ class Test(unittest.TestCase):
         with open(charsPath, 'r') as file:
             charDict = json.load(file) 
 
-        self.assertDictEqual(charDict, {'Don':{'Don':None}})
+        self.assertDictEqual(charDict, {'Don':{'Don':{'name': None, 'voice': None}}})
     
     def test_loadCharacters(self):
-        charDict = {'Don':{'Don':None}}
+        charDict = {'Don':{'Don':{'name': None, 'voice': None}}}
 
         charsPath = os.path.join(self.testProjectDir,"characters.json")
         with open(charsPath, 'w') as file:
@@ -101,5 +101,5 @@ class Test(unittest.TestCase):
         self.charM.updateCharacter('Don', c1)
 
         self.assertTrue('newDon' in self.charM.getCharacters())
-        self.assertDictEqual({'newDon':None},self.charM.getCharacters()['newDon'].aliases)
+        self.assertDictEqual({'newDon':{'name': None, 'voice': None}},self.charM.getCharacters()['newDon'].aliases)
         

@@ -1,11 +1,10 @@
 import sys
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QLineEdit, QTextEdit, QLabel
 
 class HandHoldMenu(QtWidgets.QScrollArea):
-    def __init__(self, HandHoldManager, parent):
-        super(HandHoldMenu, self).__init__(parent)
-        self.parent = parent
+    def __init__(self, HandHoldManager):
+        super(HandHoldMenu, self).__init__()
         self.HandHoldManager = HandHoldManager
         self.initParameters()
         self.initUI()
@@ -20,7 +19,7 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         self.setWidgetResizable(True)
         self.groupBox.layout = QtWidgets.QVBoxLayout()
         # printing pressed
-        print("pressed")
+        # print("pressed")
         self.saver = False
         self.saver2 = False
         self.button33 = QPushButton("Reset")
@@ -98,10 +97,10 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         for i in range(self.groupBox.layout.count()):
             widget = self.groupBox.layout.itemAt(i).widget()
             if isinstance(widget, QLabel):
-                print(widget.text())
-                '''if widget.text() == "Name of the speaker:":
-                    print(self.groupBox.layout.itemAt(i+1).widget().toPlainText())
-                    print(self.groupBox.layout.itemAt(i + 3).widget().toPlainText())'''
+                # print(widget.text())
+                # '''if widget.text() == "Name of the speaker:":
+                #     print(self.groupBox.layout.itemAt(i+1).widget().toPlainText())
+                #     print(self.groupBox.layout.itemAt(i + 3).widget().toPlainText())'''
                 if widget.text() == "Name of the speaker:":
                     final_string = final_string + self.groupBox.layout.itemAt(i+1).widget().toPlainText() + " : " + self.groupBox.layout.itemAt(i+3).widget().toPlainText() + "\n"
                 if widget.text()[:13] == "END OF CHOICE":
@@ -142,12 +141,12 @@ class HandHoldMenu(QtWidgets.QScrollArea):
                 if widget.text() == "ELSE:":
                     final_string = final_string + "ELSE" + "\n"
 
-            if isinstance(widget, QLineEdit):
-                print(widget.text())
-            if isinstance(widget, QTextEdit):
-                print(widget.toPlainText())
+            # if isinstance(widget, QLineEdit):
+            #     print(widget.text())
+            # if isinstance(widget, QTextEdit):
+            #     print(widget.toPlainText())
 
-        print(final_string)
+        # print(final_string)
         index = self.groupBox.layout.indexOf(button)
         if index < 4:
 
@@ -497,16 +496,15 @@ class HandHoldMenu(QtWidgets.QScrollArea):
             item = self.groupBox.layout.takeAt(deln - 4)
             if item.widget():
                 item.widget().deleteLater()
-        deleee = 0
-        lol = 0
-        for i in range(index-4,0,-1):
-            widget = self.groupBox.layout.itemAt(i).widget()
-            print(i)
-            lol = lol + 1
-            if isinstance(widget, QLabel):
-                if widget.text() == "BRANCH:":
-                    deleee = i
-
+        # deleee = 0
+        # lol = 0
+        # for i in range(index-4,0,-1):
+        #     widget = self.groupBox.layout.itemAt(i).widget()
+        #     print(i)
+        #     lol = lol + 1
+        #     if isinstance(widget, QLabel):
+        #         if widget.text() == "BRANCH:":
+        #             deleee = i
 
         self.groupBox.setLayout(self.groupBox.layout)
 
@@ -516,7 +514,7 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         lol = 0
         for i in range(index-1, 0, -1):
             widget = self.groupBox.layout.itemAt(i).widget()
-            print(i)
+            # print(i)
             lol = lol + 1
             if isinstance(widget, QLabel):
                 if widget.text() == "END OF SCENE BRANCHES:":
@@ -840,7 +838,7 @@ class HandHoldMenu(QtWidgets.QScrollArea):
         lol = 0
         for i in range(index - 1, 0, -1):
             widget = self.groupBox.layout.itemAt(i).widget()
-            print(i)
+            # print(i)
             lol = lol + 1
             if isinstance(widget, QLabel):
                 if widget.text() == "Name of Choice:":
@@ -871,9 +869,17 @@ class HandHoldMenu(QtWidgets.QScrollArea):
                 item.widget().deleteLater()
 
 class HandHoldManager:
-    def __init__(self, window) -> None:
-        self.window = window
-        self.menu = HandHoldMenu(self, window)
+    def __init__(self):
+        self.menu = None
 
     def menuToggle(self):
-        self.menu.toggleUI()
+        if self.menu is None:
+            self.menu = HandHoldMenu(self)
+            self.menu.setWindowTitle("Hand Hold Menu")
+            self.menu.setMinimumSize(QtCore.QSize(800, 600))
+
+        # Toggle the visibility
+        if self.menu.isVisible():
+            self.menu.close()
+        else:
+            self.menu.show()

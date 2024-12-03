@@ -1,15 +1,14 @@
 {
     "shortcutSettings": {
-        "Quit": "Ctrl+Q",
-        "Replace Shortcuts Menu": "Ctrl+/",
-        "Open IDE": "Ctrl+O",
-        "Open Hand Held Mode": "Ctrl+P",
-        "Start Transcription": "Ctrl+T",
-        "Voice Command": "Ctrl+N"
+        "quit": "Ctrl+Q",
+        "replace shortcuts menu": "Ctrl+/",
+        "open hand held mode": "Ctrl+P",
+        "start transcription": "Ctrl+T",
+        "voice command": "Ctrl+V"
     },
     "uiSettings": {
-        "Font Family": "Segoe UI",
-        "Font Size": "12",
-        "Font Color": "blue"
+        "Font Family": "Rockwell",
+        "Font Size": "15",
+        "Theme Color": "Dark"
     }
 }
