@@ -1,28 +1,46 @@
 from PySide6.QtWidgets import (
     QMainWindow, QApplication, QPushButton, QDialog, QLineEdit,
-    QFormLayout, QLabel, QKeySequenceEdit,QWidget,QVBoxLayout, QComboBox, QFileDialog, QHBoxLayout,
-    QAccessibleWidget, QGroupBox, QFontComboBox, QSpinBox, QTextEdit, QGridLayout, QListWidget, QListWidgetItem,
-    QInputDialog, QMessageBox
+    QLabel,QWidget,QVBoxLayout, QComboBox, QFileDialog,  QMessageBox,
+    QHBoxLayout, QListWidget, QListWidgetItem, QInputDialog, QSizePolicy
 )
-from PySide6.QtCore import Qt
-import sys
-import shutil
-import os
-from audioPlayer import AudioPlayer
+from PySide6.QtCore import Qt, QUrl
+from src.editor.projectManager import ProjectManager
+import sys, shutil, os
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 class CustomAudioWidget(QWidget):
     def __init__(self, fileName:str, filePath:str, listWidget:'AudioWidgetsList', parent=None):
         super(CustomAudioWidget, self).__init__(parent)
 
+        self.setObjectName("CustomAudioWidget")
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        self.setMinimumHeight(40)
         self.filePath = filePath
         self.listWidget = listWidget
         
+        self.mediaPlayer = QMediaPlayer(self)        
+        self.audioOutput = QAudioOutput()
+        self.mediaPlayer.setAudioOutput(self.audioOutput)
+        
         layout = QHBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(10) 
+        
         self.label = QLabel(fileName)
+        self.label.setAccessibleName(fileName)
         self.playButton = QPushButton("Play")
+        self.playButton.setAccessibleName(f"Play {fileName}")
         self.deleteButton = QPushButton("Delete")
+        self.deleteButton.setAccessibleName(f"Delete {fileName}")
         self.renameButton = QPushButton("Rename")
-
+        self.renameButton.setAccessibleName(f"Rename {fileName}")
+    
+        
+        for button in [self.playButton, self.deleteButton, self.renameButton]:
+            button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed) 
+            button.setMinimumSize(button.sizeHint())
+            button.adjustSize()
+        
         self.playButton.clicked.connect(self.play)
         self.deleteButton.clicked.connect(self.delete)
         self.renameButton.clicked.connect(self.rename)
@@ -31,8 +49,9 @@ class CustomAudioWidget(QWidget):
         layout.addWidget(self.playButton)
         layout.addWidget(self.renameButton)
         layout.addWidget(self.deleteButton)
-        
+
         self.setLayout(layout)
+        self.adjustSize()
 
     def delete(self):
         try:
@@ -47,7 +66,9 @@ class CustomAudioWidget(QWidget):
         self.listWidget.populateList()
     
     def play(self):
-        AudioPlayer.playMP3(self.filePath)
+        url = QUrl.fromLocalFile(self.filePath)
+        self.mediaPlayer.setSource(url)
+        self.mediaPlayer.play()
 
     def rename(self):
         newName, ok = QInputDialog.getText(self, 'Renaming', 'Enter a new name:')
@@ -65,7 +86,13 @@ class CustomAudioWidget(QWidget):
                 print(f"Permission denied to rename '{self.filePath}'.")
             except Exception as e:
                 print(f"An error occurred: {e}")
-
+                
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.playButton.adjustSize()
+        self.deleteButton.adjustSize()
+        self.renameButton.adjustSize()
+        
 class AudioWidgetsList(QListWidget):
     def __init__(self, directory):
         super().__init__()
@@ -91,31 +118,51 @@ class AudioWidgetsList(QListWidget):
                     listItem.setSizeHint(audioWidget.sizeHint())
                     self.addItem(listItem)
                     self.setItemWidget(listItem, audioWidget)
-
-        else:
-            print(f"Directory does not exist: {self.directory}")
     
 class CustomAudio():
     _currentSceneName = None
     _mainWindow = None
     _audioWidgetList = None
     _sceneDir = None
-
-    @staticmethod
-    def _updateSceneDir():
-        workingDir = os.path.dirname(os.path.abspath(__file__))
-        CustomAudio._sceneDir = os.path.join(workingDir, "audio", CustomAudio._currentSceneName)
-
-    @staticmethod
-    def _getMainWindow():
-        if CustomAudio._mainWindow is None:
-            print("getting mainWindow is not set up yet")
-
-        return CustomAudio._mainWindow
+    _projectManager = None
     
-    @staticmethod
-    def openFileExplorer():
-        if CustomAudio._currentSceneName is None:
+    def __init__(self):
+        self._projectManager = ProjectManager()
+        if self._currentSceneName:
+            self._audioWidgetList = AudioWidgetsList(self._currentSceneName)    
+        else:
+            self._audioWidgetList = AudioWidgetsList("")
+        self._setupFolders()
+    
+    def _setupFolders(self):
+        projectPath = self._projectManager.getCurrentFilePath()
+        if not projectPath:
+            raise ValueError("Project path not set.")
+        
+        audioDir = os.path.join(projectPath, "audio")
+        os.makedirs(audioDir, exist_ok=True)
+        os.makedirs(os.path.join(audioDir, "BGM"), exist_ok=True)
+        os.makedirs(os.path.join(audioDir, "SFX"), exist_ok=True)
+
+    def _updateSceneDir(self):
+        # Get the current project path from ProjectManager
+        projectPath = self._projectManager.getCurrentFilePath()
+        if not projectPath:
+            raise ValueError("Project path not set.")
+        
+        audioDir = os.path.join(projectPath, "audio")
+        os.makedirs(audioDir, exist_ok=True)
+        self._sceneDir = os.path.join(audioDir, self._currentSceneName)
+        os.makedirs(self._sceneDir, exist_ok=True)
+        
+
+    def _getMainWindow(self):
+        if self._mainWindow is None:
+            print("getting mainWindow is not set up yet")
+        return self._mainWindow
+    
+    def openFileExplorer(self):
+        if self._currentSceneName is None:
             # create simple alert box when there is no scene selected
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Information) 
@@ -124,16 +171,14 @@ class CustomAudio():
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec()
         else:
-            sourceFilePath, _ = QFileDialog.getOpenFileName(CustomAudio._mainWindow, "Open File", "", "MP3 Files (*.mp3)")
+            sourceFilePath, _ = QFileDialog.getOpenFileName(self._mainWindow, "Open File", "", "MP3 Files (*.mp3)")
 
             if sourceFilePath:
-                os.makedirs(CustomAudio._sceneDir, exist_ok=True)
-                shutil.copy(sourceFilePath, CustomAudio._sceneDir)
-                CustomAudio._audioWidgetList.populateList()
+                os.makedirs(self._sceneDir, exist_ok=True)
+                shutil.copy(sourceFilePath, self._sceneDir)
+                self._audioWidgetList.populateList()
 
-    
-    @staticmethod
-    def renameScene(original:str, new:str):
+    def renameScene(self, original:str, new:str):
         workingDir = os.path.dirname(os.path.abspath(__file__))
 
         originalDir = os.path.join(workingDir, "audio", original)
@@ -142,23 +187,97 @@ class CustomAudio():
         # make sure originalDir exists
         if os.path.isdir(originalDir):
             os.rename(originalDir, newDir)
-            CustomAudio._currentSceneName = new
-            CustomAudio._updateSceneDir()
-            CustomAudio.getAudioListWidget().setDir(CustomAudio._sceneDir)
+            self._currentSceneName = new
+            self._updateSceneDir()
+            self.getAudioListWidget().setDir(self._sceneDir)
         else:
             print(f"Original directory does not exist: {originalDir}")
     
-    @staticmethod
-    def setCurrentScene(newSceneName:str):
-        CustomAudio._currentSceneName = newSceneName
-        CustomAudio._updateSceneDir()
-        CustomAudio.getAudioListWidget().setDir(CustomAudio._sceneDir)
+    def setCurrentScene(self, newSceneName:str):
+        self._currentSceneName = newSceneName
+        self._updateSceneDir()
+        self.getAudioListWidget().setDir(self._sceneDir)
 
-    @staticmethod
-    def getAudioListWidget():
-        if CustomAudio._audioWidgetList is None:
-            CustomAudio._audioWidgetList = AudioWidgetsList("")
-        return CustomAudio._audioWidgetList
+    def setProjectManager(self):
+        self._projectManager = ProjectManager()
+        
+    def getAudioListWidget(self):
+        return self._audioWidgetList
+
+class AudioManagerDialog(QDialog):
+    def __init__(self):
+
+        self.setWindowTitle("Audio Manager")
+        self.setMinimumSize(400, 300)
+        self.setObjectName("AudioManager")
+
+        mainLayout = QVBoxLayout()
+        controlLayout = QHBoxLayout()
+        
+        self.sceneSelector = QComboBox()
+        self.sceneSelector.currentTextChanged.connect(self.changeScene)
+        self.projectManager = ProjectManager()
+        self.customAudio = CustomAudio()
+        
+        self.addSceneButton = QPushButton("Add Scene")
+        self.addSceneButton.clicked.connect(self.addScene)
+        self.removeSceneButton = QPushButton("Remove Scene")
+        self.removeSceneButton.clicked.connect(self.removeScene)
+        self.addAudioButton = QPushButton("Add Audio File")
+        self.addAudioButton.clicked.connect(self.customAudio.openFileExplorer)
+
+        controlLayout.addWidget(QLabel("Scenes:"))
+        controlLayout.addWidget(self.sceneSelector)
+        controlLayout.addWidget(self.addSceneButton)
+        controlLayout.addWidget(self.removeSceneButton)
+        controlLayout.addWidget(self.addAudioButton)
+
+        self.audioListWidget = self.customAudio.getAudioListWidget()
+
+        mainLayout.addLayout(controlLayout)
+        mainLayout.addWidget(self.audioListWidget)
+        self.setLayout(mainLayout)
+
+        self.refreshSceneList()
+
+    def addScene(self):
+        sceneName, ok = QInputDialog.getText(self, "Add Scene", "Enter scene name:")
+        if ok and sceneName:
+            self.customAudio.setCurrentScene(sceneName)
+            self.refreshSceneList()
+
+    def removeScene(self):
+        sceneName = self.sceneSelector.currentText()
+        if not sceneName:
+            QMessageBox.information(self, "Remove Scene", "No scene selected.")
+            return
+
+        confirm = QMessageBox.question(
+            self, "Confirm Removal", f"Are you sure you want to remove '{sceneName}'?", 
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if confirm == QMessageBox.Yes:
+            self.customAudio.renameScene(sceneName, None)
+            self.refreshSceneList()
+
+    def changeScene(self, sceneName):
+        if sceneName:
+            self.customAudio.setCurrentScene(sceneName)
+
+    def refreshSceneList(self):
+        projectPath = self.projectManager.getCurrentFilePath()
+        audioDir = os.path.join(projectPath, "audio")
+        os.makedirs(audioDir, exist_ok=True)
+
+        scenes = [d for d in os.listdir(audioDir) if os.path.isdir(os.path.join(audioDir, d))]
+        self.sceneSelector.clear()
+        self.sceneSelector.addItems(scenes)
+
+        # Set the first scene as the default if none is selected
+        if scenes:
+            self.sceneSelector.setCurrentIndex(0)
+            self.customAudio.setCurrentScene(scenes[0])
+
 
 if __name__ == '__main__':
     class MainWindow(QMainWindow):
@@ -173,7 +292,7 @@ if __name__ == '__main__':
             self.currentScene = QLabel()
             self.currentScene.setText("Current scene: None")
 
-            self.button = QPushButton("open file explorer", self)
+            self.button = QPushButton("Open file explorer", self)
             self.button.clicked.connect(self.buttonFunc)
 
             self.textInput = QLineEdit()
@@ -189,19 +308,20 @@ if __name__ == '__main__':
             layout.addWidget(self.button)
             layout.addWidget(self.textInput)
             layout.addWidget(self.textInput2)
-            layout.addWidget(CustomAudio.getAudioListWidget())
+            self.customAudio = CustomAudio()
+            layout.addWidget(self.customAudio.getAudioListWidget())
             central_widget.setLayout(layout)
 
 
         def buttonFunc(self):
-            CustomAudio.openFileExplorer()
+            self.customAudio.openFileExplorer()
         
         def textInputCallback(self):
-            CustomAudio.setCurrentScene(self.textInput.text())
+            self.customAudio.setCurrentScene(self.textInput.text())
             self.currentScene.setText("Current scene: " + self.textInput.text())
         
         def textInputCallback2(self):
-            CustomAudio.renameScene(CustomAudio._currentSceneName, self.textInput2.text())
+            self.customAudio.renameScene(self.customAudio._currentSceneName, self.textInput2.text())
             self.currentScene.setText("Current scene: " + self.textInput2.text())
 
     app = QApplication(sys.argv)
