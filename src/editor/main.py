@@ -1,5 +1,12 @@
 import sys
 import os
+
+script_dir = os.path.dirname(__file__)
+parent_dir = os.path.abspath(os.path.join(script_dir, "..", ".."))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+
 from PySide6.QtCore import (
     Qt, QThread, Signal
 )
@@ -8,12 +15,6 @@ from PySide6.QtWidgets import (
     QDialog, QMessageBox, QProgressDialog
 )
 from PySide6.QtGui import QAccessibleValueChangeEvent, QAction, QAccessible, QKeySequence, QAccessibleEvent
-
-script_dir = os.path.dirname(__file__)
-parent_dir = os.path.abspath(os.path.join(script_dir, "..", ".."))
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
-
 from src.editor.projectManager import ProjectManager, ProjectManagerGUI
 from src.editor.HomeMenu import HomeMenu
 from src.editor.SettingsMenu import SettingsMenu
@@ -90,7 +91,7 @@ class MainWindow(QMainWindow):
     def initShortcuts(self):
         shortcutsManager = ShortcutsManager(self)
         shortcutsManager.addShortcut("Ctrl+Q","Quit",self.close)
-        shortcutsManager.addShortcut("Ctrl+/","Replace Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
+        shortcutsManager.addShortcut("Ctrl+/","Open Shortcuts Menu",lambda: shortcutsManager.openShortcutsMenu())
         shortcutsManager.addShortcut("Ctrl+T","Start Transcription", STT.recordCallback)
         shortcutsManager.addShortcut("Ctrl+F","Open Search Menu",self.showSearchMenu)
         shortcutsManager.addShortcut("Alt+C", "Type CHOICE", lambda: self.insertTextIntoIDE("CHOICE "))

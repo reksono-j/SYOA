@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from src.viewer.SceneView import SceneView
 from src.viewer.files import FileManager
-from options import *
+from src.viewer.options import *
 
 class MainMenu(QMainWindow):
     def __init__(self):

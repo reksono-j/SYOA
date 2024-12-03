@@ -12,7 +12,7 @@ from src.viewer.audioManager import AudioManager
 from src.viewer.variables import ViewerVariableManager
 from src.viewer.backgroundManager import BackgroundManager
 from src.viewer.files import FileManager, SaveManagerGUI, SaveManager
-from options import UICustomizeDialog
+from src.viewer.options import UICustomizeDialog
 
 class DialogueLog(QWidget):
     def __init__(self, getHistoryCallback):
